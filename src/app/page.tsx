@@ -1,20 +1,7 @@
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Search, User } from "lucide-react"
 import SearchBar from "@/components/home/search-bar"
 import RealEstateGrid from "@/components/home/grid"
 export default function HomePage() {
-
-  const featuredProperties = [
-    { price: 750000, description: "Luxury Villa, Beverly Hills", details: "5 🛏 4 🛁 4,200 sqft" },
-    { price: 550000, description: "Modern Apartment, Downtown", details: "3 🛏 2 🛁 1,800 sqft" },
-    { price: 950000, description: "Waterfront Estate, Miami", details: "6 🛏 5 🛁 5,500 sqft" },
-    { price: 950000, description: "Waterfront Estate, Miami", details: "6 🛏 5 🛁 5,500 sqft" },
-    { price: 950000, description: "Waterfront Estate, Miami", details: "6 🛏 5 🛁 5,500 sqft" }
-
-  ];
 
   return (
     <div className="font-sans">
