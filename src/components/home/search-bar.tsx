@@ -1,41 +1,97 @@
-import { Button } from "../ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Input } from "../ui/input";
-import { Search } from "lucide-react";
+"use client"
 
-const SearchBar = () => {
-    const propertyTypes = ["Apartment", "House", "Villa"];
-    const priceRanges = [
-      { value: "under-500", label: "Under $500k" },
-      { value: "500-1000", label: "$500k - $1M" },
-      { value: "above-1000", label: "Above $1M" }
-    ];
+import { useState } from "react"
+import { Search, MapPin, Home, DollarSign } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+export default function SearchBar() {
+  const [searchType, setSearchType] = useState("buy")
+
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-4 bg-white rounded-md p-4 max-w-4xl mx-auto">
-    <Input placeholder="Enter location" className="w-full md:w-1/2" />
-    <Select>
-      <SelectTrigger className="w-full md:w-1/6">
-        <SelectValue placeholder="Property Type" />
-      </SelectTrigger>
-      <SelectContent>
-        {propertyTypes.map(type => (
-          <SelectItem key={type} value={type.toLowerCase()}>{type}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    <Select>
-      <SelectTrigger className="w-full md:w-1/6">
-        <SelectValue placeholder="Price Range" />
-      </SelectTrigger>
-      <SelectContent>
-        {priceRanges.map(range => (
-          <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    <Button className="w-full md:w-auto"><Search className="mr-2 h-4 w-4" /> Search</Button>
-  </div>
-  );
-};
+    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-3 md:p-4 w-full max-w-4xl">
+      <div className="flex gap-2 mb-3 md:mb-4">
+        <Button
+          variant={searchType === "buy" ? "default" : "outline"}
+          onClick={() => setSearchType("buy")}
+          className={`text-xs md:text-sm px-2 md:px-3 py-1 h-auto ${searchType === "buy" ? "bg-slate-800 hover:bg-slate-900" : ""}`}
+        >
+          Buy
+        </Button>
+        <Button
+          variant={searchType === "rent" ? "default" : "outline"}
+          onClick={() => setSearchType("rent")}
+          className={`text-xs md:text-sm px-2 md:px-3 py-1 h-auto ${searchType === "rent" ? "bg-slate-800 hover:bg-slate-900" : ""}`}
+        >
+          Rent
+        </Button>
+        <Button
+          variant={searchType === "sell" ? "default" : "outline"}
+          onClick={() => setSearchType("sell")}
+          className={`text-xs md:text-sm px-2 md:px-3 py-1 h-auto ${searchType === "sell" ? "bg-slate-800 hover:bg-slate-900" : ""}`}
+        >
+          Sell
+        </Button>
+      </div>
 
-export default SearchBar;
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+        <div className="sm:col-span-2">
+          <div className="flex items-center border rounded-md px-2 md:px-3 py-1.5 md:py-2 bg-slate-50 focus-within:ring-1 focus-within:ring-slate-400 focus-within:border-slate-400">
+            <MapPin className="h-4 w-4 text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Enter location"
+              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 text-sm h-7 md:h-8"
+            />
+          </div>
+        </div>
+
+        <div>
+          <Select defaultValue="any">
+            <SelectTrigger className="bg-slate-50 border focus:ring-1 focus:ring-slate-400 focus:border-slate-400 h-[34px] md:h-[42px] text-sm">
+              <div className="flex items-center">
+                <Home className="h-4 w-4 text-slate-400 mr-2" />
+                <SelectValue placeholder="Property Type" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any Type</SelectItem>
+              <SelectItem value="house">House</SelectItem>
+              <SelectItem value="apartment">Apartment</SelectItem>
+              <SelectItem value="condo">Condo</SelectItem>
+              <SelectItem value="villa">Villa</SelectItem>
+              <SelectItem value="land">Land</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Select defaultValue="any">
+            <SelectTrigger className="bg-slate-50 border focus:ring-1 focus:ring-slate-400 focus:border-slate-400 h-[34px] md:h-[42px] text-sm">
+              <div className="flex items-center">
+                <DollarSign className="h-4 w-4 text-slate-400 mr-2" />
+                <SelectValue placeholder="Price Range" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any Price</SelectItem>
+              <SelectItem value="100k-500k">$100k - $500k</SelectItem>
+              <SelectItem value="500k-1m">$500k - $1M</SelectItem>
+              <SelectItem value="1m-2m">$1M - $2M</SelectItem>
+              <SelectItem value="2m-5m">$2M - $5M</SelectItem>
+              <SelectItem value="5m+">$5M+</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="mt-3 md:mt-4 flex justify-end">
+        <Button className="bg-slate-800 hover:bg-slate-900 text-xs md:text-sm h-8 md:h-10">
+          <Search className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+          Search Properties
+        </Button>
+      </div>
+    </div>
+  )
+}
