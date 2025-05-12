@@ -62,8 +62,7 @@ const propertyData = {
   },
 }
 
-export default function PropertyDetailPage({ params }: { params: { id: string } }) {
-  // In a real app, you would fetch the property data based on the ID
+export default function PropertyDetailPage() {
   // const { data: property } = await getPropertyById(params.id)
 
   const property = propertyData
