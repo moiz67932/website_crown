@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react"
@@ -18,7 +18,20 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 
-export default function PropertiesGrid({ properties }: { properties: any[] }) {
+interface Property {
+  id: string
+  image: string
+  title: string
+  status: string
+  statusColor: string
+  price: number
+  location: string
+  beds: number
+  baths: number
+  sqft: number | string
+}
+
+export default function PropertiesGrid({ properties }: { properties: Property[] }) {
   const [favoriteProperties, setFavoriteProperties] = useState<string[]>([])
 
   const toggleFavorite = (e: React.MouseEvent, propertyId: string) => {

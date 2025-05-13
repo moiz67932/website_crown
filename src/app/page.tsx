@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Home, Building, MapPin, Bed, Bath, Maximize, ArrowRight, Star, Phone, Mail, CheckCircle2 } from "lucide-react"
+import { Home, Building, MapPin, Bed, Bath, Maximize, ArrowRight, Star, Phone, Mail } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -22,11 +22,38 @@ async function getFeaturedProperties() {
   return data;
 }
 
+interface Property {
+  id: string;
+  image: string;
+  title: string;
+  location: string;
+  price: number;
+  beds: string | number;
+  baths: string | number;
+  sqft: string | number;
+  status: string;
+  statusColor: string;
+  publicRemarks: string;
+}
+
+interface ApiProperty {
+  listing_id: string;
+  main_image_url: string;
+  address: string;
+  city: string;
+  list_price: number;
+  bedrooms: string | number;
+  bathrooms: string | number;
+  living_area_sqft: string | number;
+  property_type: string;
+  public_remarks: string;
+}
+
 export default async function HomePage() {
   const featuredPropertiesRaw = await getFeaturedProperties();
 
   // Map API data to UI-friendly format
-  const featuredProperties = featuredPropertiesRaw.map((item) => ({
+  const featuredProperties: Property[] = featuredPropertiesRaw.map((item: ApiProperty) => ({
     id: item.listing_id,
     image: item.main_image_url || "/placeholder.svg",
     title: item.address,
@@ -116,7 +143,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            {featuredProperties.map((property: any) => (
+            {featuredProperties.map((property) => (
               <Link href={`/properties/${property.id}`} key={property.id}>
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
