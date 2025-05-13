@@ -18,7 +18,7 @@ export default function PropertiesPage() {
   useEffect(() => {
     async function fetchProperties() {
       try {
-        const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=0&limit=10`);
+        const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=0&limit=12`);
         if (!res.ok) {
           throw new Error("Failed to fetch properties");
         }

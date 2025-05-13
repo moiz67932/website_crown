@@ -24,11 +24,12 @@ interface Property {
   title: string
   status: string
   statusColor: string
-  price: number
-  location: string
-  beds: number
-  baths: number
+  list_price: number
+  bedrooms: number
+  bathrooms: number
   sqft: number | string
+  city: string
+  address: string
 }
 
 export default function PropertiesGrid({ properties }: { properties: Property[] }) {
@@ -61,7 +62,7 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
                     {property.status}
                   </Badge>
                   <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 bg-white/90 backdrop-blur-sm rounded-md px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm font-medium">
-                    ${property.price?.toLocaleString?.() ?? property.price}
+                    ${property?.list_price?.toLocaleString?.() ?? property.list_price}
                   </div>
 
                   {/* Favorite Button */}
@@ -79,25 +80,25 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
               </div>
               <CardContent className="p-3 md:p-5">
                 <h3 className="text-base md:text-xl font-semibold mb-1 md:mb-2 line-clamp-1 group-hover:text-slate-700 transition-colors">
-                  {property.title}
+                  {property.address}
                 </h3>
                 <div className="flex items-center text-slate-500 mb-2 md:mb-3">
                   <MapPin className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
-                  <span className="text-xs md:text-sm line-clamp-1">{property.location}</span>
+                  <span className="text-xs md:text-sm line-clamp-1">{property.city}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm">
                   <div className="flex items-center">
                     <Bed className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
-                    <span>{property.beds} Beds</span>
+                    <span>{property.bedrooms ?? 0} Beds</span>
                   </div>
                   <div className="flex items-center">
                     <Bath className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
-                    <span>{property.baths} Baths</span>
+                    <span>{property.bathrooms ?? 0} Baths</span>
                   </div>
                   <div className="flex items-center">
                     <Maximize className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
                     <span>
-                      {property.sqft !== "-" ? `${property.sqft.toLocaleString?.() ?? property.sqft} Sq Ft` : "- Sq Ft"}
+                      {property.sqft !== "-" ? `${property?.sqft?.toLocaleString?.() ?? property.sqft} Sq Ft` : "- Sq Ft"}
                     </span>
                   </div>
                 </div>
