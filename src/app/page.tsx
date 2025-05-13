@@ -12,6 +12,7 @@ export default function HomePage() {
     <main>
       {/* Hero Section with Professional Background */}
       <section className="relative bg-slate-50 pt-16 md:pt-20">
+
         <div className="container mx-auto px-4 py-10 md:py-16 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="space-y-4 md:space-y-6">
@@ -246,7 +247,7 @@ export default function HomePage() {
                 <Button className="bg-white text-slate-900 hover:bg-slate-100 text-sm md:text-base">
                   Browse Properties
                 </Button>
-                <Button variant="outline" className="border-white text-white hover:bg-white/10 text-sm md:text-base">
+                <Button className="bg-white text-slate-900 hover:bg-slate-100 text-sm md:text-base">
                   Contact an Agent
                 </Button>
               </div>

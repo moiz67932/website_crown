@@ -57,8 +57,9 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <div className="relative h-8 w-32 md:h-10 md:w-40">
-              <Image src="/real-estate-logo.png" alt="Real Estate Logo" fill className="object-contain" />
+            <div className="relative h-12 w-48 md:h-14 md:w-56">
+              
+              <Image src="/logo.svg" alt="Real Estate Logo" fill className="object-contain" />
             </div>
           </Link>
 
