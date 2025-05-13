@@ -7,7 +7,39 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import SearchBar from "@/components/home/search-bar"
 
-export default function HomePage() {
+async function getFeaturedProperties() {
+  const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=1&limit=3`, {
+    headers: {
+      accept: "application/json",
+    },
+    // cache: "no-store", // Uncomment if you want to always fetch fresh data
+    next: { revalidate: 60 }, // ISR: revalidate every 60s, adjust as needed
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch featured properties");
+  }
+  const data = await res.json();
+  return data;
+}
+
+export default async function HomePage() {
+  const featuredPropertiesRaw = await getFeaturedProperties();
+
+  // Map API data to UI-friendly format
+  const featuredProperties = featuredPropertiesRaw.map((item) => ({
+    id: item.listing_id,
+    image: item.main_image_url || "/placeholder.svg",
+    title: item.address,
+    location: item.city,
+    price: item.list_price,
+    beds: item.bedrooms ?? "-",
+    baths: item.bathrooms ?? "-",
+    sqft: item.living_area_sqft ?? "-",
+    status: item.property_type,
+    statusColor: "bg-blue-100 text-blue-800", // You can adjust color logic as needed
+    publicRemarks: item.public_remarks,
+  }));
+
   return (
     <main>
       {/* Hero Section with Professional Background */}
@@ -20,7 +52,7 @@ export default function HomePage() {
                 Premier Real Estate
               </Badge>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-slate-900">
-                Find Your Perfect Property
+                Find your dream home in California 
               </h1>
               <p className="text-base md:text-lg text-slate-600 max-w-lg">
                 Explore our curated selection of premium properties in the most desirable locations.
@@ -37,12 +69,7 @@ export default function HomePage() {
                   </div>
                   <span className="text-sm md:text-base text-slate-700">10,000+ Properties</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="bg-slate-200 p-1.5 md:p-2 rounded-full">
-                    <Building className="h-4 w-4 md:h-5 md:w-5 text-slate-700" />
-                  </div>
-                  <span className="text-sm md:text-base text-slate-700">500+ Agents</span>
-                </div>
+              
                 <div className="flex items-center gap-2">
                   <div className="bg-slate-200 p-1.5 md:p-2 rounded-full">
                     <MapPin className="h-4 w-4 md:h-5 md:w-5 text-slate-700" />
@@ -62,18 +89,6 @@ export default function HomePage() {
                     className="object-cover"
                     priority
                   />
-                </div>
-
-                <div className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 bg-white rounded-lg shadow-lg p-3 md:p-4 max-w-[200px] md:max-w-xs">
-                  <div className="flex items-center gap-2 mb-1 md:mb-2">
-                    <div className="bg-green-50 p-1.5 md:p-2 rounded-full">
-                      <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
-                    </div>
-                    <span className="text-xs md:text-sm font-medium text-green-600">Verified Property</span>
-                  </div>
-                  <p className="text-xs md:text-sm text-slate-600">
-                    This property has been verified by our team for quality and authenticity.
-                  </p>
                 </div>
               </div>
             </div>
@@ -101,12 +116,12 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            {featuredProperties.map((property) => (
+            {featuredProperties.map((property: any) => (
               <Link href={`/properties/${property.id}`} key={property.id}>
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
                     <Image
-                      src={property.image || "/placeholder.svg"}
+                      src={property.image?.startsWith('https://api-trestle.corelogic.com') ? "/placeholder.svg" : property.image || "/placeholder.svg"}
                       alt={property.title}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -115,7 +130,7 @@ export default function HomePage() {
                       {property.status}
                     </Badge>
                     <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 bg-white/90 backdrop-blur-sm rounded-md px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm font-medium">
-                      ${property.price.toLocaleString()}
+                      ${property.price?.toLocaleString?.() ?? property.price}
                     </div>
                   </div>
                   <CardContent className="p-3 md:p-5">
@@ -137,9 +152,14 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center">
                         <Maximize className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
-                        <span>{property.sqft.toLocaleString()} Sq Ft</span>
+                        <span>
+                          {property.sqft !== "-" ? `${property.sqft.toLocaleString?.() ?? property.sqft} Sq Ft` : "- Sq Ft"}
+                        </span>
                       </div>
                     </div>
+                    {property.publicRemarks && (
+                      <p className="text-xs text-slate-500 mt-2 line-clamp-2">{property.publicRemarks}</p>
+                    )}
                   </CardContent>
                 </Card>
               </Link>
@@ -263,7 +283,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <p className="text-xs md:text-sm text-slate-400">Call Us</p>
-                    <p className="font-medium text-sm md:text-base">(123) 456-7890</p>
+                    <p className="font-medium text-sm md:text-base">1 858-305-4362</p>
                   </div>
                 </div>
 
@@ -273,7 +293,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <p className="text-xs md:text-sm text-slate-400">Email Us</p>
-                    <p className="font-medium text-sm md:text-base">info@realestate.com</p>
+                    <p className="font-medium text-sm md:text-base">reza@crowncoastal.com</p>
                   </div>
                 </div>
 
@@ -283,7 +303,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <p className="text-xs md:text-sm text-slate-400">Visit Us</p>
-                    <p className="font-medium text-sm md:text-base">123 Main Street, City, State</p>
+                    <p className="font-medium text-sm md:text-base">CA DRE #02211952</p>
                   </div>
                 </div>
               </div>
@@ -295,45 +315,6 @@ export default function HomePage() {
   )
 }
 
-// Sample data
-const featuredProperties = [
-  {
-    id: "1",
-    title: "Modern Luxury Villa with Ocean View",
-    location: "123 Coastal Drive, Malibu, CA",
-    price: 2750000,
-    beds: 4,
-    baths: 3.5,
-    sqft: 3200,
-    image: "/luxury-modern-house-exterior.png",
-    status: "For Sale",
-    statusColor: "bg-green-600 hover:bg-green-700",
-  },
-  {
-    id: "2",
-    title: "Contemporary Beach House",
-    location: "456 Ocean View Dr, Malibu, CA",
-    price: 2450000,
-    beds: 3,
-    baths: 2.5,
-    sqft: 2800,
-    image: "/modern-beach-house.png",
-    status: "For Sale",
-    statusColor: "bg-green-600 hover:bg-green-700",
-  },
-  {
-    id: "3",
-    title: "Luxury Downtown Penthouse",
-    location: "789 Skyline Ave, Los Angeles, CA",
-    price: 12000,
-    beds: 2,
-    baths: 2,
-    sqft: 1800,
-    image: "/modern-ocean-living.png",
-    status: "For Rent",
-    statusColor: "bg-blue-600 hover:bg-blue-700",
-  },
-]
 
 const categories = [
   {

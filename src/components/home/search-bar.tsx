@@ -26,13 +26,6 @@ export default function SearchBar() {
         >
           Rent
         </Button>
-        <Button
-          variant={searchType === "sell" ? "default" : "outline"}
-          onClick={() => setSearchType("sell")}
-          className={`text-xs md:text-sm px-2 md:px-3 py-1 h-auto ${searchType === "sell" ? "bg-slate-800 hover:bg-slate-900" : ""}`}
-        >
-          Sell
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">

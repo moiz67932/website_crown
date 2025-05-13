@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react"
@@ -18,10 +18,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 
-// This would typically come from an API or database
-import { properties } from "./property-data"
-
-export default function PropertiesGrid() {
+export default function PropertiesGrid({ properties }: { properties: any[] }) {
   const [favoriteProperties, setFavoriteProperties] = useState<string[]>([])
 
   const toggleFavorite = (e: React.MouseEvent, propertyId: string) => {
@@ -51,7 +48,7 @@ export default function PropertiesGrid() {
                     {property.status}
                   </Badge>
                   <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 bg-white/90 backdrop-blur-sm rounded-md px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm font-medium">
-                    ${property.price.toLocaleString()}
+                    ${property.price?.toLocaleString?.() ?? property.price}
                   </div>
 
                   {/* Favorite Button */}
@@ -86,7 +83,9 @@ export default function PropertiesGrid() {
                   </div>
                   <div className="flex items-center">
                     <Maximize className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
-                    <span>{property.sqft.toLocaleString()} Sq Ft</span>
+                    <span>
+                      {property.sqft !== "-" ? `${property.sqft.toLocaleString?.() ?? property.sqft} Sq Ft` : "- Sq Ft"}
+                    </span>
                   </div>
                 </div>
               </CardContent>
