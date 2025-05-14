@@ -22,7 +22,7 @@ export default function PropertiesPage() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [totalItems, setTotalItems] = useState(0)
+  // const [totalItems, setTotalItems] = useState(0)
   const limit = 12
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function PropertiesPage() {
         if (isMounted) {
           setProperties(data.listings)
           setTotalPages(data.total_pages)
-          setTotalItems(data.total_items)
+          // setTotalItems(data.total_items)
         }
       } catch (error) {
         console.error(error)
