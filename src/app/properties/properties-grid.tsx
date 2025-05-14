@@ -71,10 +71,10 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
                     variant="ghost"
                     size="icon"
                     className="absolute top-2 right-2 md:top-3 md:right-3 h-8 w-8 rounded-full bg-white/80 hover:bg-white/90 text-slate-700 hover:text-rose-500"
-                    onClick={(e) => toggleFavorite(e, property.id)}
+                    onClick={(e) => toggleFavorite(e, property._id)}
                   >
                     <Heart
-                      className={`h-4 w-4 ${favoriteProperties.includes(property.id) ? "fill-rose-500 text-rose-500" : ""}`}
+                      className={`h-4 w-4 ${favoriteProperties.includes(property._id) ? "fill-rose-500 text-rose-500" : ""}`}
                     />
                   </Button>
                 </div>
