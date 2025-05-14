@@ -148,7 +148,7 @@ export default async function HomePage() {
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
                     <Image
-                      src={property.image?.startsWith('https://api-trestle.corelogic.com') ? "/placeholder.svg" : property.image || "/placeholder.svg"}
+                      src={property.image ? "/placeholder.svg" : property.image || "/placeholder.svg"}
                       alt={property.title}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"

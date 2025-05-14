@@ -1,38 +1,39 @@
 "use client"
-import { Suspense, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import PropertiesGrid from "./properties-grid"
-import FilterSidebar from "./filter-sidebar"
 import PropertyListingHeader from "./property-header"
-import MobileFilterDrawer from "./mobile-filter-drawer"
 import { Skeleton } from "@/components/ui/skeleton"
 
-// export const metadata = {
-//   title: "Properties | Real Estate",
-//   description: "Browse our extensive collection of premium properties",
-// }
+// Dynamically import FilterSidebar and MobileFilterDrawer with SSR disabled
+const FilterSidebar = dynamic(() => import("./filter-sidebar"), { ssr: false })
+const MobileFilterDrawer = dynamic(() => import("./mobile-filter-drawer"), { ssr: false })
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
     async function fetchProperties() {
       try {
-        const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=0&limit=12`);
+        const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=0&limit=12`)
         if (!res.ok) {
-          throw new Error("Failed to fetch properties");
+          throw new Error("Failed to fetch properties")
         }
-        const data = await res.json();
-        setProperties(data.listings);
+        const data = await res.json()
+        if (isMounted) setProperties(data.listings)
       } catch (error) {
-        console.error(error);
+        console.error(error)
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false)
       }
     }
-
-    fetchProperties();
-  }, []);
+    fetchProperties()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   return (
     <main className="bg-slate-50 min-h-screen pt-16 md:pt-20">
@@ -52,9 +53,7 @@ export default function PropertiesPage() {
 
           {/* Properties Grid */}
           <div className="w-full lg:w-3/4 xl:w-4/5">
-            <Suspense fallback={<PropertyGridSkeleton />}>
-              {loading ? <PropertyGridSkeleton /> : <PropertiesGrid properties={properties} />}
-            </Suspense>
+            {loading ? <PropertyGridSkeleton /> : <PropertiesGrid properties={properties} />}
           </div>
         </div>
       </section>
