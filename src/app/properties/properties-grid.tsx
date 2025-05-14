@@ -20,7 +20,7 @@ import {
 
 interface Property {
   id: string
-  image: string
+  main_image: string
   title: string
   status: string
   statusColor: string
@@ -53,7 +53,7 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
               <div className="relative">
                 <div className="relative h-48 sm:h-56 md:h-64">
                   <Image
-                    src={property.image || "/placeholder.svg"}
+                    src={property.main_image || "/placeholder.svg"}
                     alt={property.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"

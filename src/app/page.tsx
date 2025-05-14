@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import SearchBar from "@/components/home/search-bar"
 
 async function getFeaturedProperties() {
-  const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=1&limit=3`, {
+  const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=0&limit=3`, {
     headers: {
       accept: "application/json",
     },
@@ -53,7 +53,7 @@ export default async function HomePage() {
   const featuredPropertiesRaw = await getFeaturedProperties();
 
   // Map API data to UI-friendly format
-  const featuredProperties: Property[] = featuredPropertiesRaw.map((item: ApiProperty) => ({
+  const featuredProperties: Property[] = featuredPropertiesRaw.listings.map((item: ApiProperty) => ({
     id: item.listing_id,
     image: item.main_image_url || "/placeholder.svg",
     title: item.address,
