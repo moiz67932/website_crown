@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/pagination"
 
 interface Property {
-  id: string
+  _id: string
   main_image_url: string
   title: string
   status: string
@@ -49,7 +49,7 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
         {properties.map((property) => (
-          <Link href={`/properties/${property._id}`} key={property.id}>
+          <Link href={`/properties/${property._id}`} key={property._id}>
             <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
               <div className="relative">
                 <div className="relative h-48 sm:h-56 md:h-64">

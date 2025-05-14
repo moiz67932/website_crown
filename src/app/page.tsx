@@ -51,7 +51,7 @@ interface ApiProperty {
 
 export default async function HomePage() {
   const featuredPropertiesRaw = await getFeaturedProperties();
-
+  console.log(featuredPropertiesRaw)
   // Map API data to UI-friendly format
   const featuredProperties: Property[] = featuredPropertiesRaw.listings.map((item: ApiProperty) => ({
     id: item.listing_id,
