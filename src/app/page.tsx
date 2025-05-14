@@ -147,12 +147,16 @@ export default async function HomePage() {
               <Link href={`/properties/${property.id}`} key={property.id}>
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
-                    <Image
+                    {/* <Image
                       src={property.image ? "/placeholder.svg" : property.image || "/placeholder.svg"}
                       alt={property.title}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    /> */}
+                    <img src={property.image}
+                      alt={property.title} className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
+
                     <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
                       {property.status}
                     </Badge>

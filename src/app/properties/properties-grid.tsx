@@ -9,14 +9,14 @@ import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
+// import {
+//   Pagination,
+//   PaginationContent,
+//   PaginationItem,
+//   PaginationLink,
+//   PaginationNext,
+//   PaginationPrevious,
+// } from "@/components/ui/pagination"
 
 interface Property {
   _id: string
@@ -53,11 +53,13 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
             <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
               <div className="relative">
                 <div className="relative h-48 sm:h-56 md:h-64">
-                  <Image
+                  {/* <Image
                     src={property.main_image_url || "/placeholder.svg"}
                     alt={property.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  /> */}
+                  <img src={property.main_image_url} alt={property.title} className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
                     {property.status}
@@ -109,34 +111,7 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
         ))}
       </div>
 
-      {/* Pagination */}
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              1
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">2</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">3</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">4</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">5</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+   
     </div>
   )
 }

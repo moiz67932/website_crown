@@ -4,6 +4,14 @@ import dynamic from "next/dynamic"
 import PropertiesGrid from "./properties-grid"
 import PropertyListingHeader from "./property-header"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 
 // Dynamically import FilterSidebar and MobileFilterDrawer with SSR disabled
 const FilterSidebar = dynamic(() => import("./filter-sidebar"), { ssr: false })
@@ -12,17 +20,26 @@ const MobileFilterDrawer = dynamic(() => import("./mobile-filter-drawer"), { ssr
 export default function PropertiesPage() {
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const limit = 12
 
   useEffect(() => {
     let isMounted = true
     async function fetchProperties() {
       try {
-        const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=0&limit=12`)
+        const skip = (currentPage - 1) * limit
+        const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=${skip}&limit=${limit}`)
         if (!res.ok) {
           throw new Error("Failed to fetch properties")
         }
         const data = await res.json()
-        if (isMounted) setProperties(data.listings)
+        if (isMounted) {
+          setProperties(data.listings)
+          setTotalPages(data.total_pages)
+          setTotalItems(data.total_items)
+        }
       } catch (error) {
         console.error(error)
       } finally {
@@ -33,7 +50,12 @@ export default function PropertiesPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [currentPage])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    setLoading(true)
+  }
 
   return (
     <main className="bg-slate-50 min-h-screen pt-16 md:pt-20">
@@ -54,6 +76,60 @@ export default function PropertiesPage() {
           {/* Properties Grid */}
           <div className="w-full lg:w-3/4 xl:w-4/5">
             {loading ? <PropertyGridSkeleton /> : <PropertiesGrid properties={properties} />}
+            
+            {/* Pagination */}
+            {!loading && totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    
+                    {[...Array(totalPages)].map((_, i) => {
+                      const page = i + 1
+                      // Show first page, last page, current page, and pages around current page
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(page)}
+                              isActive={currentPage === page}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return (
+                          <PaginationItem key={page}>
+                            <span className="px-4">...</span>
+                          </PaginationItem>
+                        )
+                      }
+                      return null
+                    })}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         </div>
       </section>
