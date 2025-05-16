@@ -153,7 +153,7 @@ export default async function HomePage() {
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     /> */}
-                    <img src={property.image}
+                    <img src={"http://34.133.70.161:8000/proxy-image?url=" + property.image}
                       alt={property.title} className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
