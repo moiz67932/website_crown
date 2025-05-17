@@ -9,14 +9,6 @@ import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-// import {
-//   Pagination,
-//   PaginationContent,
-//   PaginationItem,
-//   PaginationLink,
-//   PaginationNext,
-//   PaginationPrevious,
-// } from "@/components/ui/pagination"
 
 interface Property {
   _id: string
@@ -27,7 +19,7 @@ interface Property {
   list_price: number
   bedrooms: number
   bathrooms: number
-  sqft: number | string
+  living_area_sqft: number | string
   city: string
   address: string
 }
@@ -101,7 +93,7 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
                   <div className="flex items-center">
                     <Maximize className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
                     <span>
-                      {property.sqft !== "-" ? `${property?.sqft?.toLocaleString?.() ?? property.sqft} Sq Ft` : "- Sq Ft"}
+                      {property.living_area_sqft !== "-" ? `${property?.living_area_sqft?.toLocaleString?.() ?? property.living_area_sqft} Sq Ft` : "- Sq Ft"}
                     </span>
                   </div>
                 </div>
