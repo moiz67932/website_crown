@@ -45,12 +45,6 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
             <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
               <div className="relative">
                 <div className="relative h-48 sm:h-56 md:h-64">
-                  {/* <Image
-                    src={property.main_image_url || "/placeholder.svg"}
-                    alt={property.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  /> */}
                   <img src={"http://34.133.70.161:8000/proxy-image?url=" + property.main_image_url} alt={property.title} className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
