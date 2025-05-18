@@ -42,7 +42,6 @@ export default function Navbar() {
         { name: "Land", href: "/properties?category=land" },
       ],
     },
-    { name: "Agents", href: "/agents" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ]
