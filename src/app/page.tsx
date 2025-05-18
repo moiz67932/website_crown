@@ -150,12 +150,9 @@ export default async function HomePage() {
               <Link href={`/properties/${property.listing_key}`} key={property.listing_key}>
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
-                    <Image
-                      src={property.image ? "/placeholder.svg" : "http://34.133.70.161:8000/proxy-image?url=" + property.image || "/placeholder.svg"}
-                      alt={property.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                  <img src={"http://34.133.70.161:8000/proxy-image?url=" + property.image} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  />
+                    
                     <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
                       {property.status}
                     </Badge>
