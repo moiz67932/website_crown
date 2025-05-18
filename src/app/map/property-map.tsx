@@ -420,6 +420,7 @@ export default function PropertyMap({ filteredPropertyIds }: PropertyMapProps) {
           const isInSearchArea = propertiesInSearchArea.includes(property.id)
           const isFiltered = filteredPropertyIds ? filteredPropertyIds.includes(property.id) : true
           const shouldShow = (!hasSearchArea || isInSearchArea) && isFiltered
+          // const shouldShow = true
           const isSelected = selectedProperty === property.id
           const isHovered = hoveredProperty === property.id
 

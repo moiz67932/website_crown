@@ -25,6 +25,8 @@ async function getFeaturedProperties() {
 interface Property {
   id: string;
   image: string;
+  listing_key: string;
+
   title: string;
   location: string;
   price: number;
@@ -38,6 +40,7 @@ interface Property {
 
 interface ApiProperty {
   listing_id: string;
+  listing_key: string;
   main_image_url: string;
   address: string;
   city: string;
@@ -54,6 +57,7 @@ export default async function HomePage() {
   // Map API data to UI-friendly format
   const featuredProperties: Property[] = featuredPropertiesRaw.listings.map((item: ApiProperty) => ({
     id: item.listing_id,
+    listing_key: item.listing_key,
     image: item.main_image_url || "/placeholder.svg",
     title: item.address,
     location: item.city,
@@ -143,7 +147,7 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {featuredProperties.map((property) => (
-              <Link href={`/properties/${property.id}`} key={property.id}>
+              <Link href={`/properties/${property.listing_key}`} key={property.listing_key}>
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
                     <Image

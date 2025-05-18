@@ -22,7 +22,7 @@ export default function PropertiesPage() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  // const [totalItems, setTotalItems] = useState(0)
+  const [totalItems, setTotalItems] = useState(0)
   const limit = 12
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function PropertiesPage() {
         if (isMounted) {
           setProperties(data.listings)
           setTotalPages(data.total_pages)
-          // setTotalItems(data.total_items)
+          setTotalItems(data.total_items)
         }
       } catch (error) {
         console.error(error)
@@ -59,7 +59,7 @@ export default function PropertiesPage() {
 
   return (
     <main className="bg-slate-50 min-h-screen pt-16 md:pt-20">
-      <PropertyListingHeader />
+      <PropertyListingHeader currentPage={currentPage} totalPages={totalPages} totalProperties={totalItems} />
 
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

@@ -29,13 +29,17 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
     <div className="relative">
       {/* Main Gallery View */}
       <div className="relative h-[400px] md:h-[500px] rounded-xl overflow-hidden">
-        <Image
-          src={images[currentIndex] || "/placeholder.svg"}
-          alt={`Property image ${currentIndex + 1}`}
-          fill
-          className="object-cover"
-          priority
-        />
+        {images[currentIndex] ? (
+          <img
+            src={images[currentIndex]}
+            alt={`Property image ${currentIndex + 1}`}
+            className="object-cover w-full h-full"
+          />
+        ) : (
+          <div className="flex items-center justify-center w-full h-full bg-gray-200">
+            <span className="text-gray-500">Image not available</span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-black/10"></div>
 
         {/* Navigation Buttons */}
@@ -70,10 +74,9 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
           </DialogTrigger>
           <DialogContent className="max-w-5xl">
             <div className="relative h-[80vh]">
-              <Image
+              <img
                 src={images[currentIndex] || "/placeholder.svg"}
                 alt={`Property image ${currentIndex + 1}`}
-                fill
                 className="object-contain"
               />
             </div>
@@ -96,10 +99,9 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
               index === currentIndex ? "ring-2 ring-primary" : "opacity-70"
             }`}
           >
-            <Image
+            <img
               src={image || "/placeholder.svg"}
               alt={`Property thumbnail ${index + 1}`}
-              fill
               className="object-cover"
             />
           </button>

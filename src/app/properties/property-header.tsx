@@ -2,7 +2,15 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { GridIcon, LayoutList } from "lucide-react"
 
-export default function PropertyListingHeader() {
+interface IPropertyListingHeaderProps {
+  totalProperties: number
+  totalPages: number
+  currentPage: number
+}
+
+export default function PropertyListingHeader({ totalProperties, totalPages, currentPage }: IPropertyListingHeaderProps) {
+  const startIndex = (currentPage - 1) * 12 + 1
+  const endIndex = Math.min(startIndex + 11, totalProperties)
   return (
     <div className="bg-white border-b border-slate-200">
       <div className="container mx-auto px-4 py-6 md:py-8">
@@ -15,7 +23,7 @@ export default function PropertyListingHeader() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center text-sm text-slate-600">
               <span>
-                Showing <strong>1-12</strong> of <strong>248</strong> properties
+                Showing <strong>{startIndex}-{endIndex}</strong> of <strong>{totalProperties}</strong> properties
               </span>
             </div>
 

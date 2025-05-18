@@ -80,11 +80,11 @@ export default function ContactForm({ agentEmail, propertyId }: ContactFormProps
       <div className="flex flex-col gap-2 mt-4">
         <div className="flex items-center text-sm">
           <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>Call: (310) 555-1234</span>
+          <span>Call: 1 858-305-4362</span>
         </div>
         <div className="flex items-center text-sm">
           <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>Email: {agentEmail}</span>
+          <span>Email: reza@crowncoastal.com</span>
         </div>
         <div className="flex items-center text-sm">
           <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
