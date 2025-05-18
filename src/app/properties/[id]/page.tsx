@@ -3,6 +3,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { MapPin, Bed, Bath, Maximize, Calendar, Heart, Share2, ArrowRight } from "lucide-react"
 import Script from "next/script"
+import React, { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,7 +16,6 @@ import ContactForm from "./contact-form"
 import SimilarProperties from "./similar-properties"
 import StreetViewButton from "./street-view-button"
 import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
-import React from "react"
 
 
 
@@ -55,6 +55,7 @@ import React from "react"
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params)
   const { data: property , isLoading, isError} = usePropertyDetail(unwrappedParams.id)
+  const [drawnShape, setDrawnShape] = useState<any>(null) // eslint-disable-line @typescript-eslint/no-explicit-any
   // Structured data for real estate listing (JSON-LD)
   const structuredData = {
     "@context": "https://schema.org",
@@ -387,7 +388,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     <h3 className="font-semibold">Contact the Crown Coastal Team</h3>
                   </div>
                   <Separator className="my-4" />
-                  <ContactForm agentEmail={property?.list_agent_email ?? ''} propertyId={property?._id ?? ''} />
+                  <ContactForm propertyId={property?._id ?? ''} />
                 </CardContent>
               </Card>
               <Card>

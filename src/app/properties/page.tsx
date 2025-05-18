@@ -59,7 +59,7 @@ export default function PropertiesPage() {
 
   return (
     <main className="bg-slate-50 min-h-screen pt-16 md:pt-20">
-      <PropertyListingHeader currentPage={currentPage} totalPages={totalPages} totalProperties={totalItems} />
+      <PropertyListingHeader currentPage={currentPage} totalProperties={totalItems} />
 
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

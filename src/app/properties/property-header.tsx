@@ -4,11 +4,10 @@ import { GridIcon, LayoutList } from "lucide-react"
 
 interface IPropertyListingHeaderProps {
   totalProperties: number
-  totalPages: number
   currentPage: number
 }
 
-export default function PropertyListingHeader({ totalProperties, totalPages, currentPage }: IPropertyListingHeaderProps) {
+export default function PropertyListingHeader({ totalProperties, currentPage }: IPropertyListingHeaderProps) {
   const startIndex = (currentPage - 1) * 12 + 1
   const endIndex = Math.min(startIndex + 11, totalProperties)
   return (

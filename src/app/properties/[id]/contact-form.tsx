@@ -11,14 +11,13 @@ import { Label } from "@/components/ui/label"
 import { Phone, Mail, Calendar } from "lucide-react"
 
 interface ContactFormProps {
-  agentEmail: string
   propertyId: string
 }
 
-export default function ContactForm({ agentEmail, propertyId }: ContactFormProps) {
+export default function ContactForm({ propertyId }: ContactFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
