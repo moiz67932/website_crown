@@ -1,14 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { FormEvent, useState } from "react"
 import { Search, MapPin, Home, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useRouter } from "next/navigation"
 
 export default function SearchBar() {
   const [searchType, setSearchType] = useState("buy")
+  const [location, setLocation] = useState("")
+  const [propertyType, setPropertyType] = useState("any")
+  const [priceRange, setPriceRange] = useState("any")
+  const router = useRouter()
 
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault()
+
+    // Build query parameters
+    const params = new URLSearchParams()
+
+    if (location) {
+      params.append("location", location)
+    }
+
+    if (propertyType !== "any") {
+      params.append("propertyType", propertyType)
+    }
+
+    if (priceRange !== "any") {
+      params.append("priceRange", priceRange)
+    }
+
+    // Redirect to map page with search parameters
+    // router.push(`/map?${params.toString()}`)
+  }
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-3 md:p-4 w-full max-w-4xl">
       <div className="flex gap-2 mb-3 md:mb-4">
@@ -29,13 +55,22 @@ export default function SearchBar() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-        <div className="sm:col-span-2">
+      <div className="sm:col-span-2">
           <div className="flex items-center border rounded-md px-2 md:px-3 py-1.5 md:py-2 bg-slate-50 focus-within:ring-1 focus-within:ring-slate-400 focus-within:border-slate-400">
             <MapPin className="h-4 w-4 text-slate-400" />
             <Input
               type="text"
               placeholder="Enter location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
               className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 text-sm h-7 md:h-8"
+              aria-label="Search location"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  handleSearch(e)
+                }
+              }}
             />
           </div>
         </div>

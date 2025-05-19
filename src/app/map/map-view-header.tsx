@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, SlidersHorizontal, X, ChevronDown, ChevronUp } from "lucide-react"
+import { ArrowLeft, SlidersHorizontal, X, ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import MapFilterSidebar from "./map-filter-sidebar"
@@ -24,9 +24,15 @@ interface MapViewHeaderProps {
   activeFilters?: FilterValues
   onFilterChange?: (filters: FilterValues) => void
   onClearFilters?: () => void
+  onToggleFAQ?: () => void
 }
 
-export default function MapViewHeader({ activeFilters, onFilterChange, onClearFilters }: MapViewHeaderProps) {
+export default function MapViewHeader({
+  activeFilters,
+  onFilterChange,
+  onClearFilters,
+  onToggleFAQ,
+}: MapViewHeaderProps) {
   const [open, setOpen] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
@@ -92,6 +98,14 @@ export default function MapViewHeader({ activeFilters, onFilterChange, onClearFi
         </div>
 
         <div className="flex items-center gap-2">
+          {/* FAQ Button */}
+          {onToggleFAQ && (
+            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={onToggleFAQ}>
+              <HelpCircle className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Help & FAQ</span>
+            </Button>
+          )}
+
           {/* Desktop Filter Button */}
           {!isMobile && (
             <Sheet open={open} onOpenChange={setOpen}>

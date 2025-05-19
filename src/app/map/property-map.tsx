@@ -56,13 +56,65 @@ const createCustomIcon = (price: number, status: string, propertyType: string, i
   })
 }
 
-// Component to recenter map when properties change
-function MapController({ center }: { center: [number, number] }) {
+// Component to handle map location updates
+function MapLocationController({
+  center,
+  locationQuery,
+}: {
+  center: [number, number]
+  locationQuery: string | null
+}) {
   const map = useMap()
 
+  // Set initial center
   useEffect(() => {
     map.setView(center, map.getZoom())
   }, [center, map])
+
+  // Handle location query if provided
+  useEffect(() => {
+    if (!locationQuery) return
+
+    // Simple geocoding simulation - in a real app, use a geocoding service
+    const searchLocation = async () => {
+      try {
+        console.log(`Searching for location: ${locationQuery}`)
+
+        // This is a simplified example - in a real app, use a proper geocoding service
+        // For demo purposes, we'll set different locations based on common searches
+        let searchCenter: [number, number] = [34.0522, -118.2437] // Default to Los Angeles
+
+        // Simple location matching for demo purposes
+        if (locationQuery.toLowerCase().includes("new york")) {
+          searchCenter = [40.7128, -74.006]
+        } else if (locationQuery.toLowerCase().includes("chicago")) {
+          searchCenter = [41.8781, -87.6298]
+        } else if (locationQuery.toLowerCase().includes("miami")) {
+          searchCenter = [25.7617, -80.1918]
+        } else if (locationQuery.toLowerCase().includes("san francisco")) {
+          searchCenter = [37.7749, -122.4194]
+        } else if (locationQuery.toLowerCase().includes("seattle")) {
+          searchCenter = [47.6062, -122.3321]
+        }
+
+        // Zoom to the location
+        map.setView(searchCenter, 12)
+
+        // Add a temporary marker
+        const marker = L.marker(searchCenter).addTo(map)
+        marker.bindPopup(`<b>Showing results for:</b><br>${locationQuery}`).openPopup()
+
+        // Remove marker after 5 seconds
+        setTimeout(() => {
+          map.removeLayer(marker)
+        }, 5000)
+      } catch (error) {
+        console.error("Error searching location:", error)
+      }
+    }
+
+    searchLocation()
+  }, [locationQuery, map])
 
   return null
 }
@@ -79,9 +131,10 @@ function formatDistance(meters: number): string {
 
 interface PropertyMapProps {
   filteredPropertyIds?: string[]
+  initialLocationQuery?: string | null
 }
 
-export default function PropertyMap({ filteredPropertyIds }: PropertyMapProps) {
+export default function PropertyMap({ filteredPropertyIds, initialLocationQuery = null }: PropertyMapProps) {
   const router = useRouter()
 
   // Calculate center of all properties
@@ -93,7 +146,6 @@ export default function PropertyMap({ filteredPropertyIds }: PropertyMapProps) {
 
     const avgLat = lats.reduce((sum, lat) => sum + lat, 0) / lats.length
     const avgLng = lngs.reduce((sum, lng) => sum + lng, 0) / lngs.length
-
 
     return [avgLat, avgLng]
   }, [])
@@ -379,7 +431,7 @@ export default function PropertyMap({ filteredPropertyIds }: PropertyMapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <ZoomControl position="bottomright" />
-        <MapController center={center} />
+        <MapLocationController center={center} locationQuery={initialLocationQuery} />
 
         {/* Drawing Controls */}
         <FeatureGroup ref={featureGroupRef}>
@@ -420,7 +472,6 @@ export default function PropertyMap({ filteredPropertyIds }: PropertyMapProps) {
           const isInSearchArea = propertiesInSearchArea.includes(property.id)
           const isFiltered = filteredPropertyIds ? filteredPropertyIds.includes(property.id) : true
           const shouldShow = (!hasSearchArea || isInSearchArea) && isFiltered
-          // const shouldShow = true
           const isSelected = selectedProperty === property.id
           const isHovered = hoveredProperty === property.id
 
@@ -452,9 +503,7 @@ export default function PropertyMap({ filteredPropertyIds }: PropertyMapProps) {
                 className="property-popup"
                 closeButton={true}
                 closeOnClick={false}
-                // onClose={() => {
-                //   setSelectedProperty(null);
-                // }}
+                // onClose={() => setSelectedProperty(null)}
                 maxWidth={300}
               >
                 <div className="property-popup-content w-64">

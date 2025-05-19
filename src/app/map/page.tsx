@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
 import { Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import MapViewHeader, { type FilterValues } from "./map-view-header"
 import MapFilterDrawer from "./map-filter-drawer"
 import MapListToggle from "./map-list-toggle"
 import PropertyListPanel from "./property-list-panel"
 import MapLoadingSkeleton from "./map-loading-skeleton"
+import MapFAQ from "./map-faq"
 import { properties } from "../properties/property-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import "@/styles/map-styles.css"
@@ -22,8 +24,13 @@ const PropertyMap = dynamic(() => import("./property-map"), {
 export default function MapViewPage() {
   const [activeFilters, setActiveFilters] = useState<FilterValues>({})
   const [filteredPropertyIds, setFilteredPropertyIds] = useState<string[]>([])
+  const [showFAQ, setShowFAQ] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
+  // const searchParams = useSearchParams()
 
+  // Get location from search params
+  // const locationQuery = searchParams.get("location")
+  const locationQuery = "California"
   // Filter properties based on active filters
   useEffect(() => {
     if (Object.keys(activeFilters).length === 0) {
@@ -93,19 +100,24 @@ export default function MapViewPage() {
     setFilteredPropertyIds([])
   }
 
+  const toggleFAQ = () => {
+    setShowFAQ(!showFAQ)
+  }
+
   return (
     <main className="pt-16 h-screen flex flex-col">
       <MapViewHeader
         activeFilters={activeFilters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
+        onToggleFAQ={toggleFAQ}
       />
 
       <div className="flex-1 flex flex-col md:flex-row relative">
         {/* Map Container */}
         <div className="flex-1 relative">
           <Suspense fallback={<MapLoadingSkeleton />}>
-            <PropertyMap filteredPropertyIds={filteredPropertyIds} />
+            <PropertyMap filteredPropertyIds={filteredPropertyIds} initialLocationQuery={locationQuery} />
           </Suspense>
 
           {/* Mobile Filter Drawer - Only visible on mobile */}
@@ -128,6 +140,15 @@ export default function MapViewPage() {
           <PropertyListPanel filteredPropertyIds={filteredPropertyIds} />
         </div>
       </div>
+
+      {/* FAQ Section */}
+      {showFAQ && (
+        <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <MapFAQ onClose={toggleFAQ} />
+          </div>
+        </div>
+      )}
     </main>
   )
 }

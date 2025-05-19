@@ -10,9 +10,58 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Home, Building, MapPin, Wifi, Car, Waves, Trees, Utensils, Dumbbell } from "lucide-react"
 
-export default function FilterSidebar() {
-  const [priceRange, setPriceRange] = useState([0, 5000000])
+interface FilterSidebarProps {
+  filters: {
+    propertyType: string;
+    minPrice: number | undefined;
+    maxPrice: number | undefined;
+    city: string;
+  };
+  onFilterChange: (filters: {
+    propertyType: string;
+    minPrice: number | undefined;
+    maxPrice: number | undefined;
+    city: string;
+  }) => void;
+}
+
+export default function FilterSidebar({ filters, onFilterChange }: FilterSidebarProps) {
+  const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 5000000])
   const [areaRange, setAreaRange] = useState([0, 10000])
+
+  const handlePriceChange = (newRange: number[]) => {
+    setPriceRange(newRange)
+    onFilterChange({
+      ...filters,
+      minPrice: newRange[0],
+      maxPrice: newRange[1]
+    })
+  }
+
+  const handlePropertyTypeSelect = (type: string) => {
+    onFilterChange({
+      ...filters,
+      propertyType: type
+    })
+  }
+
+  const handleCitySelect = (city: string) => {
+    onFilterChange({
+      ...filters,
+      city
+    })
+  }
+
+  const handleReset = () => {
+    setPriceRange([0, 5000000])
+    setAreaRange([0, 10000])
+    onFilterChange({
+      propertyType: "",
+      minPrice: undefined,
+      maxPrice: undefined,
+      city: ""
+    })
+  }
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden sticky top-24">
@@ -28,23 +77,38 @@ export default function FilterSidebar() {
             <AccordionTrigger className="text-base font-medium">Property Type</AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-2 gap-2 pt-2">
-                <div className="flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer">
+                <div 
+                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Residential' ? 'bg-slate-50 border-slate-300' : ''}`}
+                  onClick={() => handlePropertyTypeSelect('Residential')}
+                >
                   <Home className="h-5 w-5 text-slate-600" />
                   <span className="text-xs text-center">Houses</span>
                 </div>
-                <div className="flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer">
+                <div 
+                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Farm' ? 'bg-slate-50 border-slate-300' : ''}`}
+                  onClick={() => handlePropertyTypeSelect('Farm')}
+                >
                   <Building className="h-5 w-5 text-slate-600" />
-                  <span className="text-xs text-center">Apartments</span>
+                  <span className="text-xs text-center">Farm</span>
                 </div>
-                <div className="flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer">
+                <div 
+                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Warehouse' ? 'bg-slate-50 border-slate-300' : ''}`}
+                  onClick={() => handlePropertyTypeSelect('Warehouse')}
+                >
                   <Home className="h-5 w-5 text-slate-600" />
-                  <span className="text-xs text-center">Villas</span>
+                  <span className="text-xs text-center">Ware house</span>
                 </div>
-                <div className="flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer">
+                <div 
+                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'CommercialSale' ? 'bg-slate-50 border-slate-300' : ''}`}
+                  onClick={() => handlePropertyTypeSelect('CommercialSale')}
+                >
                   <Building className="h-5 w-5 text-slate-600" />
                   <span className="text-xs text-center">Commercial</span>
                 </div>
-                <div className="flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer">
+                <div 
+                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Land' ? 'bg-slate-50 border-slate-300' : ''}`}
+                  onClick={() => handlePropertyTypeSelect('Land')}
+                >
                   <MapPin className="h-5 w-5 text-slate-600" />
                   <span className="text-xs text-center">Land</span>
                 </div>
@@ -89,7 +153,7 @@ export default function FilterSidebar() {
                   min={0}
                   max={5000000}
                   step={50000}
-                  onValueChange={setPriceRange}
+                  onValueChange={handlePriceChange}
                   className="py-4"
                 />
                 <div className="flex items-center justify-between gap-4">
@@ -103,7 +167,7 @@ export default function FilterSidebar() {
                         id="price-min"
                         type="number"
                         value={priceRange[0]}
-                        onChange={(e) => setPriceRange([Number.parseInt(e.target.value), priceRange[1]])}
+                        onChange={(e) => handlePriceChange([Number.parseInt(e.target.value), priceRange[1]])}
                         className="pl-7"
                       />
                     </div>
@@ -118,7 +182,7 @@ export default function FilterSidebar() {
                         id="price-max"
                         type="number"
                         value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], Number.parseInt(e.target.value)])}
+                        onChange={(e) => handlePriceChange([priceRange[0], Number.parseInt(e.target.value)])}
                         className="pl-7"
                       />
                     </div>
@@ -204,7 +268,7 @@ export default function FilterSidebar() {
             <AccordionTrigger className="text-base font-medium">Location</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-3 pt-2">
-                <Select>
+                <Select value={filters.city} onValueChange={handleCitySelect}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select City" />
                   </SelectTrigger>
@@ -318,7 +382,7 @@ export default function FilterSidebar() {
       <div className="p-4 border-t border-slate-200 bg-slate-50">
         <div className="flex gap-2">
           <Button className="w-full bg-slate-800 hover:bg-slate-900">Apply Filters</Button>
-          <Button variant="outline" className="flex-shrink-0">
+          <Button variant="outline" className="flex-shrink-0" onClick={handleReset}>
             Reset
           </Button>
         </div>

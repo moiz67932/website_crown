@@ -16,6 +16,8 @@ import ContactForm from "./contact-form"
 import SimilarProperties from "./similar-properties"
 import StreetViewButton from "./street-view-button"
 import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
+import PropertyFAQ from "./property-faq"
+import MortgageCalculatorModal from "./mortage-calculator-modal"
 
 
 
@@ -51,10 +53,49 @@ import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
 //     },
 //     keywords: `luxury real estate, ${property?.property_type.toLowerCase()}, ${property?.subdivision_name || "Unknown Subdivision"}, ${property?.city || "Unknown City"}, ocean view property, luxury villa`,
 //   }
+
 // }
+
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params)
   const { data: property , isLoading, isError} = usePropertyDetail(unwrappedParams.id)
+  const faqs = [
+    {
+      question: "What are the HOA fees for this property?",
+      answer:
+        "The HOA fees for this luxury villa are $850 per month. These fees cover maintenance of common areas, security services, and access to community amenities including the private beach club, tennis courts, and community pool.",
+    },
+    {
+      question: "Is this property in a flood zone?",
+      answer:
+        "No, this property is not located in a designated flood zone. It sits on an elevated portion of the coastline, approximately 45 feet above sea level, providing both safety from flooding and exceptional ocean views.",
+    },
+    {
+      question: "What schools are assigned to this property?",
+      answer:
+        "This property is served by the highly-rated Malibu Unified School District. The assigned schools are Malibu Elementary School (0.8 miles away), Malibu Middle School (1.2 miles away), and Malibu High School (1.5 miles away). All schools have received excellent ratings for academic performance.",
+    },
+    {
+      question: "Are there any upcoming special assessments?",
+      answer:
+        "There are no pending or approved special assessments for this property or the community at this time. The HOA maintains a healthy reserve fund for future maintenance and improvements.",
+    },
+    {
+      question: "What energy-efficient features does this home have?",
+      answer:
+        "This modern villa includes numerous energy-efficient features: solar panels that offset approximately 80% of electricity usage, a smart home system with energy management capabilities, high-efficiency HVAC systems, LED lighting throughout, energy-efficient appliances, and double-paned windows with UV protection.",
+    },
+    {
+      question: "Is the property furnished?",
+      answer:
+        "The property is being sold unfurnished, but the current owner is open to negotiating the sale of select furniture pieces. The custom-built kitchen appliances, window treatments, and built-in entertainment systems are included in the sale.",
+    },
+    {
+      question: "What is the property tax rate?",
+      answer:
+        "The current property tax rate is approximately 1.25% of the assessed value. The most recent annual property tax was $32,500, but please note that the property may be reassessed upon sale according to California law.",
+    },
+  ];
   const [drawnShape, setDrawnShape] = useState<any>(null) // eslint-disable-line @typescript-eslint/no-explicit-any
   // Structured data for real estate listing (JSON-LD)
   const structuredData = {
@@ -320,6 +361,11 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                           <p className="font-medium">2-Car Garage</p>
                         </div>
                       </div>
+                      <PropertyFAQ
+                        faqs={faqs}
+                        propertyType={property.property_type}
+                        propertyAddress={property.address}
+                      />
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -338,6 +384,17 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                       </div>
                     </CardContent>
                   </Card> */}
+                </TabsContent>
+                <TabsContent value="faq" className="space-y-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <PropertyFAQ
+                        faqs={faqs}
+                        propertyType={property.property_type}
+                        propertyAddress={property.address}
+                      />
+                    </CardContent>
+                  </Card>
                 </TabsContent>
 
                 <TabsContent value="location">
@@ -397,24 +454,31 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Home Price</p>
-                      <div className="font-medium">${property?.list_price.toLocaleString()}</div>
+                      <div className="font-medium">${property.list_price.toLocaleString()}</div>
                     </div>
-                    {/* <div>
+                    <div>
                       <p className="text-sm text-muted-foreground mb-1">Down Payment (20%)</p>
-                      <div className="font-medium">${(property?.list_price * 0.2).toLocaleString()}</div>
+                      <div className="font-medium">${(property.list_price * 0.2).toLocaleString()}</div>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
-                      <div className="font-medium">${(property?.list_price * 0.8).toLocaleString()}</div>
+                      <div className="font-medium">${(property.list_price * 0.8).toLocaleString()}</div>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Estimated Monthly Payment</p>
-                      <div className="font-medium">${Math.round(property?.list_price / 360).toLocaleString()}/month</div>
-                    </div> */}
-                    <Button className="w-full">Full Calculator</Button>
+                      <div className="font-medium">${Math.round(property.list_price / 360).toLocaleString()}/month</div>
+                    </div>
+                    <MortgageCalculatorModal
+                      propertyPrice={property.list_price}
+                      propertyTaxRate={0.0125}
+                      insuranceRate={0.0035}
+                      hoaFees={0.05}
+                      buttonText="Full Calculator"
+                    />
                   </div>
                 </CardContent>
               </Card>
+
 
               {/* Listing Agent Information - Subtle Version */}
               <div className="mt-6 border border-gray-100 rounded-lg bg-gray-50/50 p-4">

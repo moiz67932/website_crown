@@ -8,6 +8,16 @@ import FilterSidebar from "./filter-sidebar"
 
 export default function MobileFilterDrawer() {
   const [open, setOpen] = useState(false)
+  const [filters, setFilters] = useState({
+    propertyType: "",
+    minPrice: undefined as number | undefined,
+    maxPrice: undefined as number | undefined,
+    city: "",
+  })
+
+  const handleFilterChange = (newFilters: typeof filters) => {
+    setFilters(newFilters)
+  }
 
   return (
     <div className="mb-4">
@@ -28,7 +38,7 @@ export default function MobileFilterDrawer() {
             </div>
           </SheetHeader>
           <div className="overflow-y-auto h-[calc(100vh-5rem)]">
-            <FilterSidebar />
+            <FilterSidebar filters={filters} onFilterChange={handleFilterChange} />
           </div>
         </SheetContent>
       </Sheet>

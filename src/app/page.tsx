@@ -1,3 +1,4 @@
+"use client"
 import Image from "next/image"
 import Link from "next/link"
 import { Home, Building, MapPin, Bed, Bath, Maximize, ArrowRight, Star, Phone, Mail } from "lucide-react"
@@ -6,21 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import SearchBar from "@/components/home/search-bar"
-
-async function getFeaturedProperties() {
-  const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=0&limit=3`, {
-    headers: {
-      accept: "application/json",
-    },
-    // cache: "no-store", // Uncomment if you want to always fetch fresh data
-    next: { revalidate: 60 }, // ISR: revalidate every 60s, adjust as needed
-  });
-  if (!res.ok) {
-    throw new Error("Failed to fetch featured properties");
-  }
-  const data = await res.json();
-  return data;
-}
+import useListProperties from "@/hooks/queries/useGetListProperties";
+import Loading from "@/components/shared/loading"
 
 interface Property {
   id: string;
@@ -38,24 +26,16 @@ interface Property {
   publicRemarks: string;
 }
 
-interface ApiProperty {
-  listing_id: string;
-  listing_key: string;
-  main_image_url: string;
-  address: string;
-  city: string;
-  list_price: number;
-  bedrooms: string | number;
-  bathrooms: string | number;
-  living_area_sqft: string | number;
-  property_type: string;
-  public_remarks: string;
-}
+export default function HomePage() {
+  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 3 });
 
-export default async function HomePage() {
-  const featuredPropertiesRaw = await getFeaturedProperties();
+
+  if (!featuredPropertiesRaw) {
+    return <Loading />;
+  }
+
   // Map API data to UI-friendly format
-  const featuredProperties: Property[] = featuredPropertiesRaw.listings.map((item: ApiProperty) => ({
+  const featuredProperties: Property[] = featuredPropertiesRaw.listings.map((item: any) => ({
     id: item.listing_id,
     listing_key: item.listing_key,
     image: item.main_image_url || "/placeholder.svg",
@@ -222,7 +202,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
+x
       {/* Testimonials Section */}
       <section className="py-10 md:py-16 bg-white">
         <div className="container mx-auto px-4">

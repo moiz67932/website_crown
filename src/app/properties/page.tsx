@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import dynamic from "next/dynamic"
 import PropertiesGrid from "./properties-grid"
 import PropertyListingHeader from "./property-header"
@@ -12,49 +12,43 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import useListProperties from "@/hooks/queries/useGetListProperties"
 
 // Dynamically import FilterSidebar and MobileFilterDrawer with SSR disabled
 const FilterSidebar = dynamic(() => import("./filter-sidebar"), { ssr: false })
 const MobileFilterDrawer = dynamic(() => import("./mobile-filter-drawer"), { ssr: false })
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState([])
-  const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalItems, setTotalItems] = useState(0)
+  const [filters, setFilters] = useState({
+    propertyType: "",
+    minPrice: undefined as number | undefined,
+    maxPrice: undefined as number | undefined,
+    city: "",
+  })
   const limit = 12
+  const skip = (currentPage - 1) * limit
 
-  useEffect(() => {
-    let isMounted = true
-    async function fetchProperties() {
-      try {
-        const skip = (currentPage - 1) * limit
-        const res = await fetch(`http://34.133.70.161:8000/api/listings?skip=${skip}&limit=${limit}`)
-        if (!res.ok) {
-          throw new Error("Failed to fetch properties")
-        }
-        const data = await res.json()
-        if (isMounted) {
-          setProperties(data.listings)
-          setTotalPages(data.total_pages)
-          setTotalItems(data.total_items)
-        }
-      } catch (error) {
-        console.error(error)
-      } finally {
-        if (isMounted) setLoading(false)
-      }
-    }
-    fetchProperties()
-    return () => {
-      isMounted = false
-    }
-  }, [currentPage])
+  const { data, isLoading } = useListProperties({ 
+    skip, 
+    limit,
+    propertyType: filters.propertyType,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
+    city: filters.city
+  })
+
+  const properties = data?.listings || []
+  const totalPages = data?.total_pages || 1
+  const totalItems = data?.total_items || 0
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
-    setLoading(true)
+  }
+
+  const handleFilterChange = (newFilters: typeof filters) => {
+    setFilters(newFilters)
+    setCurrentPage(1) // Reset to first page when filters change
   }
 
   return (
@@ -65,20 +59,20 @@ export default function PropertiesPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Desktop Filter Sidebar */}
           <div className="hidden lg:block w-full lg:w-1/4 xl:w-1/5">
-            <FilterSidebar />
+            <FilterSidebar filters={filters} onFilterChange={handleFilterChange} />
           </div>
 
           {/* Mobile Filter Drawer - Only rendered on mobile */}
-          <div className="lg:hidden">
-            <MobileFilterDrawer />
-          </div>
+          {/* <div className="lg:hidden">
+            <MobileFilterDrawer filters={filters} onFilterChange={handleFilterChange} />
+          </div> */}
 
           {/* Properties Grid */}
           <div className="w-full lg:w-3/4 xl:w-4/5">
-            {loading ? <PropertyGridSkeleton /> : <PropertiesGrid properties={properties} />}
+            {isLoading ? <PropertyGridSkeleton /> : <PropertiesGrid properties={properties} />}
             
             {/* Pagination */}
-            {!loading && totalPages > 1 && (
+            {!isLoading && totalPages > 1 && (
               <div className="mt-8 flex justify-center">
                 <Pagination>
                   <PaginationContent>
