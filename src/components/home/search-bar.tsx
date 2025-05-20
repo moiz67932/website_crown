@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
+import useGetPropertyTypes from "@/hooks/queries/useGetPropertyType"
 
 export default function SearchBar() {
   const [searchType, setSearchType] = useState("buy")
@@ -13,6 +14,8 @@ export default function SearchBar() {
   const [propertyType, setPropertyType] = useState("any")
   const [priceRange, setPriceRange] = useState("any")
   const router = useRouter()
+
+  const { data: propertyTypes, isLoading } = useGetPropertyTypes()
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()
@@ -41,7 +44,7 @@ export default function SearchBar() {
         <Button
           variant={searchType === "buy" ? "default" : "outline"}
           onClick={() => setSearchType("buy")}
-          className={`text-xs md:text-sm px-2 md:px-3 py-1 h-auto ${searchType === "buy" ? "bg-slate-800 hover:bg-slate-900" : ""}`}
+          className={`text-xs md:text-sm px-2 md:px-3 py- 1 h-auto ${searchType === "buy" ? "bg-slate-800 hover:bg-slate-900" : ""}`}
         >
           Buy
         </Button>
@@ -76,7 +79,7 @@ export default function SearchBar() {
         </div>
 
         <div>
-          <Select defaultValue="any">
+          <Select defaultValue="any" onValueChange={setPropertyType}>
             <SelectTrigger className="bg-slate-50 border focus:ring-1 focus:ring-slate-400 focus:border-slate-400 h-[34px] md:h-[42px] text-sm">
               <div className="flex items-center">
                 <Home className="h-4 w-4 text-slate-400 mr-2" />
@@ -85,17 +88,15 @@ export default function SearchBar() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="any">Any Type</SelectItem>
-              <SelectItem value="house">House</SelectItem>
-              <SelectItem value="apartment">Apartment</SelectItem>
-              <SelectItem value="condo">Condo</SelectItem>
-              <SelectItem value="villa">Villa</SelectItem>
-              <SelectItem value="land">Land</SelectItem>
+              {propertyTypes?.property_type.map((type: any) => (
+                <SelectItem key={type._id} value={type.type}>{type.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
         <div>
-          <Select defaultValue="any">
+          <Select defaultValue="any" onValueChange={setPriceRange}>
             <SelectTrigger className="bg-slate-50 border focus:ring-1 focus:ring-slate-400 focus:border-slate-400 h-[34px] md:h-[42px] text-sm">
               <div className="flex items-center">
                 <DollarSign className="h-4 w-4 text-slate-400 mr-2" />
@@ -115,7 +116,7 @@ export default function SearchBar() {
       </div>
 
       <div className="mt-3 md:mt-4 flex justify-end">
-        <Button className="bg-slate-800 hover:bg-slate-900 text-xs md:text-sm h-8 md:h-10">
+        <Button className="bg-slate-800 hover:bg-slate-900 text-xs md:text-sm h-8 md:h-10" onClick={handleSearch}>
           <Search className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
           Search Properties
         </Button>

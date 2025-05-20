@@ -17,11 +17,7 @@ export default function Navbar() {
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true)
-      } else {
-        setIsScrolled(false)
-      }
+      setIsScrolled(window.scrollY > 10)
     }
 
     window.addEventListener("scroll", handleScroll)
@@ -31,17 +27,17 @@ export default function Navbar() {
   const navItems = [
     { name: "Home", href: "/" },
     { name: "Properties", href: "/properties" },
-    {
-      name: "Categories",
-      href: "#",
-      dropdown: [
-        { name: "Houses", href: "/properties?category=houses" },
-        { name: "Apartments", href: "/properties?category=apartments" },
-        { name: "Villas", href: "/properties?category=villas" },
-        { name: "Commercial", href: "/properties?category=commercial" },
-        { name: "Land", href: "/properties?category=land" },
-      ],
-    },
+    // {
+    //   name: "Categories",
+    //   href: "#",
+    //   dropdown: [
+    //     { name: "Houses", href: "/properties?category=houses" },
+    //     { name: "Apartments", href: "/properties?category=apartments" },
+    //     { name: "Villas", href: "/properties?category=villas" },
+    //     { name: "Commercial", href: "/properties?category=commercial" },
+    //     { name: "Land", href: "/properties?category=land" },
+    //   ],
+    // },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ]
@@ -56,50 +52,27 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <div className="relative h-12 w-48 md:h-14 md:w-56">
-
               <Image src="/logo.svg" alt="Real Estate Logo" fill className="object-contain" />
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1">
-            {navItems.map((item) =>
-              item.dropdown ? (
-                <DropdownMenu key={item.name}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={`flex items-center px-3 py-2 text-sm font-medium ${isScrolled ? "text-slate-800 hover:text-slate-900" : "text-slate-800 hover:text-slate-900"
-                        }`}
-                    >
-                      {item.name}
-                      <ChevronDown className="ml-1 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {item.dropdown.map((dropdownItem) => (
-                      <Link href={dropdownItem.href} key={dropdownItem.name}>
-                        <DropdownMenuItem className="cursor-pointer">{dropdownItem.name}</DropdownMenuItem>
-                      </Link>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Link href={item.href} key={item.name}>
-                  <Button
-                    variant="ghost"
-                    className={`px-3 py-2 text-sm font-medium ${pathname === item.href
-                        ? "text-slate-900 bg-slate-100"
-                        : isScrolled
-                          ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                          : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                      }`}
-                  >
-                    {item.name}
-                  </Button>
-                </Link>
-              ),
-            )}
+            {navItems.map((item) => (
+              <Link href={item.href} key={item.name}>
+                <Button
+                  variant="ghost"
+                  className={`px-3 py-2 text-sm font-medium ${pathname === item.href
+                      ? "text-slate-900 bg-slate-100"
+                      : isScrolled
+                        ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                    }`}
+                >
+                  {item.name}
+                </Button>
+              </Link>
+            ))}
           </nav>
 
           {/* User Actions */}
@@ -135,37 +108,19 @@ export default function Navbar() {
         <div className="lg:hidden bg-white border-t border-slate-200 mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="container mx-auto px-4 py-4">
             <nav className="flex flex-col space-y-2">
-              {navItems.map((item) =>
-                item.dropdown ? (
-                  <div key={item.name} className="space-y-2">
-                    <div className="font-medium text-slate-900 px-3 py-2">{item.name}</div>
-                    <div className="pl-4 space-y-1 border-l-2 border-slate-200">
-                      {item.dropdown.map((dropdownItem) => (
-                        <Link
-                          href={dropdownItem.href}
-                          key={dropdownItem.name}
-                          className="block px-3 py-2 text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-md"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          {dropdownItem.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    href={item.href}
-                    key={item.name}
-                    className={`px-3 py-2 font-medium rounded-md ${pathname === item.href
-                        ? "text-slate-900 bg-slate-100"
-                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                      }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ),
-              )}
+              {navItems.map((item) => (
+                <Link
+                  href={item.href}
+                  key={item.name}
+                  className={`px-3 py-2 font-medium rounded-md ${pathname === item.href
+                      ? "text-slate-900 bg-slate-100"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                    }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
             </nav>
             <div className="mt-4 flex flex-col space-y-2">
               <Link href="/auth/login">

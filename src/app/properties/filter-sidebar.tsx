@@ -8,13 +8,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Home, Building, MapPin, Wifi, Car, Waves, Trees, Utensils, Dumbbell } from "lucide-react"
+import { Building, Wifi, Car, Waves, Trees, Utensils, Dumbbell } from "lucide-react"
+import useGetPropertyTypes from "@/hooks/queries/useGetPropertyType"
 
 interface FilterSidebarProps {
   filters: {
     propertyType: string;
     minPrice: number | undefined;
     maxPrice: number | undefined;
+    minBathroom: number | undefined;
+    minBedroom: number | undefined;
+    yearBuilt: number | undefined;
+    max_sqft: number | undefined;
+    min_sqft: number | undefined;
     city: string;
   };
   onFilterChange: (filters: {
@@ -22,12 +28,18 @@ interface FilterSidebarProps {
     minPrice: number | undefined;
     maxPrice: number | undefined;
     city: string;
+    minBathroom: number | undefined;
+    minBedroom: number | undefined;
+    yearBuilt: number | undefined;
+    max_sqft: number | undefined;
+    min_sqft: number | undefined;
   }) => void;
 }
 
 export default function FilterSidebar({ filters, onFilterChange }: FilterSidebarProps) {
   const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 5000000])
   const [areaRange, setAreaRange] = useState([0, 10000])
+  const { data: propertyTypes, isLoading } = useGetPropertyTypes()
 
   const handlePriceChange = (newRange: number[]) => {
     setPriceRange(newRange)
@@ -52,6 +64,32 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
     })
   }
 
+  const handleBedroomSelect = (bedrooms: string) => {
+    const minBedroom = bedrooms === "Any" ? undefined : parseInt(bedrooms);
+    onFilterChange({
+      ...filters,
+      minBedroom
+    })
+  }
+
+  const handleBathroomSelect = (bathrooms: string) => {
+    const minBathroom = bathrooms === "Any" ? undefined : parseInt(bathrooms);
+    onFilterChange({
+      ...filters,
+      minBathroom
+    })
+  }
+
+  const handleYearBuiltSelect = (yearBuilt: string) => {
+    const currentYear = new Date().getFullYear();
+    const year = yearBuilt === "any" ? undefined : yearBuilt === "new" ? currentYear : currentYear - parseInt(yearBuilt);
+    
+    onFilterChange({
+      ...filters,
+      yearBuilt: year,
+    });
+  }
+
   const handleReset = () => {
     setPriceRange([0, 5000000])
     setAreaRange([0, 10000])
@@ -59,7 +97,12 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
       propertyType: "",
       minPrice: undefined,
       maxPrice: undefined,
-      city: ""
+      city: "",
+      minBathroom: undefined,
+      minBedroom: undefined,
+      yearBuilt: undefined,
+      max_sqft: undefined,
+      min_sqft: undefined
     })
   }
 
@@ -70,54 +113,30 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
         <p className="text-sm text-slate-500">Refine your search results</p>
       </div>
 
-      <div className="p-4 max-h-[calc(100vh-180px)] overflow-y-auto">
+      <div className="p-4 max-h-[calc(80vh-180px)] overflow-y-auto">
         <Accordion type="multiple" defaultValue={["category", "price", "bedsBaths", "features"]}>
           {/* Property Type */}
           <AccordionItem value="category">
             <AccordionTrigger className="text-base font-medium">Property Type</AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-2 gap-2 pt-2">
-                <div 
-                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Residential' ? 'bg-slate-50 border-slate-300' : ''}`}
-                  onClick={() => handlePropertyTypeSelect('Residential')}
-                >
-                  <Home className="h-5 w-5 text-slate-600" />
-                  <span className="text-xs text-center">Houses</span>
-                </div>
-                <div 
-                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Farm' ? 'bg-slate-50 border-slate-300' : ''}`}
-                  onClick={() => handlePropertyTypeSelect('Farm')}
-                >
-                  <Building className="h-5 w-5 text-slate-600" />
-                  <span className="text-xs text-center">Farm</span>
-                </div>
-                <div 
-                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Warehouse' ? 'bg-slate-50 border-slate-300' : ''}`}
-                  onClick={() => handlePropertyTypeSelect('Warehouse')}
-                >
-                  <Home className="h-5 w-5 text-slate-600" />
-                  <span className="text-xs text-center">Ware house</span>
-                </div>
-                <div 
-                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'CommercialSale' ? 'bg-slate-50 border-slate-300' : ''}`}
-                  onClick={() => handlePropertyTypeSelect('CommercialSale')}
-                >
-                  <Building className="h-5 w-5 text-slate-600" />
-                  <span className="text-xs text-center">Commercial</span>
-                </div>
-                <div 
-                  className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === 'Land' ? 'bg-slate-50 border-slate-300' : ''}`}
-                  onClick={() => handlePropertyTypeSelect('Land')}
-                >
-                  <MapPin className="h-5 w-5 text-slate-600" />
-                  <span className="text-xs text-center">Land</span>
-                </div>
+                {propertyTypes?.property_type?.map((type: any) => (
+                  <div 
+                    key={type._id}
+                    className={`flex flex-col items-center gap-1 p-2 border rounded-md hover:bg-slate-50 cursor-pointer ${filters.propertyType === type.type ? 'bg-slate-50 border-slate-300' : ''}`}
+                    onClick={() => handlePropertyTypeSelect(type.type)}
+                  >
+                    <Building className="h-5 w-5 text-slate-600" />
+                    <span className="text-xs text-center">{type.name}</span>
+                  </div>
+                ))}
+                {isLoading && <p>Loading property types...</p>}
               </div>
             </AccordionContent>
           </AccordionItem>
 
           {/* Status */}
-          <AccordionItem value="status">
+          {/* <AccordionItem value="status">
             <AccordionTrigger className="text-base font-medium">Status</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2 pt-2">
@@ -141,7 +160,7 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
                 </div>
               </div>
             </AccordionContent>
-          </AccordionItem>
+          </AccordionItem> */}
 
           {/* Price Range */}
           <AccordionItem value="price">
@@ -201,7 +220,12 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
                   <Label className="text-sm mb-2 block">Bedrooms</Label>
                   <div className="flex flex-wrap gap-2">
                     {["Any", "1+", "2+", "3+", "4+", "5+"].map((num) => (
-                      <Button key={num} variant="outline" className="h-8 px-3 text-xs rounded-full">
+                      <Button 
+                        key={num} 
+                        variant="outline" 
+                        className={`h-8 px-3 text-xs rounded-full ${filters.minBedroom === parseInt(num) ? 'bg-slate-50 border-slate-300' : ''}`}
+                        onClick={() => handleBedroomSelect(num)}
+                      >
                         {num}
                       </Button>
                     ))}
@@ -212,7 +236,12 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
                   <Label className="text-sm mb-2 block">Bathrooms</Label>
                   <div className="flex flex-wrap gap-2">
                     {["Any", "1+", "2+", "3+", "4+", "5+"].map((num) => (
-                      <Button key={num} variant="outline" className="h-8 px-3 text-xs rounded-full">
+                      <Button 
+                        key={num} 
+                        variant="outline" 
+                        className={`h-8 px-3 text-xs rounded-full ${filters.minBathroom === parseInt(num) ? 'bg-slate-50 border-slate-300' : ''}`}
+                        onClick={() => handleBathroomSelect(num)}
+                      >
                         {num}
                       </Button>
                     ))}
@@ -263,7 +292,7 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
             </AccordionContent>
           </AccordionItem>
 
-          {/* Location */}
+          {/* Location
           <AccordionItem value="location">
             <AccordionTrigger className="text-base font-medium">Location</AccordionTrigger>
             <AccordionContent>
@@ -302,9 +331,9 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
                 </div>
               </div>
             </AccordionContent>
-          </AccordionItem>
+          </AccordionItem> */}
 
-          {/* Features */}
+          {/* Features
           <AccordionItem value="features">
             <AccordionTrigger className="text-base font-medium">Features & Amenities</AccordionTrigger>
             <AccordionContent>
@@ -353,24 +382,23 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
                 </div>
               </div>
             </AccordionContent>
-          </AccordionItem>
+          </AccordionItem> */}
 
           {/* Year Built */}
           <AccordionItem value="year">
             <AccordionTrigger className="text-base font-medium">Year Built</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2 pt-2">
-                <Select>
+                <Select value={filters.yearBuilt ? filters.yearBuilt.toString() : "Any"} onValueChange={handleYearBuiltSelect}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Year Range" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any">Any Year</SelectItem>
-                    <SelectItem value="new">New Construction</SelectItem>
-                    <SelectItem value="5">Built within 5 years</SelectItem>
-                    <SelectItem value="10">Built within 10 years</SelectItem>
-                    <SelectItem value="20">Built within 20 years</SelectItem>
-                    <SelectItem value="older">Older than 20 years</SelectItem>
+                    <SelectItem value="Any">Any Year</SelectItem>
+                    <SelectItem value={new Date().getFullYear().toString()}>New Construction</SelectItem>
+                    <SelectItem value={(new Date().getFullYear() - 5).toString()}>Built within 5 years</SelectItem>
+                    <SelectItem value={(new Date().getFullYear() - 10).toString()}>Built within 10 years</SelectItem>
+                    <SelectItem value={(new Date().getFullYear() - 20).toString()}>Built within 20 years</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

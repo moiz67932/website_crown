@@ -70,9 +70,7 @@ export default function OfficeLocation() {
             <div>
               <h3 className="font-medium">Address</h3>
               <p className="text-slate-600">
-                123 Real Estate Avenue
-                <br />
-                San Francisco, CA 94105
+                CA DRE #02211952
                 <br />
                 United States
               </p>
@@ -108,7 +106,7 @@ export default function OfficeLocation() {
               <h3 className="font-medium">Phone</h3>
               <p className="text-slate-600">
                 <a href="tel:+14155550123" className="hover:text-slate-900">
-                  (415) 555-0123
+                1 858-305-4362
                 </a>
               </p>
             </div>
@@ -119,8 +117,8 @@ export default function OfficeLocation() {
             <div>
               <h3 className="font-medium">Email</h3>
               <p className="text-slate-600">
-                <a href="mailto:info@realestate.com" className="hover:text-slate-900">
-                  info@realestate.com
+                <a href="mailto:reza@crowncoastal.com" className="hover:text-slate-900">
+                reza@crowncoastal.com
                 </a>
               </p>
             </div>

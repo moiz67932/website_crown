@@ -21,6 +21,7 @@ interface Property {
   bedrooms: number
   bathrooms: number
   living_area_sqft: number | string
+  lot_size_sqft: number | string
   city: string
   address: string
 }
@@ -88,7 +89,7 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
                   <div className="flex items-center">
                     <Maximize className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
                     <span>
-                      {property.living_area_sqft !== "-" ? `${property?.living_area_sqft?.toLocaleString?.() ?? property.living_area_sqft} Sq Ft` : "- Sq Ft"}
+                      {property.living_area_sqft ? `${property?.living_area_sqft?.toLocaleString?.() ?? property.living_area_sqft} Sq Ft` : `${property?.lot_size_sqft?.toLocaleString?.() ?? property.lot_size_sqft} Sq Ft`}
                     </span>
                   </div>
                 </div>

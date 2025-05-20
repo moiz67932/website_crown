@@ -6,18 +6,33 @@ import { SlidersHorizontal, X } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import FilterSidebar from "./filter-sidebar"
 
-export default function MobileFilterDrawer() {
-  const [open, setOpen] = useState(false)
-  const [filters, setFilters] = useState({
-    propertyType: "",
-    minPrice: undefined as number | undefined,
-    maxPrice: undefined as number | undefined,
-    city: "",
-  })
+interface FilterSidebarProps {
+  filters: {
+    propertyType: string;
+    minPrice: number | undefined;
+    maxPrice: number | undefined;
+    city: string;
+    minBathroom: number | undefined;
+    minBedroom: number | undefined;
+    yearBuilt: number | undefined;
+    max_sqft: number | undefined;
+    min_sqft: number | undefined;
+  };
+  onFilterChange: (filters: {
+    propertyType: string;
+    minPrice: number | undefined;
+    maxPrice: number | undefined;
+    city: string;
+    minBathroom: number | undefined;
+    minBedroom: number | undefined;
+    yearBuilt: number | undefined;
+    max_sqft: number | undefined;
+    min_sqft: number | undefined;
+  }) => void;
+}
 
-  const handleFilterChange = (newFilters: typeof filters) => {
-    setFilters(newFilters)
-  }
+export default function MobileFilterDrawer({ filters, onFilterChange }: FilterSidebarProps) {
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="mb-4">
@@ -38,7 +53,7 @@ export default function MobileFilterDrawer() {
             </div>
           </SheetHeader>
           <div className="overflow-y-auto h-[calc(100vh-5rem)]">
-            <FilterSidebar filters={filters} onFilterChange={handleFilterChange} />
+            <FilterSidebar filters={filters} onFilterChange={onFilterChange} />
           </div>
         </SheetContent>
       </Sheet>

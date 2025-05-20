@@ -117,7 +117,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     numberOfBathroomsTotal: property?.bathrooms,
     floorSize: {
       "@type": "QuantitativeValue",
-      value: property?.living_area_sqft,
+      value: property?.living_area_sqft ?? property?.lot_size_sqft,
       unitCode: "FTK",
     },
     price: property?.list_price,
@@ -269,7 +269,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <div className="flex items-center">
                   <Maximize className="h-5 w-5 mr-2 text-muted-foreground" />
                   <span>
-                    <strong itemProp="floorSize">{property?.living_area_sqft.toLocaleString()}</strong> Sq Ft
+                    <strong itemProp="floorSize">{property?.living_area_sqft ?? property?.lot_size_sqft}</strong> Sq Ft
                   </span>
                 </div>
                 <div className="flex items-center">
@@ -346,9 +346,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Lot Size</p>
-                          <p className="font-medium">0.5 Acres</p>
+                          <p className="font-medium">{property?.lot_size_sqft} Sq Ft</p>
                         </div>
-                        <div>
+                        {/* <div>
                           <p className="text-sm text-muted-foreground">Heating</p>
                           <p className="font-medium">Central</p>
                         </div>
@@ -359,7 +359,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         <div>
                           <p className="text-sm text-muted-foreground">Parking</p>
                           <p className="font-medium">2-Car Garage</p>
-                        </div>
+                        </div> */}
                       </div>
                       <PropertyFAQ
                         faqs={faqs}
@@ -410,7 +410,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         }} address={property?.address ?? ''} />
                       </div>
 
-                      <div className="mt-6">
+                      {/* <div className="mt-6">
                         <h3 className="text-lg font-semibold mb-3">Nearby Amenities</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
@@ -430,7 +430,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                             </ul>
                           </div>
                         </div>
-                      </div>
+                      </div> */}
                     </CardContent>
                   </Card>
                 </TabsContent>

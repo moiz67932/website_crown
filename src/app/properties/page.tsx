@@ -25,6 +25,11 @@ export default function PropertiesPage() {
     minPrice: undefined as number | undefined,
     maxPrice: undefined as number | undefined,
     city: "",
+    minBathroom: undefined as number | undefined,
+    minBedroom: undefined as number | undefined,
+    yearBuilt: undefined as number | undefined,
+    max_sqft: undefined as number | undefined,
+    min_sqft: undefined as number | undefined
   })
   const limit = 12
   const skip = (currentPage - 1) * limit
@@ -35,7 +40,12 @@ export default function PropertiesPage() {
     propertyType: filters.propertyType,
     minPrice: filters.minPrice,
     maxPrice: filters.maxPrice,
-    city: filters.city
+    city: filters.city,
+    minBathroom: filters.minBathroom,
+    minBedroom: filters.minBedroom,
+    yearBuilt: filters.yearBuilt,
+    max_sqft: filters.max_sqft,
+    min_sqft: filters.min_sqft
   })
 
   const properties = data?.listings || []
@@ -63,9 +73,9 @@ export default function PropertiesPage() {
           </div>
 
           {/* Mobile Filter Drawer - Only rendered on mobile */}
-          {/* <div className="lg:hidden">
+          <div className="lg:hidden">
             <MobileFilterDrawer filters={filters} onFilterChange={handleFilterChange} />
-          </div> */}
+          </div>
 
           {/* Properties Grid */}
           <div className="w-full lg:w-3/4 xl:w-4/5">

@@ -45,44 +45,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Our Team */}
-      <section className="py-16 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Meet Our Team</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Sarah Johnson",
-                role: "Principal Broker",
-                image: "/professional-woman-portrait.png",
-                bio: "With over 15 years of experience in real estate, Sarah leads our team with expertise and passion.",
-              },
-              {
-                name: "Michael Chen",
-                role: "Senior Agent",
-                image: "/professional-man-portrait.png",
-                bio: "Michael specializes in luxury properties and has a keen eye for investment opportunities.",
-              },
-              {
-                name: "Emily Rodriguez",
-                role: "Client Relations",
-                image: "/woman-portrait.png",
-                bio: "Emily ensures our clients receive personalized attention and support throughout their journey.",
-              },
-            ].map((member, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="relative h-48 mb-4 rounded-md overflow-hidden">
-                  <Image src={member.image || "/placeholder.svg"} alt={member.name} fill className="object-cover" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900">{member.name}</h3>
-                <p className="text-slate-500 mb-2">{member.role}</p>
-                <p className="text-slate-600">{member.bio}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Why Choose Us */}
       <section className="py-16">
         <div className="container mx-auto px-4">
