@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crofton Real Estate",
-  description: "Crofton Real Estate",
+  title: "Crown Real Estate",
+  description: "Crown Real Estate",
 };
 
 export default function RootLayout({

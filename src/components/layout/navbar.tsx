@@ -75,21 +75,7 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* User Actions */}
-          <div className="hidden lg:flex items-center space-x-1">
-            <Button variant="ghost" size="icon" className="text-slate-700">
-              <Heart className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-slate-700">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="outline" className="ml-2">
-              <User className="h-4 w-4 mr-2" />
-              Sign In
-            </Button>
-            <Button className="bg-slate-800 hover:bg-slate-900 ml-2">List Property</Button>
-          </div>
-
+        
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
