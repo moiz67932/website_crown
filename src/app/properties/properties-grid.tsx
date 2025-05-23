@@ -24,6 +24,7 @@ interface Property {
   lot_size_sqft: number | string
   city: string
   address: string
+  images: string[]
 }
 
 export default function PropertiesGrid({ properties }: { properties: Property[] }) {
@@ -47,7 +48,7 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
             <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
               <div className="relative">
                 <div className="relative h-48 sm:h-56 md:h-64">
-                  <img src={process.env.NEXT_PUBLIC_API_BASE_URL + "/proxy-image?url=" + property.main_image_url} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  <img src={property.images[0]} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                   />
                   <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
                     {property.status}
