@@ -25,6 +25,7 @@ interface Property {
   city: string
   address: string
   images: string[]
+  property_type: string
 }
 
 export default function PropertiesGrid({ properties }: { properties: Property[] }) {
@@ -44,14 +45,14 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
         {properties.map((property) => (
-          <Link href={`/properties/${property.listing_key}`} key={property.listing_key}>
+          <Link href={`/properties/${property.address.replaceAll(' ', '-')}/${property.listing_key}`} key={property.listing_key}>
             <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
               <div className="relative">
                 <div className="relative h-48 sm:h-56 md:h-64">
                   <img src={property.images[0]} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                   />
-                  <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
-                    {property.status}
+                  <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs bg-green-600`}>
+                    {property.property_type}
                   </Badge>
                   <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 bg-white/90 backdrop-blur-sm rounded-md px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm font-medium">
                     ${property?.list_price?.toLocaleString?.() ?? property.list_price}

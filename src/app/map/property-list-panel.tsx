@@ -89,7 +89,7 @@ export default function PropertyListPanel({
           <div className="divide-y divide-slate-200">
             {properties.map((property) => (
               <Link
-                href={`/properties/${property.listing_key}`}
+                href={`/properties/${property.address.replaceAll(' ', '-')}/${property.listing_key}`}
                 key={property.listing_key}
                 className={`block p-4 hover:bg-slate-50 transition-colors ${
                   hoveredProperty === property.listing_key ? "bg-slate-50" : ""

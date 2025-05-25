@@ -28,28 +28,115 @@ function MapViewPage() {
 
   // Get location from search params
   const locationQuery = searchParams.get("location")
+  const propertyType = searchParams.get("propertyType")
+  const priceRange = searchParams.get("priceRange")
+
+  const convertPriceRange = (priceRange: string) => {
+    if (priceRange === "100k-500k") return [100000, 500000]
+    if (priceRange === "500k-1m") return [500000, 1000000]
+    if (priceRange === "1m-2m") return [1000000, 2000000]
+    if (priceRange === "2m-5m") return [2000000, 5000000]
+    if (priceRange === "5m+") return [5000000, Infinity]
+    return [0, Infinity]
+  }
+  const price_range = useMemo(() => {
+    if (priceRange) {
+      return convertPriceRange(priceRange)
+    }
+    return [0, Infinity]
+  }, [priceRange])
 
   // Determine the county from the locationQuery
   const county = useMemo(() => {
-    if (!locationQuery) return null
-    if (locationQuery.toLowerCase().includes("los-angeles-county")) return "Los Angeles"
-    if (locationQuery.toLowerCase().includes("orange-county")) return "Orange"
-    if (locationQuery.toLowerCase().includes("san-diego-county")) return "San Diego"
-    if (locationQuery.toLowerCase().includes("santa-clara-county")) return "Santa Clara"
-    if (locationQuery.toLowerCase().includes("alameda-county")) return "Alameda"
-    return null
-  }, [locationQuery])
+    if (!locationQuery) return null;
+
+    const countyMap: Record<string, string> = {
+      "los-angeles-county": "Los Angeles",
+      "orange-county": "Orange",
+      "san-diego-county": "San Diego",
+      "santa-clara-county": "Santa Clara",
+      "alameda-county": "Alameda",
+      "sacramento-county": "Sacramento",
+      "san-francisco-county": "San Francisco",
+      "riverside-county": "Riverside",
+      "san-bernardino-county": "San Bernardino",
+      "san-joaquin-county": "San Joaquin",
+      "san-luis-obispo-county": "San Luis Obispo",
+      "san-mateo-county": "San Mateo",
+      "santa-barbara-county": "Santa Barbara",
+      "santa-cruz-county": "Santa Cruz",
+      "shasta-county": "Shasta",
+      "sierra-county": "Sierra",
+      "siskiyou-county": "Siskiyou",
+      "solano-county": "Solano",
+      "sonoma-county": "Sonoma",
+      "stanislaus-county": "Stanislaus",
+      "sutter-county": "Sutter",
+      "tehama-county": "Tehama",
+      "trinity-county": "Trinity",
+      "tulare-county": "Tulare",
+      "tuolumne-county": "Tuolumne",
+      "ventura-county": "Ventura",
+      "yolo-county": "Yolo",
+      "yuba-county": "Yuba",
+      "alpine-county": "Alpine",
+      "amador-county": "Amador",
+      "butte-county": "Butte",
+      "calaveras-county": "Calaveras",
+      "colusa-county": "Colusa",
+      "contra-costa-county": "Contra Costa",
+      "del-norte-county": "Del Norte",
+      "el-dorado-county": "El Dorado",
+      "fresno-county": "Fresno",
+      "glenn-county": "Glenn",
+      "humboldt-county": "Humboldt",
+      "imperial-county": "Imperial",
+      "inyo-county": "Inyo",
+      "kern-county": "Kern",
+      "kings-county": "Kings",
+      "lake-county": "Lake",
+      "lassen-county": "Lassen",
+      "madera-county": "Madera",
+      "marin-county": "Marin",
+      "mariposa-county": "Mariposa",
+      "mendocino-county": "Mendocino",
+      "merced-county": "Merced",
+      "modoc-county": "Modoc",
+      "mono-county": "Mono",
+      "monterey-county": "Monterey",
+      "napa-county": "Napa",
+      "nevada-county": "Nevada",
+      "placer-county": "Placer",
+      "plumas-county": "Plumas",
+      "san-benito-county": "San Benito",
+    };
+
+    const query = locationQuery.toLowerCase();
+    for (const [key, value] of Object.entries(countyMap)) {
+      if (query.includes(key)) return value;
+    }
+
+    return null;
+  }, [locationQuery, propertyType, priceRange]);
 
   // Map activeFilters to API params for useListProperties
   const apiParams = useMemo(() => {
     // Map FilterValues to API params
     // Only 10 items
     const params: Record<string, any> = { limit: 10 }
+    if (propertyType) {
+      params.propertyType = propertyType
+    }
     if (activeFilters.propertyType && activeFilters.propertyType.length > 0) {
       // Only use the first propertyType for API param
       params.propertyType = Array.isArray(activeFilters.propertyType)
         ? activeFilters.propertyType[0]
         : activeFilters.propertyType
+    }
+
+    if (price_range) {
+      params.minPrice = price_range[0]
+      params.maxPrice = price_range[1]
     }
     if (activeFilters.priceRange) {
       params.minPrice = activeFilters.priceRange[0]

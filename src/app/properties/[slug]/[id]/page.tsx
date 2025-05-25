@@ -18,47 +18,11 @@ import StreetViewButton from "./street-view-button"
 import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
 import PropertyFAQ from "./property-faq"
 import MortgageCalculatorModal from "./mortage-calculator-modal"
-
-
-
-// Dynamic metadata generation for SEO
-// export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-//   const { data: property } = usePropertyDetail(params.id)
-
-//   return {
-//     title: `${property?.address || "Property"} | Luxury Real Estate in ${property?.city || "Unknown Location"}`,
-//     description: property?.public_remarks?.substring(0, 160) || "No description available",
-//     openGraph: {
-//       title: `${property?.address} | Luxury Real Estate`,
-//       description: property?.public_remarks?.substring(0, 160),
-//       images: [
-//         {
-//           url: property?.main_image_url || "",
-//           width: 1200,
-//           height: 630,
-//           alt: property?.address || "Property Image",
-//         },
-//       ],
-//       locale: "en_US",
-//       type: "website",
-//     },
-//     twitter: {
-//       card: "summary_large_image",
-//       title: property?.address || "Property",
-//       description: property?.public_remarks?.substring(0, 160),
-//       images: [property?.main_image_url || ""],
-//     },
-//     alternates: {
-//       canonical: `/properties/${params.id}`,
-//     },
-//     keywords: `luxury real estate, ${property?.property_type.toLowerCase()}, ${property?.subdivision_name || "Unknown Subdivision"}, ${property?.city || "Unknown City"}, ocean view property, luxury villa`,
-//   }
-
-// }
+import Loading from "@/components/shared/loading"
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params)
-  const { data: property , isLoading, isError} = usePropertyDetail(unwrappedParams.id)
+  const { data: property, isLoading, isError } = usePropertyDetail(unwrappedParams.id)
   const faqs = [
     {
       question: "What are the HOA fees for this property?",
@@ -97,7 +61,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     },
   ];
   const [drawnShape, setDrawnShape] = useState<any>(null) // eslint-disable-line @typescript-eslint/no-explicit-any
-  // Structured data for real estate listing (JSON-LD)
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
@@ -108,8 +72,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     address: {
       "@type": "PostalAddress",
       streetAddress: property?.address.split(",")[0].trim(),
-      // addressLocality: property?.address.split(",")[1].trim(),
-      // addressRegion: property?.address.split(",")[2].trim().split(" ")[0],
       postalCode: property?.postal_code,
       addressCountry: "US",
     },
@@ -140,7 +102,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     },
   }
 
-  // Breadcrumb structured data
   const breadcrumbData = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -168,10 +129,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
-        <span className="ml-4 text-lg">Loading...</span>
-      </div>
+      <Loading />
     )
   }
 
@@ -200,8 +158,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         {JSON.stringify(breadcrumbData)}
       </Script>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb - Enhanced with structured data attributes */}
+      <main className="container mx-auto px-4 py-8 pt-24">
         <nav aria-label="Breadcrumb" className="mb-4">
           <ol
             className="flex items-center text-sm text-muted-foreground"
@@ -229,7 +186,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           </ol>
         </nav>
 
-        {/* Property Header */}
         <article itemScope itemType="https://schema.org/RealEstateListing">
           <meta itemProp="name" content={property?.address || "Unknown Address"} />
           <meta itemProp="description" content={property?.public_remarks || "No description available"} />
@@ -309,10 +265,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
-          {/* Property Gallery */}
           <PropertyGallery images={property?.images || []} />
 
-          {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             <div className="lg:col-span-2">
               <Tabs defaultValue="details">
@@ -348,18 +302,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                           <p className="text-sm text-muted-foreground">Lot Size</p>
                           <p className="font-medium">{property?.lot_size_sqft} Sq Ft</p>
                         </div>
-                        {/* <div>
-                          <p className="text-sm text-muted-foreground">Heating</p>
-                          <p className="font-medium">Central</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Cooling</p>
-                          <p className="font-medium">Central A/C</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Parking</p>
-                          <p className="font-medium">2-Car Garage</p>
-                        </div> */}
                       </div>
                       <PropertyFAQ
                         faqs={faqs}
@@ -371,19 +313,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </TabsContent>
 
                 <TabsContent value="features" className="space-y-6">
-                  {/* <Card>
-                    <CardContent className="p-6">
-                      <h2 className="text-xl font-semibold mb-4">Property Features</h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {property.features.map((feature, index) => (
-                          <div key={index} className="flex items-center" itemProp="amenityFeature">
-                            <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
-                            <span>{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card> */}
                 </TabsContent>
                 <TabsContent value="faq" className="space-y-6">
                   <Card>
@@ -409,28 +338,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                           lng: property?.longitude ?? 0
                         }} address={property?.address ?? ''} />
                       </div>
-
-                      {/* <div className="mt-6">
-                        <h3 className="text-lg font-semibold mb-3">Nearby Amenities</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-medium">Schools</h4>
-                            <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
-                              <li>Malibu Elementary School (0.8 miles)</li>
-                              <li>Malibu Middle School (1.2 miles)</li>
-                              <li>Malibu High School (1.5 miles)</li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h4 className="font-medium">Transportation</h4>
-                            <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
-                              <li>Pacific Coast Highway (0.3 miles)</li>
-                              <li>Bus Stop (0.4 miles)</li>
-                              <li>Santa Monica Airport (15 miles)</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div> */}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -438,14 +345,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             <div>
-              {/* Agent Contact Card */}
               <Card className="mb-6">
                 <CardContent className="p-6">
                   <div className="mb-4">
                     <h3 className="font-semibold">Contact the Crown Coastal Team</h3>
                   </div>
                   <Separator className="my-4" />
-                  <ContactForm propertyId={property?._id ?? ''} />
+                  <ContactForm propertyId={property?.listing_key ?? ''} />
                 </CardContent>
               </Card>
               <Card>
@@ -479,8 +385,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </CardContent>
               </Card>
 
-
-              {/* Listing Agent Information - Subtle Version */}
               <div className="mt-6 border border-gray-100 rounded-lg bg-gray-50/50 p-4">
                 <p className="text-sm text-muted-foreground mb-3">Listing Agent</p>
                 <div className="space-y-2 text-sm">
@@ -500,17 +404,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
           </div>
-
-          {/* Similar Properties */}
-          {/* <section className="mt-16">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Similar Properties</h2>
-              <Link href="/properties" className="text-primary flex items-center hover:underline">
-                View All <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </div>
-            <SimilarProperties currentPropertyId={property?._id} />
-          </section> */}
         </article>
       </main>
     </>
