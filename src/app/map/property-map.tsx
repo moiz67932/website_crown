@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useMemo, useRef, Suspense } from "react"
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Polygon as LeafletPolygon } from "react-leaflet"
 import L from "leaflet"
 import * as turf from "@turf/turf"
@@ -129,7 +129,7 @@ const californiaPolygonLatLngs = [
 ]
 
 // Convert to [lat, lng] for react-leaflet Polygon
-const californiaPolygonLatLngsLeaflet = californiaPolygonLatLngs
+const californiaPolygonLatLngsLeaflet: [number, number][] = californiaPolygonLatLngs.map(([lat, lng]) => [lat, lng] as [number, number])
 
 // Convert to GeoJSON polygon for turf
 const californiaPolygonGeoJSON: Feature<TurfPolygon> = {
@@ -213,7 +213,7 @@ interface PropertyMapProps {
   initialLocationQuery?: string | null
 }
 
-export default function PropertyMap({ filteredPropertyIds, initialLocationQuery = null }: PropertyMapProps) {
+function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null }: PropertyMapProps) {
   const router = useRouter()
 
   // Center the map on California
@@ -545,5 +545,17 @@ export default function PropertyMap({ filteredPropertyIds, initialLocationQuery 
         />
       )}
     </>
+  )
+}
+
+export default function PropertyMap(props: PropertyMapProps) {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-full w-full">
+        <span>Loading map...</span>
+      </div>
+    }>
+      <PropertyMapContent {...props} />
+    </Suspense>
   )
 }

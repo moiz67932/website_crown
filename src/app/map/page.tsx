@@ -20,7 +20,7 @@ const PropertyMap = dynamic(() => import("./property-map"), {
   loading: () => <MapLoadingSkeleton />,
 })
 
-export default function MapViewPage() {
+function MapViewPage() {
   const [activeFilters, setActiveFilters] = useState<FilterValues>({})
   const [showFAQ, setShowFAQ] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
@@ -134,7 +134,7 @@ export default function MapViewPage() {
 
           {/* Map/List Toggle - Only visible on mobile */}
           <div className="md:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
-            <MapListToggle filteredPropertyIds={filteredPropertyIds} />
+            <MapListToggle filteredPropertyIds={filteredPropertyIds} properties={properties} />
           </div>
         </div>
 
@@ -153,5 +153,15 @@ export default function MapViewPage() {
         </div>
       )}
     </main>
+  )
+}
+
+
+export default function MapViewPageWrapper() {
+  return (
+    // You could have a loading skeleton as the `fallback` too
+    <Suspense>
+      <MapViewPage />
+    </Suspense>
   )
 }

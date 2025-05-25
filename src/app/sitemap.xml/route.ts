@@ -1,4 +1,3 @@
-import { properties } from "../properties/property-data"
 
 export async function GET() {
   // Base URL - replace with your actual domain in production
@@ -33,16 +32,16 @@ export async function GET() {
 `
   })
 
-  // Add dynamic property routes
-  properties.forEach((property) => {
-    xml += `  <url>
-    <loc>${baseUrl}/properties/${property.id}</loc>
-    <lastmod>${date}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`
-  })
+//   // Add dynamic property routes
+//   properties.forEach((property) => {
+//     xml += `  <url>
+//     <loc>${baseUrl}/properties/${property.id}</loc>
+//     <lastmod>${date}</lastmod>
+//     <changefreq>weekly</changefreq>
+//     <priority>0.8</priority>
+//   </url>
+// `
+//   })
 
   // Close XML
   xml += `</urlset>`
