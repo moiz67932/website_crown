@@ -127,7 +127,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {featuredProperties.map((property) => (
-              <Link href={`/properties/${property.listing_key}`} key={property.listing_key}>
+              <Link href={`/properties/${property.title.replaceAll(' ', '-')}/${property.listing_key}`} key={property.listing_key}>
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
                   <img src={property.image} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
