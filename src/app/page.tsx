@@ -38,7 +38,7 @@ export default function HomePage() {
   const featuredProperties: Property[] = featuredPropertiesRaw.listings.map((item: any) => ({
     id: item.listing_id,
     listing_key: item.listing_key,
-    image: item.main_image_url || "/placeholder.svg",
+    image: item.images[0] || "/placeholder.svg",
     title: item.address,
     location: item.city,
     price: item.list_price,
@@ -130,7 +130,7 @@ export default function HomePage() {
               <Link href={`/properties/${property.listing_key}`} key={property.listing_key}>
                 <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
                   <div className="relative h-48 sm:h-56 md:h-64">
-                  <img src={process.env.NEXT_PUBLIC_API_BASE_URL +"/proxy-image?url=" + property.image} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  <img src={property.image} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                   />
                     
                     <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
@@ -202,9 +202,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-x
+
       {/* Testimonials Section */}
-      <section className="py-10 md:py-16 bg-white">
+      {/* <section className="py-10 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">What Our Clients Say</h2>
@@ -258,7 +258,7 @@ x
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-10 md:py-16 bg-slate-900 text-white">
