@@ -26,6 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+      <link rel="apple-touch-icon" sizes="180x180" href="/logo.svg" />
+        <link rel="icon" sizes="32x32" href="/logo.svg" />
+        <link rel="icon" sizes="16x16" href="/logo.svg" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
