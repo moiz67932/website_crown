@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, FeatureGroup, Circle } from "react-leaflet"
-import { EditControl } from "react-leaflet-draw"
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Polygon as LeafletPolygon } from "react-leaflet"
 import L from "leaflet"
 import * as turf from "@turf/turf"
-import { properties } from "../properties/property-data"
+import type { Feature, Polygon as TurfPolygon } from "geojson"
 import { formatPrice } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Trash2, MapPin, CircleIcon, BarChart3, ChevronDown, ChevronUp, ViewIcon as StreetView } from "lucide-react"
@@ -13,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import PropertyStatistics from "./property-statistics"
 import { useRouter } from "next/navigation"
 import StreetViewModal from "@/components/shared/street-view-model"
+import useGetListProperties from "@/hooks/queries/useGetListProperties" // <-- Import the hook
 
 // Import Leaflet CSS
 import "leaflet/dist/leaflet.css"
@@ -41,7 +41,6 @@ const createCustomIcon = (price: number, status: string, propertyType: string, i
   if (propertyType.toLowerCase().includes("apartment")) {
     icon = `<Building class="h-3 w-3 mr-1" />`
   }
-
   return L.divIcon({
     className: "custom-marker-icon",
     html: `
@@ -54,6 +53,94 @@ const createCustomIcon = (price: number, status: string, propertyType: string, i
     iconSize: [80, 30],
     iconAnchor: [40, 15],
   })
+}
+
+// California polygon coordinates (approximate, simplified for demo)
+// Format: [lat, lng]
+const californiaPolygonLatLngs = [
+  [42.0095, -124.4096], // NW corner (Oregon border)
+  [41.9983, -123.6237],
+  [41.9983, -122.3789],
+  [41.9983, -121.0370],
+  [41.9983, -120.0019], // NE corner
+  [39.0021, -120.0037],
+  [37.5555, -117.9575],
+  [36.3594, -116.3699],
+  [35.0019, -114.6335], // SE corner (Arizona border)
+  [34.9659, -114.6382],
+  [34.9107, -114.6286],
+  [34.8758, -114.6382],
+  [34.8454, -114.5977],
+  [34.7890, -114.5685],
+  [34.7269, -114.4966],
+  [34.6648, -114.4503],
+  [34.6581, -114.4599],
+  [34.5869, -114.4324],
+  [34.5235, -114.3785],
+  [34.4601, -114.3867],
+  [34.4500, -114.3362],
+  [34.4375, -114.3036],
+  [34.4024, -114.2672],
+  [34.3559, -114.1865],
+  [34.3049, -114.1386],
+  [34.2561, -114.1317],
+  [34.2596, -114.1650],
+  [34.2044, -114.2241],
+  [34.1914, -114.2224],
+  [34.1720, -114.2900],
+  [34.1368, -114.3236],
+  [34.1186, -114.3621],
+  [34.1118, -114.4084],
+  [34.0856, -114.4366],
+  [34.0276, -114.4336],
+  [33.9582, -114.5111],
+  [33.9308, -114.5361],
+  [33.9058, -114.5096],
+  [33.8613, -114.5257],
+  [33.8248, -114.5210],
+  [33.7597, -114.5056],
+  [33.7083, -114.4946],
+  [33.6832, -114.5282],
+  [33.6363, -114.5249],
+  [33.5895, -114.4974],
+  [33.5528, -114.5249],
+  [33.5311, -114.5249],
+  [33.5070, -114.5352],
+  [33.4418, -114.5249],
+  [33.4142, -114.5122],
+  [33.4039, -114.5352],
+  [33.3576, -114.5257],
+  [33.3041, -114.5122],
+  [33.2858, -114.5282],
+  [33.2751, -114.4974],
+  [32.7556, -117.2468], // San Diego
+  [32.5343, -117.1278], // SW corner (Mexico border)
+  [32.7500, -117.2500], // Back up the coast
+  [33.0000, -118.0000],
+  [34.0000, -120.0000],
+  [35.0000, -122.0000],
+  [36.0000, -123.0000],
+  [37.0000, -123.5000],
+  [38.0000, -123.8000],
+  [39.0000, -124.0000],
+  [40.0000, -124.2000],
+  [41.0000, -124.3000],
+  [42.0095, -124.4096], // Close the polygon
+]
+
+// Convert to [lat, lng] for react-leaflet Polygon
+const californiaPolygonLatLngsLeaflet = californiaPolygonLatLngs
+
+// Convert to GeoJSON polygon for turf
+const californiaPolygonGeoJSON: Feature<TurfPolygon> = {
+  type: "Feature",
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      californiaPolygonLatLngs.map(([lat, lng]) => [lng, lat])
+    ]
+  },
+  properties: {}
 }
 
 // Component to handle map location updates
@@ -78,36 +165,28 @@ function MapLocationController({
     // Simple geocoding simulation - in a real app, use a geocoding service
     const searchLocation = async () => {
       try {
-        console.log(`Searching for location: ${locationQuery}`)
 
         // This is a simplified example - in a real app, use a proper geocoding service
         // For demo purposes, we'll set different locations based on common searches
         let searchCenter: [number, number] = [34.0522, -118.2437] // Default to Los Angeles
 
         // Simple location matching for demo purposes
-        if (locationQuery.toLowerCase().includes("new york")) {
-          searchCenter = [40.7128, -74.006]
-        } else if (locationQuery.toLowerCase().includes("chicago")) {
-          searchCenter = [41.8781, -87.6298]
-        } else if (locationQuery.toLowerCase().includes("miami")) {
-          searchCenter = [25.7617, -80.1918]
-        } else if (locationQuery.toLowerCase().includes("san francisco")) {
-          searchCenter = [37.7749, -122.4194]
-        } else if (locationQuery.toLowerCase().includes("seattle")) {
-          searchCenter = [47.6062, -122.3321]
+        if (locationQuery.toLowerCase().includes("los-angeles-county")) {
+          searchCenter = [34.0522, -118.2437]
+        } else if (locationQuery.toLowerCase().includes("orange-county")) {
+          searchCenter = [33.7175, -117.8311]
+        } else if (locationQuery.toLowerCase().includes("san-diego-county")) {
+          searchCenter = [32.7157, -117.1611]
+        } else if (locationQuery.toLowerCase().includes("santa-clara-county")) {
+          searchCenter = [37.3541, -121.9552]
+        } else if (locationQuery.toLowerCase().includes("alameda-county")) {
+          searchCenter = [37.6017, -121.7195]
         }
 
         // Zoom to the location
         map.setView(searchCenter, 12)
 
-        // Add a temporary marker
-        const marker = L.marker(searchCenter).addTo(map)
-        marker.bindPopup(`<b>Showing results for:</b><br>${locationQuery}`).openPopup()
 
-        // Remove marker after 5 seconds
-        setTimeout(() => {
-          map.removeLayer(marker)
-        }, 5000)
       } catch (error) {
         console.error("Error searching location:", error)
       }
@@ -137,180 +216,99 @@ interface PropertyMapProps {
 export default function PropertyMap({ filteredPropertyIds, initialLocationQuery = null }: PropertyMapProps) {
   const router = useRouter()
 
-  // Calculate center of all properties
+  // Center the map on California
   const center = useMemo<[number, number]>(() => {
-    if (properties.length === 0) return [34.0522, -118.2437] // Default to LA
-
-    const lats = properties.map((p) => p.lat || 0)
-    const lngs = properties.map((p) => p.lng || 0)
-
-    const avgLat = lats.reduce((sum, lat) => sum + lat, 0) / lats.length
-    const avgLng = lngs.reduce((sum, lng) => sum + lng, 0) / lngs.length
-
-    return [avgLat, avgLng]
+    // Approximate center of California
+    return [36.7783, -119.4179]
   }, [])
 
+  // Determine the county from the initialLocationQuery
+  const county = useMemo(() => {
+    if (!initialLocationQuery) return null
+    if (initialLocationQuery.toLowerCase().includes("los-angeles-county")) return "Los Angeles"
+    if (initialLocationQuery.toLowerCase().includes("orange-county")) return "Orange"
+    if (initialLocationQuery.toLowerCase().includes("san-diego-county")) return "San Diego"
+    if (initialLocationQuery.toLowerCase().includes("santa-clara-county")) return "Santa Clara"
+    if (initialLocationQuery.toLowerCase().includes("alameda-county")) return "Alameda"
+    return null
+  }, [initialLocationQuery])
+
+  // --- Use the hook to get 100 properties, filtered by county if available ---
+  const { data: properties = {listings: [], total_items: 0}, isLoading, isError } = useGetListProperties({ limit: 100, county: county ?? undefined })
+
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null)
-  const [drawnShape, setDrawnShape] = useState<any>(null)
-  const [shapeType, setShapeType] = useState<"polygon" | "circle" | null>(null)
+  // California polygon is always drawn, so set as default
+  const [drawnShape, setDrawnShape] = useState<any>(californiaPolygonGeoJSON)
+  const [shapeType, setShapeType] = useState<"polygon" | "circle" | null>("polygon")
   const [circleRadius, setCircleRadius] = useState<number | null>(null)
   const [circleCenter, setCircleCenter] = useState<[number, number] | null>(null)
   const [propertiesInSearchArea, setPropertiesInSearchArea] = useState<string[]>([])
-  const [propertiesInAreaData, setPropertiesInAreaData] = useState<typeof properties>([])
+  const [propertiesInAreaData, setPropertiesInAreaData] = useState<any[]>([])
+  // Drawing is disabled, since California is always drawn
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false)
   const [activeDrawTool, setActiveDrawTool] = useState<"polygon" | "circle" | null>(null)
   const [showStatistics, setShowStatistics] = useState(false)
   const [hoveredProperty, setHoveredProperty] = useState<string | null>(null)
   const [streetViewOpen, setStreetViewOpen] = useState(false)
-  const [streetViewProperty, setStreetViewProperty] = useState<(typeof properties)[0] | null>(null)
+  const [streetViewProperty, setStreetViewProperty] = useState<any | null>(null)
   const featureGroupRef = useRef<L.FeatureGroup>(null)
   const mapRef = useRef<L.Map | null>(null)
-  const hasSearchArea = Boolean(drawnShape || circleCenter)
+  const hasSearchArea = true // Always true, since California is always drawn
 
   // Determine which properties to display based on filters and drawn area
   const displayedProperties = useMemo(() => {
-    let displayProps = properties
+    if (!properties || properties.length === 0) return []
+    
+    let displayProps = properties.listings
 
     // Apply filters if provided
-    if (filteredPropertyIds && filteredPropertyIds.length > 0) {
-      displayProps = displayProps.filter((p) => filteredPropertyIds.includes(p.id))
-    }
+    // if (filteredPropertyIds && filteredPropertyIds.length > 0) {
+    //   displayProps = displayProps.filter((p: any) => filteredPropertyIds.includes(p.id))
+    // }
 
-    // Apply drawn area filter if active
-    if (hasSearchArea) {
-      displayProps = displayProps.filter((p) => propertiesInSearchArea.includes(p.id))
-    }
+    // Always filter by California polygon
+    // displayProps = displayProps.filter((p: any) => propertiesInSearchArea.includes(p.id))
 
     return displayProps
-  }, [filteredPropertyIds, propertiesInSearchArea, hasSearchArea])
-
-  // Filter properties based on drawn shape
+  }, [filteredPropertyIds, propertiesInSearchArea, properties])
+  // Filter properties based on California polygon
   useEffect(() => {
-    if (!drawnShape && !circleCenter) {
-      setPropertiesInSearchArea([])
-      setPropertiesInAreaData([])
-      return
-    }
+    // Defensive: only run if properties is a stable array (not recreated every render)
+    // if (!Array.isArray(properties) || properties.length === 0) {
+    //   setPropertiesInSearchArea([])
+    //   setPropertiesInAreaData([])
+    //   return
+    // }
 
-    const propertiesInArea: string[] = []
-    let propertiesData: typeof properties = []
-
-    if (shapeType === "polygon" && drawnShape) {
-      // Filter properties within polygon
-      propertiesData = properties.filter((property) => {
-        if (!property.lat || !property.lng) return false
-
+    // Memoize the calculation to avoid unnecessary state updates
+    const filtered = properties.listings.reduce(
+      (acc: { ids: string[]; data: any[] }, property: any) => {
+        if (!property.lat || !property.lng) return acc
         const point = turf.point([property.lng, property.lat])
-        const isInArea = turf.booleanPointInPolygon(point, drawnShape)
-
-        if (isInArea) {
-          propertiesInArea.push(property.id)
+        if (turf.booleanPointInPolygon(point, californiaPolygonGeoJSON)) {
+          acc.ids.push(property.id)
+          acc.data.push(property)
         }
+        return acc
+      },
+      { ids: [], data: [] }
+    )
 
-        return isInArea
-      })
-    } else if (shapeType === "circle" && circleCenter && circleRadius) {
-      // Filter properties within circle radius
-      propertiesData = properties.filter((property) => {
-        if (!property.lat || !property.lng) return false
+    // Only update state if values have actually changed to avoid infinite loops
+    setPropertiesInSearchArea(prev =>
+      JSON.stringify(prev) === JSON.stringify(filtered.ids) ? prev : filtered.ids
+    )
+    setPropertiesInAreaData(prev =>
+      JSON.stringify(prev) === JSON.stringify(filtered.data) ? prev : filtered.data
+    )
+  }, [properties])
 
-        const from = turf.point([circleCenter[1], circleCenter[0]])
-        const to = turf.point([property.lng, property.lat])
-        const distance = turf.distance(from, to, { units: "meters" })
-
-        const isInArea = distance <= circleRadius
-
-        if (isInArea) {
-          propertiesInArea.push(property.id)
-        }
-
-        return isInArea
-      })
-    }
-
-    setPropertiesInSearchArea(propertiesInArea)
-    setPropertiesInAreaData(propertiesData)
-  }, [drawnShape, shapeType, circleCenter, circleRadius])
-
-  // Handle draw events
-  const handleDrawCreated = (e: any) => {
-    const { layerType, layer } = e
-
-    if (layerType === "polygon" || layerType === "rectangle") {
-      // Convert Leaflet layer to GeoJSON
-      const drawnPolygon = layer.toGeoJSON()
-      setDrawnShape(drawnPolygon)
-      setShapeType("polygon")
-      setCircleCenter(null)
-      setCircleRadius(null)
-
-      // Fit map to the drawn area bounds
-      if (mapRef.current) {
-        mapRef.current.fitBounds(layer.getBounds())
-      }
-    } else if (layerType === "circle") {
-      const center = layer.getLatLng()
-      const radius = layer.getRadius()
-
-      setCircleCenter([center.lat, center.lng])
-      setCircleRadius(radius)
-      setShapeType("circle")
-      setDrawnShape(null)
-
-      // Fit map to the circle bounds
-      if (mapRef.current) {
-        mapRef.current.fitBounds(layer.getBounds())
-      }
-    }
-
-    setActiveDrawTool(null)
-    setShowStatistics(true)
-  }
-
-  const handleDrawDeleted = () => {
-    setDrawnShape(null)
-    setShapeType(null)
-    setCircleCenter(null)
-    setCircleRadius(null)
-    setShowStatistics(false)
-  }
-
-  const handleDrawEdited = (e: any) => {
-    const editedLayers = e.layers
-
-    editedLayers.eachLayer((layer: any) => {
-      if (layer instanceof L.Polygon) {
-        setDrawnShape(layer.toGeoJSON())
-        setShapeType("polygon")
-        setCircleCenter(null)
-        setCircleRadius(null)
-      } else if (layer instanceof L.Circle) {
-        const center = layer.getLatLng()
-        const radius = layer.getRadius()
-
-        setCircleCenter([center.lat, center.lng])
-        setCircleRadius(radius)
-        setShapeType("circle")
-        setDrawnShape(null)
-      }
-    })
-  }
-
-  const clearDrawnShape = () => {
-    if (featureGroupRef.current) {
-      featureGroupRef.current.clearLayers()
-    }
-    setDrawnShape(null)
-    setShapeType(null)
-    setCircleCenter(null)
-    setCircleRadius(null)
-    setShowStatistics(false)
-  }
-
-  const activateDrawTool = (tool: "polygon" | "circle") => {
-    setIsDrawingEnabled(true)
-    setActiveDrawTool(tool)
-  }
+  // Drawing controls are disabled, so these handlers are not used
+  const handleDrawCreated = () => {}
+  const handleDrawDeleted = () => {}
+  const handleDrawEdited = () => {}
+  const clearDrawnShape = () => {}
+  const activateDrawTool = () => {}
 
   const handlePropertyClick = (propertyId: string) => {
     setSelectedProperty(propertyId)
@@ -320,108 +318,100 @@ export default function PropertyMap({ filteredPropertyIds, initialLocationQuery 
     router.push(`/properties/${propertyId}`)
   }
 
-  const openStreetView = (property: (typeof properties)[0]) => {
+  const openStreetView = (property: any) => {
     setStreetViewProperty(property)
     setStreetViewOpen(true)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <span>Loading properties...</span>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <span>Failed to load properties.</span>
+      </div>
+    )
   }
 
   return (
     <>
       <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
         <div className="bg-white rounded-md shadow-md p-3">
-          <h3 className="text-sm font-semibold mb-2">Draw Search Area</h3>
+          <h3 className="text-sm font-semibold mb-2">California Area</h3>
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant={activeDrawTool === "polygon" ? "default" : "outline"}
-                className={activeDrawTool === "polygon" ? "bg-slate-800" : ""}
-                onClick={() => activateDrawTool("polygon")}
+                variant="default"
+                className="bg-slate-800"
+                disabled
               >
                 <MapPin className="h-4 w-4 mr-2" />
-                Draw Area
+                California Area
               </Button>
-
               <Button
                 size="sm"
-                variant={activeDrawTool === "circle" ? "default" : "outline"}
-                className={activeDrawTool === "circle" ? "bg-slate-800" : ""}
-                onClick={() => activateDrawTool("circle")}
+                variant="outline"
+                className=""
+                disabled
               >
                 <CircleIcon className="h-4 w-4 mr-2" />
                 Draw Radius
               </Button>
             </div>
-
-            <Button size="sm" variant="outline" onClick={clearDrawnShape} disabled={!hasSearchArea}>
+            <Button size="sm" variant="outline" disabled>
               <Trash2 className="h-4 w-4 mr-2" />
               Clear
             </Button>
           </div>
 
-          {hasSearchArea && (
-            <div className="mt-3 pt-3 border-t border-slate-200">
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between items-center">
-                  <p className="text-xs text-slate-600">
-                    <span className="font-semibold text-slate-800">{propertiesInSearchArea.length}</span> properties
-                    found
-                  </p>
-
-                  {propertiesInSearchArea.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 -mr-1"
-                      onClick={() => setShowStatistics(!showStatistics)}
-                    >
-                      <BarChart3 className="h-3.5 w-3.5 mr-1" />
-                      Stats
-                      {showStatistics ? (
-                        <ChevronUp className="h-3.5 w-3.5 ml-1" />
-                      ) : (
-                        <ChevronDown className="h-3.5 w-3.5 ml-1" />
-                      )}
-                    </Button>
-                  )}
-                </div>
-
-                {shapeType === "circle" && circleRadius && (
-                  <Badge variant="outline" className="self-start text-xs bg-slate-50">
-                    Radius: {formatDistance(circleRadius)}
-                  </Badge>
+          <div className="mt-3 pt-3 border-t border-slate-200">
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-slate-600">
+                  <span className="font-semibold text-slate-800">{properties.total_items}</span> properties
+                  found in California
+                </p>
+                {propertiesInSearchArea.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 -mr-1"
+                    onClick={() => setShowStatistics(!showStatistics)}
+                  >
+                    <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                    Stats
+                    {showStatistics ? (
+                      <ChevronUp className="h-3.5 w-3.5 ml-1" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                    )}
+                  </Button>
                 )}
               </div>
             </div>
-          )}
+          </div>
         </div>
-
-        {!hasSearchArea && !isDrawingEnabled && (
-          <div className="bg-white rounded-md shadow-md p-3">
-            <p className="text-xs text-slate-600">
-              Draw a custom area or radius on the map to find properties and view market statistics.
-            </p>
-          </div>
-        )}
-
-        {isDrawingEnabled && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md shadow-md p-3">
-            <p className="text-xs text-yellow-800">
-              <span className="font-semibold">Drawing mode active.</span>{" "}
-              {activeDrawTool === "polygon"
-                ? "Click on the map to start drawing a polygon. Double-click to complete."
-                : "Click on the map and drag to create a radius circle."}
-            </p>
-          </div>
-        )}
-
+        <div className="bg-white rounded-md shadow-md p-3">
+          <p className="text-xs text-slate-600">
+            The area of California is highlighted on the map. All properties shown are within California.
+          </p>
+        </div>
         {/* Statistics Panel */}
         {showStatistics && propertiesInAreaData.length > 0 && <PropertyStatistics properties={propertiesInAreaData} />}
       </div>
 
       <MapContainer
         center={center}
-        zoom={13}
+        zoom={7}
+        maxZoom={18}
+        minZoom={6}
         style={{ height: "100%", width: "100%" }}
         zoomControl={false}
         ref={mapRef}
@@ -433,61 +423,35 @@ export default function PropertyMap({ filteredPropertyIds, initialLocationQuery 
         <ZoomControl position="bottomright" />
         <MapLocationController center={center} locationQuery={initialLocationQuery} />
 
-        {/* Drawing Controls */}
-        <FeatureGroup ref={featureGroupRef}>
-          {isDrawingEnabled && (
-            <EditControl
-              position="topright"
-              onCreated={handleDrawCreated}
-              onEdited={handleDrawEdited}
-              onDeleted={handleDrawDeleted}
-              draw={{
-                rectangle: activeDrawTool === "polygon",
-                polygon: activeDrawTool === "polygon",
-                polyline: false,
-                circle: activeDrawTool === "circle",
-                circlemarker: false,
-                marker: false,
-              }}
-            />
-          )}
-        </FeatureGroup>
-
-        {/* Render circle if we have circle data */}
-        {circleCenter && circleRadius && (
-          <Circle
-            center={circleCenter}
-            radius={circleRadius}
-            pathOptions={{
-              color: "#3b82f6",
-              fillColor: "#3b82f6",
-              fillOpacity: 0.1,
-              weight: 2,
-            }}
-          />
-        )}
+        {/* California Polygon Area */}
+        <LeafletPolygon
+          positions={californiaPolygonLatLngsLeaflet}
+          pathOptions={{
+            fillOpacity: 0,
+          }}
+        />
 
         {/* Property Markers */}
-        {properties.map((property) => {
+        {displayedProperties.map((property: any) => {
           const isInSearchArea = propertiesInSearchArea.includes(property.id)
           const isFiltered = filteredPropertyIds ? filteredPropertyIds.includes(property.id) : true
-          const shouldShow = (!hasSearchArea || isInSearchArea) && isFiltered
+          const shouldShow = true;
           const isSelected = selectedProperty === property.id
           const isHovered = hoveredProperty === property.id
 
           // Determine property type for icon
-          const propertyType = property.title.toLowerCase().includes("apartment")
-            ? "apartment"
-            : property.title.toLowerCase().includes("condo")
-              ? "condo"
-              : "house"
-
+          // const propertyType = property.title?.toLowerCase().includes("apartment")
+          //   ? "apartment"
+          //   : property.title?.toLowerCase().includes("condo")
+          //     ? "condo"
+          //     : "house"
+          const propertyType = property.property_type
           return shouldShow ? (
             <Marker
               key={property.id}
-              position={[property.lat || 0, property.lng || 0]}
+              position={[property.latitude || 0, property.longitude || 0]}
               icon={createCustomIcon(
-                property.price,
+                property.current_price ?? property.list_price,
                 property.status,
                 propertyType,
                 isInSearchArea || isSelected || isHovered,
@@ -509,34 +473,34 @@ export default function PropertyMap({ filteredPropertyIds, initialLocationQuery 
                 <div className="property-popup-content w-64">
                   <div className="relative h-32 w-full mb-2">
                     <img
-                      src={property.image || "/placeholder.svg"}
-                      alt={property.title}
+                      src={property.images[0] || "/placeholder.svg"}
+                      alt={property.address}
                       className="h-full w-full object-cover rounded-md"
                     />
                     <div
                       className={`absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-medium text-white ${
-                        property.status === "For Sale" ? "bg-green-600" : "bg-blue-600"
+                        property.property_type === "For Sale" ? "bg-green-600" : "bg-blue-600"
                       }`}
                     >
-                      {property.status}
+                      {property.property_type}
                     </div>
                   </div>
-                  <h3 className="font-semibold text-sm mb-1">{property.title}</h3>
-                  <p className="text-slate-600 text-xs mb-1">{property.location}</p>
-                  <p className="font-bold text-sm">${property.price.toLocaleString()}</p>
+                  <h3 className="font-semibold text-sm mb-1">{property.address}</h3>
+                  <p className="text-slate-600 text-xs mb-1">{property.city}</p>
+                  <p className="font-bold text-sm">${property.current_price?.toLocaleString()}</p>
                   <div className="flex gap-2 mt-2 text-xs text-slate-600">
-                    <span>{property.beds} beds</span>
+                    <span>{property.bedrooms} beds</span>
                     <span>•</span>
-                    <span>{property.baths} baths</span>
+                    <span>{property.bathrooms} baths</span>
                     <span>•</span>
-                    <span>{property.sqft.toLocaleString()} sq ft</span>
+                    <span>                      {property.living_area_sqft ? `${property?.living_area_sqft?.toLocaleString?.() ?? property.living_area_sqft} Sq Ft` : `${property?.lot_size_sqft?.toLocaleString?.() ?? property.lot_size_sqft} sq ft`}                    </span>
                   </div>
 
                   {/* Features */}
                   {property.features && property.features.length > 0 && (
                     <div className="mt-2">
                       <div className="flex flex-wrap gap-1">
-                        {property.features.slice(0, 3).map((feature) => (
+                        {property.features.slice(0, 3).map((feature: string) => (
                           <Badge key={feature} variant="outline" className="text-xs bg-slate-50">
                             {feature}
                           </Badge>
@@ -553,7 +517,7 @@ export default function PropertyMap({ filteredPropertyIds, initialLocationQuery 
                   <div className="flex gap-2 mt-3">
                     <Button
                       className="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-xs py-1.5 px-3 rounded-md"
-                      onClick={() => navigateToProperty(property.id)}
+                      onClick={() => navigateToProperty(property.listing_key)}
                     >
                       View Details
                     </Button>

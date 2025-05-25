@@ -22,12 +22,14 @@ interface FilterSidebarProps {
     max_sqft: number | undefined;
     min_sqft: number | undefined;
     city: string;
+    county: string;
   };
   onFilterChange: (filters: {
     propertyType: string;
     minPrice: number | undefined;
     maxPrice: number | undefined;
     city: string;
+    county: string;
     minBathroom: number | undefined;
     minBedroom: number | undefined;
     yearBuilt: number | undefined;
@@ -98,6 +100,7 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
       minPrice: undefined,
       maxPrice: undefined,
       city: "",
+      county: "",
       minBathroom: undefined,
       minBedroom: undefined,
       yearBuilt: undefined,

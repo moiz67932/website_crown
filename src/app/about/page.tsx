@@ -39,7 +39,7 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="relative h-80 rounded-lg overflow-hidden">
-              <Image src="/modern-real-estate-office.png" alt="Our modern office space" fill className="object-cover" />
+              <Image src="/luxury-modern-house-exterior.png" alt="Our modern office space" fill className="object-cover" />
             </div>
           </div>
         </div>

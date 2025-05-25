@@ -25,6 +25,7 @@ export default function PropertiesPage() {
     minPrice: undefined as number | undefined,
     maxPrice: undefined as number | undefined,
     city: "",
+    county: "", // Added county filter
     minBathroom: undefined as number | undefined,
     minBedroom: undefined as number | undefined,
     yearBuilt: undefined as number | undefined,

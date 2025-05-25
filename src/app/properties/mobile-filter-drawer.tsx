@@ -12,6 +12,7 @@ interface FilterSidebarProps {
     minPrice: number | undefined;
     maxPrice: number | undefined;
     city: string;
+    county: string;
     minBathroom: number | undefined;
     minBedroom: number | undefined;
     yearBuilt: number | undefined;
@@ -23,6 +24,7 @@ interface FilterSidebarProps {
     minPrice: number | undefined;
     maxPrice: number | undefined;
     city: string;
+    county: string;
     minBathroom: number | undefined;
     minBedroom: number | undefined;
     yearBuilt: number | undefined;

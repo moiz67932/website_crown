@@ -1,21 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { Suspense } from "react"
-import { useSearchParams } from "next/navigation"
 import MapViewHeader, { type FilterValues } from "./map-view-header"
 import MapFilterDrawer from "./map-filter-drawer"
 import MapListToggle from "./map-list-toggle"
 import PropertyListPanel from "./property-list-panel"
 import MapLoadingSkeleton from "./map-loading-skeleton"
 import MapFAQ from "./map-faq"
-import { properties } from "../properties/property-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import useListProperties from "@/hooks/queries/useGetListProperties"
 import "@/styles/map-styles.css"
+import { useSearchParams } from "next/navigation"
 
 // Dynamically import the map component with no SSR
-// This is necessary because Leaflet requires the window object
 const PropertyMap = dynamic(() => import("./property-map"), {
   ssr: false,
   loading: () => <MapLoadingSkeleton />,
@@ -23,73 +22,78 @@ const PropertyMap = dynamic(() => import("./property-map"), {
 
 export default function MapViewPage() {
   const [activeFilters, setActiveFilters] = useState<FilterValues>({})
-  const [filteredPropertyIds, setFilteredPropertyIds] = useState<string[]>([])
   const [showFAQ, setShowFAQ] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
-  // const searchParams = useSearchParams()
+  const searchParams = useSearchParams()
 
   // Get location from search params
-  // const locationQuery = searchParams.get("location")
-  const locationQuery = "California"
-  // Filter properties based on active filters
-  useEffect(() => {
-    if (Object.keys(activeFilters).length === 0) {
-      setFilteredPropertyIds([])
-      return
+  const locationQuery = searchParams.get("location")
+
+  // Determine the county from the locationQuery
+  const county = useMemo(() => {
+    if (!locationQuery) return null
+    if (locationQuery.toLowerCase().includes("los-angeles-county")) return "Los Angeles"
+    if (locationQuery.toLowerCase().includes("orange-county")) return "Orange"
+    if (locationQuery.toLowerCase().includes("san-diego-county")) return "San Diego"
+    if (locationQuery.toLowerCase().includes("santa-clara-county")) return "Santa Clara"
+    if (locationQuery.toLowerCase().includes("alameda-county")) return "Alameda"
+    return null
+  }, [locationQuery])
+
+  // Map activeFilters to API params for useListProperties
+  const apiParams = useMemo(() => {
+    // Map FilterValues to API params
+    // Only 10 items
+    const params: Record<string, any> = { limit: 10 }
+    if (activeFilters.propertyType && activeFilters.propertyType.length > 0) {
+      // Only use the first propertyType for API param
+      params.propertyType = Array.isArray(activeFilters.propertyType)
+        ? activeFilters.propertyType[0]
+        : activeFilters.propertyType
     }
+    if (activeFilters.priceRange) {
+      params.minPrice = activeFilters.priceRange[0]
+      params.maxPrice = activeFilters.priceRange[1]
+    }
+    if (activeFilters.beds && activeFilters.beds !== "Any") {
+      params.minBedroom = Number.parseInt(activeFilters.beds)
+    }
+    if (activeFilters.baths && activeFilters.baths !== "Any") {
+      params.minBathroom = Number.parseInt(activeFilters.baths)
+    }
+    if (activeFilters.areaRange) {
+      params.min_sqft = activeFilters.areaRange[0]
+      params.max_sqft = activeFilters.areaRange[1]
+    }
+    if (county) {
+      params.county = county
+    }
+    // You can add more mappings as needed (e.g., city, yearBuilt, etc.)
+    return params
+  }, [activeFilters, county])
 
-    const filtered = properties
-      .filter((property) => {
-        // Filter by property type
-        if (activeFilters.propertyType && activeFilters.propertyType.length > 0) {
-          // This is a simplified example - in a real app, you'd have property types in your data
-          const matchesType = activeFilters.propertyType.some((type) =>
-            property.title.toLowerCase().includes(type.toLowerCase()),
-          )
-          if (!matchesType) return false
-        }
+  const { data, isLoading } = useListProperties(apiParams)
+  const properties = data?.listings || []
 
-        // Filter by status
-        if (activeFilters.status && activeFilters.status.length > 0) {
-          if (!activeFilters.status.includes(property.status)) return false
-        }
+  // Filter by features and status on the client side if needed
+  const filteredProperties = useMemo(() => {
+    let filtered = properties
+    // if (activeFilters.status && activeFilters.status.length > 0) {
+    //   filtered = filtered.filter((property: any) =>
+    //     activeFilters.status.includes(property.status)
+    //   )
+    // }
+    // if (activeFilters.features && activeFilters.features.length > 0) {
+    //   filtered = filtered.filter((property: any) =>
+    //     activeFilters.features.every((feature: string) =>
+    //       property.features?.includes(feature)
+    //     )
+    //   )
+    // }
+    return filtered
+  }, [properties, activeFilters.status, activeFilters.features])
 
-        // Filter by price range
-        if (activeFilters.priceRange) {
-          const [min, max] = activeFilters.priceRange
-          if (property.price < min || property.price > max) return false
-        }
-
-        // Filter by beds
-        if (activeFilters.beds && activeFilters.beds !== "Any") {
-          const minBeds = Number.parseInt(activeFilters.beds)
-          if (property.beds < minBeds) return false
-        }
-
-        // Filter by baths
-        if (activeFilters.baths && activeFilters.baths !== "Any") {
-          const minBaths = Number.parseInt(activeFilters.baths)
-          if (property.baths < minBaths) return false
-        }
-
-        // Filter by area range
-        if (activeFilters.areaRange) {
-          const [min, max] = activeFilters.areaRange
-          if (property.sqft < min || property.sqft > max) return false
-        }
-
-        // Filter by features
-        if (activeFilters.features && activeFilters.features.length > 0 && property.features) {
-          const hasAllFeatures = activeFilters.features.every((feature) => property.features?.includes(feature))
-          if (!hasAllFeatures) return false
-        }
-
-        return true
-      })
-      .map((p) => p.id)
-
-    setFilteredPropertyIds(filtered)
-  }, [activeFilters])
+  const filteredPropertyIds = filteredProperties.map((p: any) => p.id)
 
   const handleFilterChange = (filters: FilterValues) => {
     setActiveFilters(filters)
@@ -97,7 +101,6 @@ export default function MapViewPage() {
 
   const handleClearFilters = () => {
     setActiveFilters({})
-    setFilteredPropertyIds([])
   }
 
   const toggleFAQ = () => {
@@ -115,7 +118,7 @@ export default function MapViewPage() {
 
       <div className="flex-1 flex flex-col md:flex-row relative">
         {/* Map Container */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative h-[calc(100vh-100px)]">
           <Suspense fallback={<MapLoadingSkeleton />}>
             <PropertyMap filteredPropertyIds={filteredPropertyIds} initialLocationQuery={locationQuery} />
           </Suspense>
@@ -137,7 +140,7 @@ export default function MapViewPage() {
 
         {/* Property List Panel - Hidden on mobile when map is shown */}
         <div className="hidden md:block w-full md:w-[400px] lg:w-[450px] border-l border-slate-200 bg-white overflow-y-auto">
-          <PropertyListPanel filteredPropertyIds={filteredPropertyIds} />
+          <PropertyListPanel filteredPropertyIds={filteredPropertyIds} properties={properties} />
         </div>
       </div>
 
