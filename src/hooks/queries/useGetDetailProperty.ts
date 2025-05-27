@@ -53,6 +53,13 @@ export interface PropertyDetail {
   ShowingContactName: string | null
   current_price: number
   images: string[]
+  seo_title: string | null
+  faq_content: string | null
+  h1_heading: string | null
+  amenities_content: string | null
+  page_content: string | null
+  meta_description: string | null
+  title: string | null
 }
 
 const fetchPropertyDetail = async (id: string): Promise<PropertyDetail> => {

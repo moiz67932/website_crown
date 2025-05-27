@@ -1,6 +1,8 @@
 "use client"
 import Link from "next/link"
 import type { Metadata } from "next"
+import ReactMarkdown from 'react-markdown';
+
 import { MapPin, Bed, Bath, Maximize, Calendar, Heart, Share2, ArrowRight } from "lucide-react"
 import Script from "next/script"
 import React, { useState } from "react"
@@ -23,51 +25,15 @@ import Loading from "@/components/shared/loading"
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params)
   const { data: property, isLoading, isError } = usePropertyDetail(unwrappedParams.id)
-  const faqs = [
-    {
-      question: "What are the HOA fees for this property?",
-      answer:
-        "The HOA fees for this luxury villa are $850 per month. These fees cover maintenance of common areas, security services, and access to community amenities including the private beach club, tennis courts, and community pool.",
-    },
-    {
-      question: "Is this property in a flood zone?",
-      answer:
-        "No, this property is not located in a designated flood zone. It sits on an elevated portion of the coastline, approximately 45 feet above sea level, providing both safety from flooding and exceptional ocean views.",
-    },
-    {
-      question: "What schools are assigned to this property?",
-      answer:
-        "This property is served by the highly-rated Malibu Unified School District. The assigned schools are Malibu Elementary School (0.8 miles away), Malibu Middle School (1.2 miles away), and Malibu High School (1.5 miles away). All schools have received excellent ratings for academic performance.",
-    },
-    {
-      question: "Are there any upcoming special assessments?",
-      answer:
-        "There are no pending or approved special assessments for this property or the community at this time. The HOA maintains a healthy reserve fund for future maintenance and improvements.",
-    },
-    {
-      question: "What energy-efficient features does this home have?",
-      answer:
-        "This modern villa includes numerous energy-efficient features: solar panels that offset approximately 80% of electricity usage, a smart home system with energy management capabilities, high-efficiency HVAC systems, LED lighting throughout, energy-efficient appliances, and double-paned windows with UV protection.",
-    },
-    {
-      question: "Is the property furnished?",
-      answer:
-        "The property is being sold unfurnished, but the current owner is open to negotiating the sale of select furniture pieces. The custom-built kitchen appliances, window treatments, and built-in entertainment systems are included in the sale.",
-    },
-    {
-      question: "What is the property tax rate?",
-      answer:
-        "The current property tax rate is approximately 1.25% of the assessed value. The most recent annual property tax was $32,500, but please note that the property may be reassessed upon sale according to California law.",
-    },
-  ];
+  const faqs = property?.faq_content ? JSON.parse(property.faq_content) : []
   const [drawnShape, setDrawnShape] = useState<any>(null) // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
-    name: property?.address || "Unknown Address",
-    description: property?.public_remarks || "No description available",
-    image: property?.main_image_url || [],
+    name: property?.seo_title || "Unknown Address",
+    description: property?.meta_description || "No description available",
+    image: property?.images[0] || [],
     url: `/properties/${unwrappedParams.id}`,
     address: {
       "@type": "PostalAddress",
@@ -180,15 +146,15 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             </li>
             <span className="mx-2">/</span>
             <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" className="text-foreground">
-              <span itemProp="name">{property?.address || "Unknown Address"}</span>
+              <span itemProp="name">{property?.title || property?.address || "Unknown Address"}</span>
               <meta itemProp="position" content="3" />
             </li>
           </ol>
         </nav>
 
         <article itemScope itemType="https://schema.org/RealEstateListing">
-          <meta itemProp="name" content={property?.address || "Unknown Address"} />
-          <meta itemProp="description" content={property?.public_remarks || "No description available"} />
+          <meta itemProp="name" content={property?.title || property?.address || "Unknown Address"} />
+          <meta itemProp="description" content={property?.meta_description || "No description available"} />
           <meta itemProp="price" content={property?.list_price.toString()} />
           <meta itemProp="priceCurrency" content="USD" />
 
@@ -203,7 +169,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </Badge>
               </div>
               <h1 className="text-3xl font-bold mb-2" itemProp="name">
-                {property?.address}
+                {property?.title || property?.address}
               </h1>
               <div className="flex items-center text-muted-foreground mb-2">
                 <MapPin className="h-4 w-4 mr-1" />
@@ -303,25 +269,25 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                           <p className="font-medium">{property?.lot_size_sqft} Sq Ft</p>
                         </div>
                       </div>
+                      {faqs && faqs.length > 0 && (
                       <PropertyFAQ
                         faqs={faqs}
                         propertyType={property.property_type}
-                        propertyAddress={property.address}
-                      />
+                          propertyAddress={property.address}
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
 
                 <TabsContent value="features" className="space-y-6">
-                </TabsContent>
-                <TabsContent value="faq" className="space-y-6">
                   <Card>
                     <CardContent className="p-6">
-                      <PropertyFAQ
-                        faqs={faqs}
-                        propertyType={property.property_type}
-                        propertyAddress={property.address}
-                      />
+                      <h2 className="text-xl font-semibold mb-4">Features</h2>
+                      <p className="text-muted-foreground leading-relaxed" itemProp="description">
+                      <ReactMarkdown>{property?.amenities_content}</ReactMarkdown>
+
+                      </p>
                     </CardContent>
                   </Card>
                 </TabsContent>

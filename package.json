@@ -45,6 +45,7 @@
     "react-hook-form": "^7.54.1",
     "react-leaflet": "latest",
     "react-leaflet-draw": "latest",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
     "sonner": "^1.7.1",
