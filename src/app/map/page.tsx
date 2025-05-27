@@ -224,7 +224,7 @@ function MapViewPage() {
 
           {/* Map/List Toggle - Only visible on mobile */}
           <div className="md:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
-            <MapListToggle filteredPropertyIds={filteredPropertyIds} properties={properties} />
+            <MapListToggle filteredPropertyIds={filteredPropertyIds} properties={properties} data={data?.seo_content}/>
           </div>
         </div>
 

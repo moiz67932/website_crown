@@ -9,9 +9,10 @@ import PropertyListPanel from "./property-list-panel"
 interface MapListToggleProps {
   filteredPropertyIds?: string[]
   properties: any[]
+  data: any
 }
 
-export default function MapListToggle({ filteredPropertyIds, properties }: MapListToggleProps) {
+export default function MapListToggle({ filteredPropertyIds, properties, data }: MapListToggleProps) {
   const [showList, setShowList] = useState(false)
 
   return (
@@ -47,7 +48,7 @@ export default function MapListToggle({ filteredPropertyIds, properties }: MapLi
             </div>
           </SheetHeader>
           <div className="h-[calc(80vh-56px)] overflow-hidden">
-            <PropertyListPanel onPropertyClick={() => setShowList(false)} filteredPropertyIds={filteredPropertyIds} properties={properties} />
+            <PropertyListPanel onPropertyClick={() => setShowList(false)} filteredPropertyIds={filteredPropertyIds} properties={properties} data={data} isLoading={false} />
           </div>
         </SheetContent>
       </Sheet>
