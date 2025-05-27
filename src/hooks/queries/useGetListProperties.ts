@@ -59,6 +59,8 @@ interface UseListPropertiesParams {
   max_sqft?: number;
   min_sqft?: number;
   county?: string;
+
+
 }
 
 const useListProperties = ({ skip, limit, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, county }: UseListPropertiesParams) => {

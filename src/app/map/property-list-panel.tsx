@@ -9,6 +9,7 @@ import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/utils"
+import ReactMarkdown from "react-markdown"
 
 // Define the property type based on useGetListProperties.ts API response
 export interface Property {
@@ -30,11 +31,20 @@ export interface Property {
   [key: string]: any
 }
 
+interface Data {
+  faq_content: string
+  amenities_content: string
+  page_content: string
+  meta_description: string
+  title: string
+}
 interface PropertyListPanelProps {
   onPropertyClick?: () => void
   filteredPropertyIds?: string[]
   properties: Property[]
   onPropertyHover?: (id: string | null) => void
+  data: any
+  isLoading: boolean
 }
 
 export default function PropertyListPanel({
@@ -42,10 +52,13 @@ export default function PropertyListPanel({
   filteredPropertyIds,
   onPropertyHover,
   properties,
+  data,
+  isLoading,
 }: PropertyListPanelProps) {
+  // console.log(data);
   const [favoriteProperties, setFavoriteProperties] = useState<string[]>([])
   const [hoveredProperty, setHoveredProperty] = useState<string | null>(null)
-
+  const faqs = data?.faq_content ? JSON.parse(data.faq_content) : []
   const toggleFavorite = (e: React.MouseEvent, propertyId: string) => {
     e.preventDefault()
     e.stopPropagation()
@@ -85,7 +98,7 @@ export default function PropertyListPanel({
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="divide-y divide-slate-200">
             {properties.map((property) => (
               <Link
@@ -95,7 +108,7 @@ export default function PropertyListPanel({
                   hoveredProperty === property.listing_key ? "bg-slate-50" : ""
                 }`}
                 onClick={onPropertyClick}
-                onMouseEnter={() => handlePropertyHover(property.id)}
+                onMouseEnter={() => handlePropertyHover(property.listing_key)}
                 onMouseLeave={() => handlePropertyHover(null)}
               >
                 <div className="flex gap-4">
@@ -150,9 +163,9 @@ export default function PropertyListPanel({
                       <div className="flex items-center">
                         <Maximize className="h-3 w-3 mr-1 text-slate-400" />
                         <span>
-                          {property.sqft?.toLocaleString
-                            ? property.sqft.toLocaleString()
-                            : property.sqft}{" "}
+                          {property.lot_size_sqft?.toLocaleString
+                            ? property.lot_size_sqft.toLocaleString()
+                            : property.living_area_sqft }{" "}
                           sq ft
                         </span>
                       </div>
@@ -162,8 +175,64 @@ export default function PropertyListPanel({
               </Link>
             ))}
           </div>
+          
+           {/* SEO Content Section */}
+           {data && (
+            <div className="p-6 border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+              {data.title && (
+                <h3 className="font-bold text-2xl text-slate-900 mb-3">{data.seo_title || data.title}</h3>
+              )}
+              
+              {data.page_content && (
+                <div className="prose prose-lg text-slate-700 mb-6">
+                  <ReactMarkdown>
+                    {data.page_content}
+                  </ReactMarkdown>
+                </div>
+              )}
+              
+              {data.amenities_content && (
+                <div className="mb-6">
+                  <h4 className="font-semibold text-lg text-emerald-700 mb-2">Amenities</h4>
+                  <div className="prose prose-base text-slate-700">
+                    <ReactMarkdown>
+                      {data.amenities_content}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )}
+              
+              {faqs && faqs.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-lg text-blue-700 mb-3">Frequently Asked Questions</h4>
+                  <div className="space-y-4">
+                    {faqs.map((faq: any, index: number) => (
+                      <div key={index} className="bg-slate-100 rounded-lg p-4 shadow-sm">
+                        <h5 className="font-semibold text-slate-800 mb-1">{faq.question}</h5>
+                        <p className="text-slate-600">{faq.answer}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 8px;
+        }
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #e2e8f0 transparent;
+        }
+      `}</style>
     </div>
   )
 }

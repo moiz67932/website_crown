@@ -13,6 +13,7 @@ import { useMediaQuery } from "@/hooks/use-media-query"
 import useListProperties from "@/hooks/queries/useGetListProperties"
 import "@/styles/map-styles.css"
 import { useSearchParams } from "next/navigation"
+import { NodeNextRequest } from "next/dist/server/base-http/node"
 
 // Dynamically import the map component with no SSR
 const PropertyMap = dynamic(() => import("./property-map"), {
@@ -36,14 +37,14 @@ function MapViewPage() {
     if (priceRange === "500k-1m") return [500000, 1000000]
     if (priceRange === "1m-2m") return [1000000, 2000000]
     if (priceRange === "2m-5m") return [2000000, 5000000]
-    if (priceRange === "5m+") return [5000000, Infinity]
-    return [0, Infinity]
+    if (priceRange === "5m+") return [5000000, 100000000]
+    return null
   }
   const price_range = useMemo(() => {
     if (priceRange) {
       return convertPriceRange(priceRange)
     }
-    return [0, Infinity]
+    return null
   }, [priceRange])
 
   // Determine the county from the locationQuery
@@ -159,8 +160,10 @@ function MapViewPage() {
     return params
   }, [activeFilters, county])
 
+
   const { data, isLoading } = useListProperties(apiParams)
   const properties = data?.listings || []
+  
 
   // Filter by features and status on the client side if needed
   const filteredProperties = useMemo(() => {
@@ -227,7 +230,7 @@ function MapViewPage() {
 
         {/* Property List Panel - Hidden on mobile when map is shown */}
         <div className="hidden md:block w-full md:w-[400px] lg:w-[450px] border-l border-slate-200 bg-white overflow-y-auto">
-          <PropertyListPanel filteredPropertyIds={filteredPropertyIds} properties={properties} />
+          <PropertyListPanel filteredPropertyIds={filteredPropertyIds} properties={properties} data={data?.seo_content} isLoading={isLoading} />
         </div>
       </div>
 
