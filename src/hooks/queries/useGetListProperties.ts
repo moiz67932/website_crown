@@ -16,9 +16,10 @@ interface FetchListPropertiesParams {
   yearBuilt?: number;
   max_sqft?: number;
   min_sqft?: number;
+  sortBy?: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc";
 }
 
-const fetchListProperties = async ({ skip = 0, limit = 10, county, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft }: FetchListPropertiesParams) => {
+const fetchListProperties = async ({ skip = 0, limit = 10, county, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, sortBy }: FetchListPropertiesParams) => {
   const queryParams = new URLSearchParams({
     skip: skip.toString(),
     limit: limit.toString(),
@@ -32,6 +33,7 @@ const fetchListProperties = async ({ skip = 0, limit = 10, county, propertyType,
     ...(max_sqft !== undefined && { max_sqft: max_sqft.toString() }),
     ...(min_sqft !== undefined && { min_sqft: min_sqft.toString() }),
     ...(county && { county: county }),
+    ...(sortBy && { sort_by: sortBy }),
   });
 
   try {
@@ -59,14 +61,13 @@ interface UseListPropertiesParams {
   max_sqft?: number;
   min_sqft?: number;
   county?: string;
-
-
+  sortBy?: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc";
 }
 
-const useListProperties = ({ skip, limit, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, county }: UseListPropertiesParams) => {
+const useListProperties = ({ skip, limit, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, county, sortBy }: UseListPropertiesParams) => {
   return useQuery({
-    queryKey: ["listProperties", skip, limit, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, county],
-    queryFn: () => fetchListProperties({ skip, limit, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, county }),
+    queryKey: ["listProperties", skip, limit, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, county, sortBy],
+    queryFn: () => fetchListProperties({ skip, limit, propertyType, minPrice, maxPrice, city, minBathroom, minBedroom, yearBuilt, max_sqft, min_sqft, county, sortBy }),
   });
 };
 

@@ -5,9 +5,11 @@ import { GridIcon, LayoutList } from "lucide-react"
 interface IPropertyListingHeaderProps {
   totalProperties: number
   currentPage: number
+  sortBy: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
+  onSortChange: (sort: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc") => void
 }
 
-export default function PropertyListingHeader({ totalProperties, currentPage }: IPropertyListingHeaderProps) {
+export default function PropertyListingHeader({ totalProperties, currentPage, sortBy, onSortChange }: IPropertyListingHeaderProps) {
   const startIndex = (currentPage - 1) * 12 + 1
   const endIndex = Math.min(startIndex + 11, totalProperties)
   return (
@@ -36,7 +38,7 @@ export default function PropertyListingHeader({ totalProperties, currentPage }: 
                 </Button>
               </div>
 
-              <Select defaultValue="recommended">
+              <Select value={sortBy} onValueChange={onSortChange}>
                 <SelectTrigger className="h-8 text-xs md:text-sm w-[140px] md:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>

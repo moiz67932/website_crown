@@ -30,7 +30,8 @@ export default function PropertiesPage() {
     minBedroom: undefined as number | undefined,
     yearBuilt: undefined as number | undefined,
     max_sqft: undefined as number | undefined,
-    min_sqft: undefined as number | undefined
+    min_sqft: undefined as number | undefined,
+    sortBy: "recommended" as "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
   })
   const limit = 12
   const skip = (currentPage - 1) * limit
@@ -46,7 +47,8 @@ export default function PropertiesPage() {
     minBedroom: filters.minBedroom,
     yearBuilt: filters.yearBuilt,
     max_sqft: filters.max_sqft,
-    min_sqft: filters.min_sqft
+    min_sqft: filters.min_sqft,
+    sortBy: filters.sortBy
   })
 
   const properties = data?.listings || []
@@ -64,7 +66,12 @@ export default function PropertiesPage() {
 
   return (
     <main className="bg-slate-50 min-h-screen pt-16 md:pt-20">
-      <PropertyListingHeader currentPage={currentPage} totalProperties={totalItems} />
+      <PropertyListingHeader 
+        currentPage={currentPage} 
+        totalProperties={totalItems} 
+        sortBy={filters.sortBy}
+        onSortChange={(newSort) => handleFilterChange({ ...filters, sortBy: newSort })}
+      />
 
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

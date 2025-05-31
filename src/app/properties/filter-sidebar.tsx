@@ -23,6 +23,7 @@ interface FilterSidebarProps {
     min_sqft: number | undefined;
     city: string;
     county: string;
+    sortBy: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
   };
   onFilterChange: (filters: {
     propertyType: string;
@@ -35,6 +36,7 @@ interface FilterSidebarProps {
     yearBuilt: number | undefined;
     max_sqft: number | undefined;
     min_sqft: number | undefined;
+    sortBy: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
   }) => void;
 }
 
@@ -105,7 +107,8 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
       minBedroom: undefined,
       yearBuilt: undefined,
       max_sqft: undefined,
-      min_sqft: undefined
+      min_sqft: undefined,
+      sortBy: "recommended"
     })
   }
 
