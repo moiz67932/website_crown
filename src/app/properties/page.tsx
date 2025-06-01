@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import dynamic from "next/dynamic"
 import PropertiesGrid from "./properties-grid"
 import PropertyListingHeader from "./property-header"
@@ -19,23 +19,57 @@ import { useSearchParams } from "next/navigation"
 const FilterSidebar = dynamic(() => import("./filter-sidebar"), { ssr: false })
 const MobileFilterDrawer = dynamic(() => import("./mobile-filter-drawer"), { ssr: false })
 
-export default function PropertiesPage() {
+// Client-side component that uses useSearchParams
+function PropertiesPageContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const searchParams = useSearchParams()
 
-  const [filters, setFilters] = useState({
-    propertyType: searchParams.get("propertyType") || "",
-    minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
-    maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
-    city: searchParams.get("searchLocationType") === "city" ? searchParams.get("location") || "" : "",
-    county: searchParams.get("searchLocationType") === "county" ? searchParams.get("location") || "" : "",
-    minBathroom: searchParams.get("minBathroom") ? Number(searchParams.get("minBathroom")) : undefined,
-    minBedroom: searchParams.get("minBedroom") ? Number(searchParams.get("minBedroom")) : undefined,
-    yearBuilt: searchParams.get("yearBuilt") ? Number(searchParams.get("yearBuilt")) : undefined,
-    max_sqft: searchParams.get("max_sqft") ? Number(searchParams.get("max_sqft")) : undefined,
-    min_sqft: searchParams.get("min_sqft") ? Number(searchParams.get("min_sqft")) : undefined,
-    sortBy: searchParams.get("sortBy") as "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc" || "recommended"
+  const [filters, setFilters] = useState<{
+    propertyType: string;
+    minPrice: number | undefined;
+    maxPrice: number | undefined;
+    city: string;
+    county: string;
+    minBathroom: number | undefined;
+    minBedroom: number | undefined;
+    yearBuilt: number | undefined;
+    max_sqft: number | undefined;
+    min_sqft: number | undefined;
+    sortBy: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc";
+  }>({
+    propertyType: "",
+    minPrice: undefined,
+    maxPrice: undefined,
+    city: "",
+    county: "",
+    minBathroom: undefined,
+    minBedroom: undefined,
+    yearBuilt: undefined,
+    max_sqft: undefined,
+    min_sqft: undefined,
+    sortBy: "recommended"
   })
+
+  useEffect(() => {
+    const sortByParam = searchParams.get("sortBy")
+    const validSortBy = ["recommended", "price-asc", "price-desc", "date-desc", "area-desc"].includes(sortByParam || "")
+      ? sortByParam as "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
+      : "recommended"
+
+    setFilters({
+      propertyType: searchParams.get("propertyType") || "",
+      minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+      maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+      city: searchParams.get("searchLocationType") === "city" ? searchParams.get("location") || "" : "",
+      county: searchParams.get("searchLocationType") === "county" ? searchParams.get("location") || "" : "",
+      minBathroom: searchParams.get("minBathroom") ? Number(searchParams.get("minBathroom")) : undefined,
+      minBedroom: searchParams.get("minBedroom") ? Number(searchParams.get("minBedroom")) : undefined,
+      yearBuilt: searchParams.get("yearBuilt") ? Number(searchParams.get("yearBuilt")) : undefined,
+      max_sqft: searchParams.get("max_sqft") ? Number(searchParams.get("max_sqft")) : undefined,
+      min_sqft: searchParams.get("min_sqft") ? Number(searchParams.get("min_sqft")) : undefined,
+      sortBy: validSortBy
+    })
+  }, [searchParams])
 
   const limit = 12
   const skip = (currentPage - 1) * limit
@@ -108,7 +142,6 @@ export default function PropertiesPage() {
                     
                     {[...Array(totalPages)].map((_, i) => {
                       const page = i + 1
-                      // Show first page, last page, current page, and pages around current page
                       if (
                         page === 1 ||
                         page === totalPages ||
@@ -156,7 +189,7 @@ export default function PropertiesPage() {
 
 function PropertyGridSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+    <div className="pt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
       {[...Array(9)].map((_, i) => (
         <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm">
           <Skeleton className="h-48 w-full" />
@@ -172,5 +205,14 @@ function PropertyGridSkeleton() {
         </div>
       ))}
     </div>
+  )
+}
+
+// Main component with Suspense boundary
+export default function PropertiesPage() {
+  return (
+    <Suspense fallback={<PropertyGridSkeleton />}>
+      <PropertiesPageContent />
+    </Suspense>
   )
 }
