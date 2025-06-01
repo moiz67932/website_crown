@@ -1,7 +1,19 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { MapPin } from "lucide-react"
+import { useEffect } from "react"
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
+
+// Fix for default marker icon in Next.js
+const icon = L.icon({
+  iconUrl: "/gps.png",
+  iconRetinaUrl: "/gps.png",
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30],
+  shadowSize: [30, 30]
+})
 
 interface PropertyMapProps {
   location: {
@@ -12,25 +24,24 @@ interface PropertyMapProps {
 }
 
 export default function PropertyMap({ location, address }: PropertyMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // In a real application, you would integrate with Google Maps, Mapbox, etc.
-    // For this example, we'll just show a placeholder
-  }, [location])
-
   return (
-    <div className="relative h-[300px] rounded-lg overflow-hidden bg-muted">
-      <div ref={mapRef} className="h-full w-full">
-        {/* Placeholder for map */}
-        <div className="absolute inset-0 flex items-center justify-center flex-col">
-          <MapPin className="h-10 w-10 text-primary" />
-          <p className="mt-2 text-center max-w-xs px-4">{address}</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
-          </p>
-        </div>
-      </div>
+    <div className="relative h-[300px] rounded-lg overflow-hidden">
+      <MapContainer
+        center={[location.lat, location.lng]}
+        zoom={16}
+        scrollWheelZoom={false}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Marker position={[location.lat, location.lng]} icon={icon}>
+          <Popup>
+            {address}
+          </Popup>
+        </Marker>
+      </MapContainer>
     </div>
   )
 }
