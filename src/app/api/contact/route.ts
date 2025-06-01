@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   const res = await fetch('https://api.lofty.com/v1.0/leads', {
     method: 'POST',
     headers: {
-      'Authorization': `token ${process.env.NEXT_PUBLIC_LOFTY_API_TOKEN}`,
+      'Authorization': `token eyJhbGciOiJIUzI1NiJ9.eyJleHQiOjMzMjU1MTA1NTMzMjMsInVzZXJfaWQiOjg0NDc2ODQ4NzAyNjYzOCwic2NvcGUiOiI1IiwiaWF0IjoxNzQ4NzEwNTUzMzIzfQ.MSR8yHKJw6DHRAlM8zEivRQ2ZVQ4vKnBaoNs200DlWY`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
