@@ -4,26 +4,39 @@ import { FormEvent, useState, useRef, useEffect } from "react"
 import { Search, MapPin, Home, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
-import useGetPropertyTypes from "@/hooks/queries/useGetPropertyType"
+import { useAutoComplete } from "@/hooks/queries/useAutoComplete"
 
 export default function SearchBar() {
   const [searchType, setSearchType] = useState("buy")
   const [location, setLocation] = useState("")
-  // const [propertyType, setPropertyType] = useState("any")
-  // const [priceRange, setPriceRange] = useState("any")
   const [isSearching, setIsSearching] = useState(false)
+  const [searchLocationType, setSearchLocationType] = useState("city") // New state for search location type
   const router = useRouter()
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [activeTab, setActiveTab] = useState('All')
 
   const searchTypeOptions = [
     { value: "buy", label: "For Sale" },
     { value: "rent", label: "For Rent" },
     { value: "all", label: "All Properties" },
   ]
+
+  // Tab options for autocomplete
+  const tabOptions = [
+    { label: 'All', value: 'All' },
+    { label: 'Places', value: 'city' },
+    { label: 'Counties', value: 'county' },
+    // { label: 'Neighborhoods', value: 'neighborhood' },
+    // { label: 'Schools', value: 'school' },
+    // { label: 'Buildings', value: 'building' },
+    // { label: 'Agents', value: 'agent' },
+  ]
+
+  // Use the useAutoComplete hook
+  const { data: autoCompleteResults } = useAutoComplete(location)
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -46,12 +59,18 @@ export default function SearchBar() {
     if (location) {
       params.append("location", location)
     }
+    if (searchType) {
+      params.append("searchType", searchType)
+    }
+    if (searchLocationType) {
+      params.append("searchLocationType", searchLocationType)
+    }
 
     // Simulate a network request
     setTimeout(() => {
       setIsSearching(false)
       // Redirect to map page with search parameters
-      router.push(`/map?${params.toString()}`)
+      router.push(`/properties?${params.toString()}`)
     }, 1000)
   }
 
@@ -59,6 +78,18 @@ export default function SearchBar() {
     if (e.key === 'Enter') {
       handleSearch(e as unknown as FormEvent)
     }
+  }
+
+  const handleAutoCompleteClick = (value: string, type: string) => {
+    setLocation(value)
+    setSearchLocationType(type) // Set the search location type
+    const params = new URLSearchParams()
+    params.append("location", value)
+    if (searchType) {
+      params.append("searchType", searchType)
+    }
+    params.append("searchLocationType", type)
+    router.push(`/properties?${params.toString()}`)
   }
 
   return (
@@ -99,17 +130,69 @@ export default function SearchBar() {
           </div>
         )}
       </div>
-      <div className="flex items-center flex-1 px-3">
+      <div className="flex items-center flex-1 px-3 relative">
         <MapPin className="h-5 w-5 text-slate-400 mr-2" />
         <Input
           type="text"
           value={location}
           onChange={e => setLocation(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Place, Neighborhood, School"
+          placeholder="Place, City, County"
           className="bg-transparent border-0 focus:ring-0 focus:border-0 text-base md:text-lg w-full px-0"
           style={{ boxShadow: 'none' }}
         />
+        {autoCompleteResults && location && (
+          <div className="absolute top-full mt-1 w-full bg-white border border-slate-200 rounded-2xl shadow-lg z-10 max-h-[300px] overflow-y-auto">
+            {/* Tabs */}
+            <div className="sticky top-0 bg-white flex border-b border-slate-100 z-20">
+              {tabOptions.map(tab => (
+                <button
+                  key={tab.value}
+                  className={`px-5 py-3 text-base font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === tab.value ? 'border-orange-400 text-black' : 'border-transparent text-slate-500 hover:text-black'}`}
+                  onClick={() => setActiveTab(tab.value)}
+                  style={{ background: 'none' }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {/* Grouped Results */}
+            <div className="py-2">
+              {/* PLACES (city) */}
+              {(activeTab === 'All' || activeTab === 'city') && (
+                <>
+                  <div className="px-6 pt-4 pb-2 text-slate-500 font-bold text-lg tracking-wide">PLACES</div>
+                  {autoCompleteResults.filter(r => r.type === 'city').map((result, index) => (
+                    <div
+                      key={index}
+                      className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).city, 'city')}
+                    >
+                      <div className="font-medium text-black">{typeof result.value === 'string' ? result.value : (result.value as any).city + (result.value && (result.value as any).county ? ', ' + (result.value as any).county : '')}</div>
+                      <div className="text-slate-400 text-base leading-tight">City</div>
+                    </div>
+                  ))}
+                </>
+              )}
+              {/* COUNTIES */}
+              {(activeTab === 'All' || activeTab === 'county') && (
+                <>
+                  <div className="px-6 pt-4 pb-2 text-slate-500 font-bold text-lg tracking-wide">COUNTIES</div>
+                  {autoCompleteResults.filter(r => r.type === 'county').map((result, index) => (
+                    <div
+                      key={index}
+                      className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).county, 'county')}
+                    >
+                      <div className="font-medium text-black">{typeof result.value === 'string' ? result.value : (result.value as any).county}</div>
+                      <div className="text-slate-400 text-base leading-tight">County</div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       <button
         type="submit"

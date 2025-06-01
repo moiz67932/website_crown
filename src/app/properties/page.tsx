@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
 import PropertiesGrid from "./properties-grid"
 import PropertyListingHeader from "./property-header"
@@ -13,6 +13,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import useListProperties from "@/hooks/queries/useGetListProperties"
+import { useSearchParams } from "next/navigation"
 
 // Dynamically import FilterSidebar and MobileFilterDrawer with SSR disabled
 const FilterSidebar = dynamic(() => import("./filter-sidebar"), { ssr: false })
@@ -20,19 +21,22 @@ const MobileFilterDrawer = dynamic(() => import("./mobile-filter-drawer"), { ssr
 
 export default function PropertiesPage() {
   const [currentPage, setCurrentPage] = useState(1)
+  const searchParams = useSearchParams()
+
   const [filters, setFilters] = useState({
-    propertyType: "",
-    minPrice: undefined as number | undefined,
-    maxPrice: undefined as number | undefined,
-    city: "",
-    county: "", // Added county filter
-    minBathroom: undefined as number | undefined,
-    minBedroom: undefined as number | undefined,
-    yearBuilt: undefined as number | undefined,
-    max_sqft: undefined as number | undefined,
-    min_sqft: undefined as number | undefined,
-    sortBy: "recommended" as "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
+    propertyType: searchParams.get("propertyType") || "",
+    minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+    maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+    city: searchParams.get("searchLocationType") === "city" ? searchParams.get("location") || "" : "",
+    county: searchParams.get("searchLocationType") === "county" ? searchParams.get("location") || "" : "",
+    minBathroom: searchParams.get("minBathroom") ? Number(searchParams.get("minBathroom")) : undefined,
+    minBedroom: searchParams.get("minBedroom") ? Number(searchParams.get("minBedroom")) : undefined,
+    yearBuilt: searchParams.get("yearBuilt") ? Number(searchParams.get("yearBuilt")) : undefined,
+    max_sqft: searchParams.get("max_sqft") ? Number(searchParams.get("max_sqft")) : undefined,
+    min_sqft: searchParams.get("min_sqft") ? Number(searchParams.get("min_sqft")) : undefined,
+    sortBy: searchParams.get("sortBy") as "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc" || "recommended"
   })
+
   const limit = 12
   const skip = (currentPage - 1) * limit
 
@@ -43,6 +47,7 @@ export default function PropertiesPage() {
     minPrice: filters.minPrice,
     maxPrice: filters.maxPrice,
     city: filters.city,
+    county: filters.county,
     minBathroom: filters.minBathroom,
     minBedroom: filters.minBedroom,
     yearBuilt: filters.yearBuilt,
