@@ -22,11 +22,37 @@ export default function ContactForm({ propertyId }: ContactFormProps) {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const formData = new FormData(e.target as HTMLFormElement)
+    const name = formData.get('name') as string
+    const email = formData.get('email') as string
+    const phone = formData.get('phone') as string
+    const message = formData.get('message') as string
 
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, phone, message })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit form')
+      }
+
+      const data = await response.json()
+      if (data.status === 'success') {
+        setIsSubmitted(true)
+      } else {
+        throw new Error(data.error || 'Failed to submit form')
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error)
+      // You might want to show an error message to the user here
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (isSubmitted) {
@@ -43,20 +69,21 @@ export default function ContactForm({ propertyId }: ContactFormProps) {
       <div className="grid grid-cols-1 gap-4">
         <div>
           <Label htmlFor="name">Your Name</Label>
-          <Input id="name" placeholder="John Doe" required />
+          <Input id="name" name="name" placeholder="John Doe" required />
         </div>
         <div>
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="john@example.com" required />
+          <Input id="email" name="email" type="email" placeholder="john@example.com" required />
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" placeholder="(123) 456-7890" />
+          <Input id="phone" name="phone" placeholder="(123) 456-7890" />
         </div>
         <div>
           <Label htmlFor="message">Message</Label>
           <Textarea
             id="message"
+            name="message"
             placeholder="I'm interested in this property..."
             className="resize-none"
             rows={4}
