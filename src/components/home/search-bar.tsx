@@ -74,11 +74,11 @@ export default function SearchBar() {
     }, 1000)
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch(e as unknown as FormEvent)
-    }
-  }
+  // const handleKeyPress = (e: React.KeyboardEvent) => {
+  //   if (e.key === 'Enter') {
+  //     handleSearch(e as unknown as FormEvent)
+  //   }
+  // }
 
   const handleAutoCompleteClick = (value: string, type: string) => {
     setLocation(value)
@@ -136,7 +136,7 @@ export default function SearchBar() {
           type="text"
           value={location}
           onChange={e => setLocation(e.target.value)}
-          onKeyPress={handleKeyPress}
+          // onKeyPress={handleKeyPress}
           placeholder="Place, City, County"
           className="bg-transparent border-0 focus:ring-0 focus:border-0 text-base md:text-lg w-full px-0"
           style={{ boxShadow: 'none' }}
