@@ -153,8 +153,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         </nav>
 
         <article itemScope itemType="https://schema.org/RealEstateListing">
-          <meta itemProp="name" content={property?.title || property?.address || "Unknown Address"} />
-          <meta itemProp="description" content={property?.meta_description || "No description available"} />
+          <meta itemProp="name" content={property?.address || "Unknown Address"} />
+          <meta itemProp="description" content={property?.public_remarks || "No description available"} />
           <meta itemProp="price" content={property?.list_price.toString()} />
           <meta itemProp="priceCurrency" content="USD" />
 
@@ -169,12 +169,12 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </Badge>
               </div>
               <h1 className="text-3xl font-bold mb-2" itemProp="name">
-                {property?.title || property?.address}
+                {property?.address}
               </h1>
-              <div className="flex items-center text-muted-foreground mb-2">
-                <MapPin className="h-4 w-4 mr-1" />
-                <span itemProp="address">{property?.address}</span>
-              </div>
+                <div className="flex items-center text-muted-foreground mb-2">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  <span itemProp="address">{property?.city}</span>
+                </div>
               <div className="flex flex-wrap gap-4 mt-3">
                 <div className="flex items-center">
                   <Bed className="h-5 w-5 mr-2 text-muted-foreground" />
