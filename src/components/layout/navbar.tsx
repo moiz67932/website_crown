@@ -41,7 +41,7 @@ export default function Navbar() {
   ];
   const rightNavItems = [
     { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
+    // { name: "Contact", href: "/contact" },
     // { name: "Help", href: "/help" },
   ];
 

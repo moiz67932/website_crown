@@ -317,7 +317,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     <h3 className="font-semibold">Contact the Crown Coastal Team</h3>
                   </div>
                   <Separator className="my-4" />
-                  <ContactForm propertyId={property?.listing_key ?? ''} />
+                  <ContactForm propertyId={property?.listing_key ?? ''} proertyData={property} />
                 </CardContent>
               </Card>
               <Card>

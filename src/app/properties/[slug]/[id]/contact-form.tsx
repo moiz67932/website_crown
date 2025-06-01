@@ -12,9 +12,10 @@ import { Phone, Mail, Calendar } from "lucide-react"
 
 interface ContactFormProps {
   propertyId: string
+  proertyData: any
 }
 
-export default function ContactForm({ propertyId }: ContactFormProps) {
+export default function ContactForm({ propertyId, proertyData }: ContactFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   
@@ -27,6 +28,7 @@ export default function ContactForm({ propertyId }: ContactFormProps) {
     const email = formData.get('email') as string
     const phone = formData.get('phone') as string
     const message = formData.get('message') as string
+    const propertyData = proertyData
 
     try {
       const response = await fetch('/api/contact', {
@@ -34,7 +36,7 @@ export default function ContactForm({ propertyId }: ContactFormProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, phone, message })
+        body: JSON.stringify({ name, email, phone, message, propertyData })
       })
 
       if (!response.ok) {
