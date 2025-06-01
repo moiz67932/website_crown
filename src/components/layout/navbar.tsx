@@ -47,8 +47,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white shadow-md py-2" : "bg-transparent py-3 md:py-4"
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#13304A] py-3 md:py-4`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14">
@@ -60,26 +59,21 @@ export default function Navbar() {
                 <div className="relative group">
                   <Button
                     variant="ghost"
-                    className={`px-3 py-2 text-sm font-medium ${pathname === '/buy'
-                        ? 'text-slate-900 bg-slate-100'
-                        : isScrolled
-                          ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
+                    className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
                   >
                     Buy
                   </Button>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-[260px] p-0" sideOffset={8}>
-                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4">For Sale</DropdownMenuLabel>
-                <DropdownMenuItem className="px-6 py-2 text-base">Houses</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">Townhouses</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">Condos</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">Manufactured</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">Lot/Land</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">New Homes/New Construction</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">All Homes</DropdownMenuItem>
+              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#13304A] text-white border-none shadow-lg" sideOffset={8}>
+                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-white">For Sale</DropdownMenuLabel>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Houses</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Townhouses</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Condos</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Manufactured</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Lot/Land</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">New Homes/New Construction</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">All Homes</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             {/* Rent Dropdown */}
@@ -88,23 +82,18 @@ export default function Navbar() {
                 <div className="relative group">
                   <Button
                     variant="ghost"
-                    className={`px-3 py-2 text-sm font-medium ${pathname === '/rent'
-                        ? 'text-slate-900 bg-slate-100'
-                        : isScrolled
-                          ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                          : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
+                    className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
                   >
                     Rent
                   </Button>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-[260px] p-0" sideOffset={8}>
-                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4">For Rent</DropdownMenuLabel>
-                <DropdownMenuItem className="px-6 py-2 text-base">Houses for Rent</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">Apartments for Rent</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">Townhomes for Rent</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base">All Rentals</DropdownMenuItem>
+              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#13304A] text-white border-none shadow-lg" sideOffset={8}>
+                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-white">For Rent</DropdownMenuLabel>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Houses for Rent</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Apartments for Rent</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Townhomes for Rent</DropdownMenuItem>
+                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">All Rentals</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             {/* Other left nav items */}
@@ -112,12 +101,7 @@ export default function Navbar() {
               <Link href={item.href} key={item.name}>
                 <Button
                   variant="ghost"
-                  className={`px-3 py-2 text-sm font-medium ${pathname === item.href
-                      ? "text-slate-900 bg-slate-100"
-                      : isScrolled
-                        ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                    }`}
+                  className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
                 >
                   {item.name}
                 </Button>
@@ -144,24 +128,25 @@ export default function Navbar() {
               <Link href={item.href} key={item.name}>
                 <Button
                   variant="ghost"
-                  className={`px-3 py-2 text-sm font-medium ${pathname === item.href
-                      ? "text-slate-900 bg-slate-100"
-                      : isScrolled
-                        ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                    }`}
+                  className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
                 >
                   {item.name}
                 </Button>
               </Link>
             ))}
+            {/* Contact Button */}
+            <Link href="/contact">
+              <Button className="ml-4 bg-[#D4AF37] text-[#13304A] font-semibold px-5 py-2 rounded hover:bg-[#bfa13a] border-none shadow-none">
+                Contact
+              </Button>
+            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden text-slate-700 p-1"
+            className="lg:hidden text-white p-1"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -172,17 +157,14 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-200 mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="lg:hidden bg-[#13304A] border-t border-slate-200 mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="container mx-auto px-4 py-4">
             <nav className="flex flex-col space-y-2">
               {navItems.map((item) => (
                 <Link
                   href={item.href}
                   key={item.name}
-                  className={`px-3 py-2 font-medium rounded-md ${pathname === item.href
-                      ? "text-slate-900 bg-slate-100"
-                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                    }`}
+                  className={`px-3 py-2 font-medium rounded-md text-white hover:text-[#D4AF37] hover:bg-[#13304A]`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.name}
@@ -191,12 +173,12 @@ export default function Navbar() {
             </nav>
             <div className="mt-4 flex flex-col space-y-2">
               <Link href="/auth/login">
-                <Button variant="outline" className="justify-center w-full">
+                <Button variant="outline" className="justify-center w-full text-white border-white hover:bg-[#D4AF37] hover:text-[#13304A]">
                   <User className="h-4 w-4 mr-2" />
                   Sign In
                 </Button>
               </Link>
-              <Button className="bg-slate-800 hover:bg-slate-900 justify-center w-full">List Property</Button>
+              <Button className="bg-[#D4AF37] hover:bg-[#bfa13a] text-[#13304A] justify-center w-full font-semibold">List Property</Button>
             </div>
           </div>
         </div>

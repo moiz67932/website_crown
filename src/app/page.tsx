@@ -53,7 +53,7 @@ export default function HomePage() {
   return (
     <main>
       {/* Hero Section with Professional Background */}
-      <section className="relative bg-slate-50 pt-16 md:pt-20">
+      <section className="relative bg-gradient-to-b from-navy-950/80 to-navy-950/40 pt-16 md:pt-20">
 
         <div className="container mx-auto px-4 py-10 md:py-16 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -106,16 +106,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Rest of the page content remains the same */}
+
+
       {/* Featured Properties Section */}
       <section className="py-10 md:py-16 bg-white">
         <div className="container mx-auto px-4">
+        <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Explore Homes Near You</h2>
+            <div className="w-16 h-1 bg-yellow-400 mx-auto mb-4" />
+            <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto">
+                Discover our handpicked selection of premium properties in the most sought-after locations.
+            </p>
+          </div>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">Explore Homes Near You              </h2>
-              <p className="text-sm md:text-base text-slate-600 max-w-2xl">
-                Discover our handpicked selection of premium properties in the most sought-after locations.
-              </p>
+
             </div>
             <Link href="/properties" className="mt-4 md:mt-0">
               <Button variant="outline" className="gap-2 text-sm">
@@ -171,6 +176,86 @@ export default function HomePage() {
                 </Card>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* OUR PREMIUM SERVICES Section */}
+      <section className="bg-white py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">OUR PREMIUM SERVICES</h2>
+            <div className="w-16 h-1 bg-yellow-400 mx-auto mb-4" />
+            <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto">
+              Crown Coastal Concierge offers exclusive services tailored to discerning clients seeking premium coastal properties.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Card 1 */}
+            <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
+              <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
+              <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              </div>
+              <h3 className="font-bold text-lg text-slate-900 mb-2">Concierge Home Buying</h3>
+              <p className="text-slate-600 text-sm mb-4">White-glove service throughout your entire home buying journey, from property selection to closing.</p>
+              <ul className="text-slate-700 text-sm mb-4 space-y-1 list-disc list-inside">
+                <li>Personalized property selection</li>
+                <li>Private viewings</li>
+                <li>Negotiation expertise</li>
+                <li>Transaction management</li>
+                <li>Post-purchase support</li>
+              </ul>
+              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+            </div>
+            {/* Card 2 */}
+            <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
+              <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
+              <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              </div>
+              <h3 className="font-bold text-lg text-slate-900 mb-2">World-Class Affiliates</h3>
+              <p className="text-slate-600 text-sm mb-4">Access to our exclusive network of premium service providers, from interior designers to property managers.</p>
+              <ul className="text-slate-700 text-sm mb-4 space-y-1 list-disc list-inside">
+                <li>Vetted interior designers</li>
+                <li>Trusted property managers</li>
+                <li>Premium home service providers</li>
+                <li>Legal and financial advisors</li>
+                <li>Luxury lifestyle concierge</li>
+              </ul>
+              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+            </div>
+            {/* Card 3 */}
+            <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
+              <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
+                    <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              </div>
+              <h3 className="font-bold text-lg text-slate-900 mb-2">Tailored Landing Solutions</h3>
+              <p className="text-slate-600 text-sm mb-4">Personalized relocation services designed to make your transition to coastal living seamless and stress-free.</p>
+              <ul className="text-slate-700 text-sm mb-4 space-y-1 list-disc list-inside">
+                <li>Personalized property search</li>
+                <li>Area orientation tours</li>
+                <li>School and community information</li>
+                <li>Temporary housing assistance</li>
+                <li>Local service provider connections</li>
+              </ul>
+              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+            </div>
+            {/* Card 4 */}
+            <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
+              <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
+              <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              </div>
+              <h3 className="font-bold text-lg text-slate-900 mb-2">Investment Management</h3>
+              <p className="text-slate-600 text-sm mb-4">Expert guidance on property investments with comprehensive support for maximizing your real estate portfolio.</p>
+              <ul className="text-slate-700 text-sm mb-4 space-y-1 list-disc list-inside">
+                <li>Market analysis and trends</li>
+                <li>ROI projections</li>
+                <li>Portfolio diversification strategies</li>
+                <li>Property management solutions</li>
+                <li>Tax and legal considerations</li>
+              </ul>
+              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+            </div>
           </div>
         </div>
       </section>
