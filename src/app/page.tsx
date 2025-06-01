@@ -62,10 +62,10 @@ export default function HomePage() {
                 Premier Real Estate
               </Badge>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-slate-900">
-                Find your dream home in California 
+              LUXURY REAL ESTATE CONCIERGE SERVICES
               </h1>
               <p className="text-base md:text-lg text-slate-600 max-w-lg">
-                Explore our curated selection of premium properties in the most desirable locations.
+              Your Premier Partner for Exclusive Coastal Properties in Southern California
               </p>
 
               <div className="pt-2 md:pt-4">
@@ -112,7 +112,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">Featured Properties</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">Explore Homes Near You              </h2>
               <p className="text-sm md:text-base text-slate-600 max-w-2xl">
                 Discover our handpicked selection of premium properties in the most sought-after locations.
               </p>
@@ -204,7 +204,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials Section */}
-      {/* <section className="py-10 md:py-16 bg-white">
+      <section className="py-10 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">What Our Clients Say</h2>
@@ -258,7 +258,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* CTA Section */}
       <section className="py-10 md:py-16 bg-slate-900 text-white">
@@ -376,12 +376,12 @@ const testimonials = [
   },
   {
     name: "Michael Chen",
-    avatar: "/professional-man-portrait.png",
+    avatar: "/34.jpg",
     text: "The team went above and beyond to help me sell my property at a great price. Their market knowledge is exceptional.",
   },
   {
     name: "Emily Rodriguez",
-    avatar: "/professional-woman-portrait.png",
+    avatar: "/27.jpg",
     text: "I was impressed by their attention to detail and personalized service. They truly understood what I was looking for.",
   },
 ]
