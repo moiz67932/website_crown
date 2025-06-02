@@ -3,6 +3,14 @@ import axiosInstance from '@/lib/axios'
 import { useQuery } from '@tanstack/react-query'
 
 export interface PropertyDetail {
+  parking_total: string
+  garage_size: string
+  heating: string
+  cooling: string
+  security_features: string
+  parking_features: string
+  laundry_features: string
+ 
   _id: string
   listing_key: string
   listing_id: string

@@ -21,6 +21,7 @@ import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
 import PropertyFAQ from "./property-faq"
 import MortgageCalculatorModal from "./mortage-calculator-modal"
 import Loading from "@/components/shared/loading"
+import { feature } from "@turf/turf";
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params)
@@ -283,11 +284,169 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <TabsContent value="features" className="space-y-6">
                   <Card>
                     <CardContent className="p-6">
-                      <h2 className="text-xl font-semibold mb-4">Features</h2>
-                      <p className="text-muted-foreground leading-relaxed" itemProp="description">
-                      <ReactMarkdown>{property?.amenities_content}</ReactMarkdown>
+                      <h2 className="text-xl font-semibold mb-4 bg-gray-200">Interior</h2>
+                      <div className="grid grid-cols-2">
+                        <div >
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Bedrooms & bathrooms</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Bedrooms: {property?.bedrooms}</li>
+                              <li>Bathrooms:{property?.bathrooms}</li>
+                              <li>Full bathrooms: 1</li>
+                            </ul>
+                          </div>
+                          <div className="mb-6">  
+                            <h3 className="text-lg font-semibold">Rooms</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Room types:</li>
+                            </ul>
+                          </div>
+                          <div className="mb-6">  
+                            <h3 className="text-lg font-semibold">Heating</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>{property.heating}</li>
+                            </ul>
+                          </div>
+                          <div className="mb-6">  
+                            <h3 className="text-lg font-semibold">Cooling</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>{property.cooling}</li>
+                            </ul>
+                          </div>
+                        </div>
 
-                      </p>
+                        <div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Appliances</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Included: Dishwasher, Range/Oven, Refrigerator</li>
+                              <li>Laundry: { property.laundry_features}</li>
+                            </ul>
+                          </div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Features</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Flooring: Tile, Wood</li>
+                              <li>Has fireplace: Yes</li>
+                              <li>Fireplace features: Living Room</li>
+                            </ul>
+                          </div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Interior area</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Total structure area:  667</li>
+                              <li>Total interior livable area: 667 sqft</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div> 
+
+                      <h2 className="text-xl font-semibold mb-4 bg-gray-200">Property</h2>
+                      <div className="grid grid-cols-2">
+                        <div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Parking</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Total spaces: {property.parking_total}</li>
+                              <li>Parking features: {property.parking_features}</li>
+                              <li>Garage spaces: {property.garage_size}</li>
+                            </ul>
+                          </div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Features</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Levels: One</li>
+                              <li>Pool features: None</li>
+                              <li>Spa features: Community </li>
+                              <li>Has view: Yes</li>
+                              <li>View description: Tree Top</li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Lot</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Size: {property.lot_size_sqft} Sq ft</li>
+                            </ul>
+                          </div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Details</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Parcel number: 5528003194</li>
+                              <li>Zoning: LAR3</li>
+                              <li>Special conditions: Standard</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h2 className="text-xl font-semibold mb-4 bg-gray-200">Construction</h2>
+                      <div className="grid grid-cols-2">
+                        <div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Type & style</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Home type: Condo</li>
+                              <li>Architectural style: Contemporary</li>
+                              <li>Property subtype: {property.property_sub_type} </li>
+                              <li>Attached to another structure: Yes</li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Condition</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Year built: {property?.year_built}</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      <h2 className="text-xl font-semibold mb-4 bg-gray-200">Community & HOA</h2>
+                      <div className="grid grid-cols-2">
+                        <div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Community</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Security: {property.security_features}</li>
+                              <li>Subdivision: {property?.property_sub_type}</li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">HOA</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Has HOA: Yes</li>
+                              <li>Amenities included: Spa/Hot Tub, Fitness Center, Elevator(s), Controlled Access, Clubhouse, Sauna, Sun Deck</li>
+                              <li>HOA fee: $469 monthly</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold">Location</h3>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                              <li>Region: {property?.county}</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      <h2 className="text-xl font-semibold mb-4 bg-gray-200">Financial & Listing Details</h2>
+                      <div className="mb-6">
+                        <ul className="list-disc list-inside text-sm text-muted-foreground mt-2">
+                          <li>Price per square foot: $862/sqft</li>
+                          <li>Tax assessed value: $533,862</li>
+                          <li>Annual tax amount: $6,493</li>
+                          <li>Date on market: {property.on_market_timestamp}</li>
+                        </ul>
+                      </div>
+
+
+
                     </CardContent>
                   </Card>
                 </TabsContent>
