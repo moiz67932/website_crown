@@ -9,6 +9,7 @@ import { ArrowRight, Search, MapPin, StarIcon, MessageSquare } from "lucide-reac
 import type { Metadata } from "next"
 import { PropertyCard } from "@/components/property-card"
 import { cn } from "@/lib/utils"
+import { use } from "react";
 
 // Sample properties for the city - in a real app, this would be fetched
 const sampleCityProperties = [
@@ -50,12 +51,11 @@ const sampleCityProperties = [
   },
 ]
 
-interface CityPageProps {
-  params: { city: string }
-}
 
-export async function generateMetadata({ params }: CityPageProps): Promise<Metadata> {
-  const cityData = getCityData(params?.city)
+
+export async function generateMetadata({ params }: {params: Promise<{ city: string }> }): Promise<Metadata> {
+  const { city } = await params;
+  const cityData = getCityData(city || '')
   if (!cityData) {
     return {
       title: "City Not Found",
@@ -115,8 +115,10 @@ function CitySearchWidget({ cityName, cityId }: { cityName: string; cityId: stri
   )
 }
 
-export default function CityPage({ params }: CityPageProps) {
-  const cityData = getCityData(params.city)
+export default async function CityPage({ params }: { params: Promise<{ city: string }> }) {
+  const { city } = await params;
+
+  const cityData = getCityData(city || '')
 
   if (!cityData) {
     notFound()
