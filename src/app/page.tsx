@@ -14,7 +14,7 @@ interface Property {
   id: string;
   image: string;
   listing_key: string;
-
+  property_type: string;
   title: string;
   location: string;
   price: number;
@@ -27,7 +27,7 @@ interface Property {
 }
 
 export default function HomePage() {
-  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 3 });
+  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 4 });
 
 
   if (!featuredPropertiesRaw) {
@@ -45,63 +45,41 @@ export default function HomePage() {
     beds: item.bedrooms ?? "-",
     baths: item.bathrooms ?? "-",
     sqft: item.living_area_sqft ?? "-",
-    status: item.property_type,
+    status: item.property_type !== "ResidentailLease" ? "FOR SALE" : "FOR RENT",
+    property_type: item.property_type,
     statusColor: "bg-blue-100 text-blue-800", // You can adjust color logic as needed
     publicRemarks: item.public_remarks,
   }));
 
   return (
     <main>
-      {/* Hero Section with Professional Background */}
-      <section className="relative bg-gradient-to-b from-navy-950/80 to-navy-950/40 pt-16 md:pt-20">
-
-        <div className="container mx-auto px-4 py-10 md:py-16 lg:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="space-y-4 md:space-y-6">
-              <Badge className="bg-slate-200 text-slate-800 hover:bg-slate-300 border-none px-3 py-1 text-xs md:text-sm">
-                Premier Real Estate
-              </Badge>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-slate-900">
-              LUXURY REAL ESTATE CONCIERGE SERVICES
-              </h1>
-              <p className="text-base md:text-lg text-slate-600 max-w-lg">
-              Your Premier Partner for Exclusive Coastal Properties in Southern California
+      {/* Hero Section with Background Image and Overlay */}
+      <section className="relative h-[calc(100vh-5rem)] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden">
+        {/* Background image */}
+        <Image
+          src="/california-coastal-sunset.png"
+          alt="Luxury Modern House"
+          fill
+          className="object-cover object-center z-0"
+          priority
+        />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30 z-10" />
+        {/* Centered Content Box */}
+        <div className="relative z-20 w-full flex flex-col items-center">
+          <div className="mx-auto w-full max-w-2xl rounded-xl bg-white/30 backdrop-blur-md px-6 py-10 md:py-14 flex flex-col items-center shadow-lg">
+            <h1 className="text-3xl md:text-5xl font-bold text-center text-white leading-tight mb-2">
+              Find Your California <br />
+              <span className="block text-brand-goldenHour drop-shadow-md">Coastal Dream</span>
+            </h1>
+            <p className="text-base md:text-lg text-white text-center mb-8 mt-2 max-w-xl">
+            Discover exquisite properties along the stunning California coastline. Your journey to luxury living starts here.
               </p>
-
-              <div className="pt-2 md:pt-4">
-                <SearchBar />
-              </div>
-
-              <div className="flex flex-wrap gap-4 md:gap-6 pt-2">
-                <div className="flex items-center gap-2">
-                  <div className="bg-slate-200 p-1.5 md:p-2 rounded-full">
-                    <Home className="h-4 w-4 md:h-5 md:w-5 text-slate-700" />
-                  </div>
-                  <span className="text-sm md:text-base text-slate-700">10,000+ Properties</span>
-                </div>
-              
-                <div className="flex items-center gap-2">
-                  <div className="bg-slate-200 p-1.5 md:p-2 rounded-full">
-                    <MapPin className="h-4 w-4 md:h-5 md:w-5 text-slate-700" />
-                  </div>
-                  <span className="text-sm md:text-base text-slate-700">100+ Cities</span>
-                </div>
-              </div>
+            {/* Search Bar */}
+            <div className="w-full max-w-xl mb-4">
+              <SearchBar />
             </div>
 
-            <div className="relative mt-6 lg:mt-0 lg:block">
-              <div className="relative">
-                <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] w-full rounded-lg overflow-hidden shadow-lg">
-                  <Image
-                    src="/luxury-modern-house-exterior.png"
-                    alt="Luxury Modern House"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -109,73 +87,53 @@ export default function HomePage() {
 
 
       {/* Featured Properties Section */}
-      <section className="py-10 md:py-16 bg-white">
+      <section className="py-16 bg-[#F6EEE7]">
         <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Explore Homes Near You</h2>
-            <div className="w-16 h-1 bg-yellow-400 mx-auto mb-4" />
-            <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto">
-                Discover our handpicked selection of premium properties in the most sought-after locations.
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#2D3A4A] mb-2">Featured Properties</h2>
+            <p className="text-base md:text-lg text-[#6B7280] max-w-2xl mx-auto">
+              Handpicked selection of premium coastal homes and investment opportunities in California.
             </p>
           </div>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12">
-            <div>
-
-            </div>
-            <Link href="/properties" className="mt-4 md:mt-0">
-              <Button variant="outline" className="gap-2 text-sm">
-                View All Properties
-                <ArrowRight className="h-3 w-3 md:h-4 md:w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+          <div className="flex flex-wrap justify-center gap-8 mb-10">
             {featuredProperties.map((property) => (
-              <Link href={`/properties/${property.title.replaceAll(' ', '-')}/${property.listing_key}`} key={property.listing_key}>
-                <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
-                  <div className="relative h-48 sm:h-56 md:h-64">
-                  <img src={property.image} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                  />
-                    
-                    <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs ${property.statusColor}`}>
-                      {property.status}
-                    </Badge>
-                    <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 bg-white/90 backdrop-blur-sm rounded-md px-2 py-1 md:px-3 md:py-1 text-xs md:text-sm font-medium">
-                      ${property.price?.toLocaleString?.() ?? property.price}
+              <Link href={`/properties/${property.title.replace(/\s+/g, '-').toLowerCase()}/${property.listing_key}`} key={property.listing_key} className="bg-white  rounded-2xl shadow-lg p-0 w-full max-w-xs flex flex-col relative transition hover:shadow-xl">
+                {/* Status badge */}
+                <div className={`absolute top-4 left-4 z-10 px-3 py-1 rounded-full text-xs font-semibold ${property.status === 'FOR SALE' ? 'bg-[#F47C6E] text-white' : 'bg-[#3CB4AC] text-white'}`}>{property.status}</div>
+                {/* Type badge (static for now) */}
+                <div className="absolute top-4 left-28 z-10 px-3 py-1 rounded-full text-xs font-medium bg-[#F6EEE7] text-[#7C6F57] border border-[#e5d8c7]">{property.property_type}</div>
+                {/* Heart icon */}
+                <div className="absolute top-4 right-4 z-10">
+                  <button className="bg-white/80 rounded-full p-2 shadow hover:bg-pink-100 transition">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#F47C6E" strokeWidth="2"><path d="M12 21C12 21 4 13.5 4 8.5C4 5.42 6.42 3 9.5 3C11.24 3 12.91 3.81 14 5.08C15.09 3.81 16.76 3 18.5 3C21.58 3 24 5.42 24 8.5C24 13.5 16 21 16 21H12Z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                </div>
+                {/* Property image */}
+                <div className="h-60 bg-[#F3F4F6] flex items-center justify-center rounded-t-2xl overflow-hidden">
+                  <img src={property.image} alt={property.title} className="rounded-t-2xl w-full h-full object-cover" />
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <div className="mb-1">
+                    <h3 className="text-lg font-bold text-[#1CA7A6] truncate">{property.title}</h3>
+                    <div className="flex items-center text-[#6B7280] text-sm mt-1">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      {property.location}
                     </div>
                   </div>
-                  <CardContent className="p-3 md:p-5">
-                    <h3 className="text-base md:text-xl font-semibold mb-1 md:mb-2 line-clamp-1 group-hover:text-slate-700 transition-colors">
-                      {property.title}
-                    </h3>
-                    <div className="flex items-center text-slate-500 mb-2 md:mb-3">
-                      <MapPin className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
-                      <span className="text-xs md:text-sm line-clamp-1">{property.location}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm">
-                      <div className="flex items-center">
-                        <Bed className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
-                        <span>{property.beds} Beds</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Bath className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
-                        <span>{property.baths} Baths</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Maximize className="h-3 w-3 md:h-4 md:w-4 mr-1 text-slate-400" />
-                        <span>
-                          {property.sqft !== "-" ? `${property.sqft.toLocaleString?.() ?? property.sqft} Sq Ft` : "- Sq Ft"}
-                        </span>
-                      </div>
-                    </div>
-                    {property.publicRemarks && (
-                      <p className="text-xs text-slate-500 mt-2 line-clamp-2">{property.publicRemarks}</p>
-                    )}
-                  </CardContent>
-                </Card>
+                  <div className="text-2xl font-bold text-[#2D3A4A] mb-2">${property.price?.toLocaleString?.() ?? property.price}</div>
+                  <div className="flex items-center gap-4 text-[#6B7280] text-sm mt-auto">
+                    <div className="flex items-center gap-1"><Bed className="h-4 w-4" />{property.beds} Beds</div>
+                    <div className="flex items-center gap-1"><Bath className="h-4 w-4" />{property.baths} Baths</div>
+                    <div className="flex items-center gap-1"><Maximize className="h-4 w-4" />{property.sqft !== '-' ? `${property.sqft.toLocaleString?.() ?? property.sqft} sqft` : '- sqft'}</div>
+                  </div>
+                </div>
               </Link>
             ))}
+          </div>
+          <div className="flex justify-center">
+            <Link href="/properties">
+              <button className="px-8 py-2 border-2 border-[#1CA7A6] text-[#1CA7A6] rounded-full font-semibold bg-white hover:bg-[#F6EEE7] transition-all shadow-sm">View All Properties</button>
+            </Link>
           </div>
         </div>
       </section>
@@ -261,7 +219,7 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-10 md:py-16 bg-slate-50">
+      {/* <section className="py-10 md:py-16 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">Browse by Category</h2>
@@ -286,8 +244,47 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
+      {/* Popular California Cities Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#2D3A4A] mb-2">Explore Popular California Cities</h2>
+            <p className="text-base md:text-lg text-[#6B7280] max-w-2xl mx-auto">
+              Discover homes in California's most sought-after coastal and metropolitan areas.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+            {popularCities.map((city) => (
+              <div key={city.name} className="relative rounded-2xl shadow-lg overflow-hidden bg-white group h-96 flex flex-col justify-end">
+                {/* City image */}
+                <div className="absolute inset-0">
+                  {city.image ? (
+                    <Image src={city.image} alt={city.name} fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                      <span className="text-5xl text-gray-400">
+                        <Image src="/city-san-diego.jpg" alt="San Diego" fill className="object-cover" />
+                      </span>
+                    </div>
+                  )}
+                  {/* Gradient overlay at bottom */}
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+                </div>
+                {/* City info */}
+                <div className="relative z-10 p-6 flex flex-col justify-end h-1/2 mt-auto">
+                  <h3 className="text-2xl font-bold text-white mb-1">{city.name}</h3>
+                  <p className="text-white text-sm mb-3 line-clamp-2">{city.description}</p>
+                  <a href={city.link} className="text-[#E2C275] font-semibold text-base hover:underline flex items-center gap-1">
+                    View Properties <span aria-hidden>→</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       {/* Testimonials Section */}
       <section className="py-10 md:py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -346,7 +343,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-10 md:py-16 bg-slate-900 text-white">
+      {/* <section className="py-10 md:py-16 bg-slate-900 text-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
@@ -402,7 +399,9 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
+
+
     </main>
   )
 }
@@ -470,3 +469,43 @@ const testimonials = [
     text: "I was impressed by their attention to detail and personalized service. They truly understood what I was looking for.",
   },
 ]
+
+const popularCities = [
+  {
+    name: 'San Diego',
+    image: '/san-diego-bay-sunset.png',
+    description: "San Diego, renowned for its idyllic climate, 70 miles of pristine beaches, and a dazzling array of world-class attractions.",
+    link: '/discover/san-diego',
+  },
+  {
+    name: 'Los Angeles',
+    image: '/san-diego-bay-sunset.png', // Add image path if available
+    description: "Discover this iconic California city, home to Hollywood, beautiful beaches, and vibrant neighborhoods.",
+    link: '/discover/los-angeles',
+  },
+  {
+    name: 'San Francisco',
+    image: '/san-diego-bay-sunset.png', // Add image path if available
+    description: "Discover this iconic California city, famous for the Golden Gate Bridge, tech innovation, and unique culture.",
+    link: '/discover/san-francisco',
+  },
+  {
+    name: 'Malibu',
+    image: '/san-diego-bay-sunset.png',
+    description: "San Diego, renowned for its idyllic climate, 70 miles of pristine beaches, and a dazzling array of world-class attractions.",
+    link: '/buy/malibu',
+  },
+  {
+    name: 'Anta Barbara',
+    image: '/san-diego-bay-sunset.png', // Add image path if available
+    description: "Discover this iconic California city, home to Hollywood, beautiful beaches, and vibrant neighborhoods.",
+    link: '/discover/anta-barbara',
+  },
+  {
+    name: 'San Francisco',
+    image: '/san-diego-bay-sunset.png', // Add image path if available
+    description: "Discover this iconic California city, famous for the Golden Gate Bridge, tech innovation, and unique culture.",
+    link: '/buy/san-francisco',
+  },
+  // Add more cities as needed
+];

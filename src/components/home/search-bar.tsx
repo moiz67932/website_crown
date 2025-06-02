@@ -95,7 +95,7 @@ export default function SearchBar() {
   return (
     <form
       onSubmit={handleSearch}
-      className="flex items-center bg-white rounded-full border border-slate-200 shadow-sm px-4 py-2 w-full max-w-4xl"
+      className="flex items-center bg-white rounded-full text-left text-slate-900 border border-slate-200 shadow-sm px-4 py-2 w-full max-w-4xl"
     >
       <div className="relative flex items-center pr-2 border-r border-slate-200" ref={dropdownRef}>
         <button

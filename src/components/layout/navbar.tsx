@@ -47,7 +47,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#13304A] py-3 md:py-4`}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#FAF4ED] py-3 md:py-4 border-b border-[#f0e9e0] shadow-sm"
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14">
@@ -59,14 +59,14 @@ export default function Navbar() {
                 <div className="relative group">
                   <Button
                     variant="ghost"
-                    className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
+                    className={`px-3 py-2 text-sm font-text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors focus:bg-[#13304A]`}
                   >
                     Buy
                   </Button>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#13304A] text-white border-none shadow-lg" sideOffset={8}>
-                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-white">For Sale</DropdownMenuLabel>
+              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#FAF4ED] text-slate-900 border-none shadow-lg" sideOffset={8}>
+                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-slate-900">For Sale</DropdownMenuLabel>
                 <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Houses</DropdownMenuItem>
                 <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Townhouses</DropdownMenuItem>
                 <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Condos</DropdownMenuItem>
@@ -82,14 +82,14 @@ export default function Navbar() {
                 <div className="relative group">
                   <Button
                     variant="ghost"
-                    className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
+                    className={`px-3 py-2 text-sm font-text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors focus:bg-[#13304A]`}
                   >
                     Rent
                   </Button>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#13304A] text-white border-none shadow-lg" sideOffset={8}>
-                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-white">For Rent</DropdownMenuLabel>
+              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#FAF4ED] text-slate-900 border-none shadow-lg" sideOffset={8}>
+                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-slate-900">For Rent</DropdownMenuLabel>
                 <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Houses for Rent</DropdownMenuItem>
                 <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Apartments for Rent</DropdownMenuItem>
                 <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Townhomes for Rent</DropdownMenuItem>
@@ -101,7 +101,7 @@ export default function Navbar() {
               <Link href={item.href} key={item.name}>
                 <Button
                   variant="ghost"
-                  className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
+                  className={`px-3 py-2 text-sm font-medium text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors`}
                 >
                   {item.name}
                 </Button>
@@ -110,35 +110,26 @@ export default function Navbar() {
           </nav>
 
           {/* Logo Centered */}
-          <div className="flex-0 flex justify-center items-center w-48 md:w-56 absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0">
-            <Link href="/" className="flex items-center">
-            <div className="relative h-12 w-48 md:h-14 md:w-56">
-                <Image src="/logo.svg" alt="Real Estate Logo" fill className="object-contain" />
+          <div className="flex-0 flex justify-center items-center w-12 md:w-16 absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0">
+            <Link href="/" className="flex items-center justify-center">
+              <div className="relative h-10 w-10 md:h-12 md:w-12 rounded-full bg-[#f5eee6] flex items-center justify-center shadow-md">
+                {/* Placeholder for logo icon */}
+                <Image src="/logo.svg" alt="Logo" width={40} height={40} />
               </div>
-              <div className="relative h-12 w-48 md:h-14 md:w-56 hidden md:flex ml-2 md:ml-4 h-8 md:h-10 border-l border-gray-400 pl-2 md:pl-4">
-                <Image src="/exp-realty-logo.webp" alt="Exp Realty Logo" fill className="object-contain" />
-              </div>
-            
+            </Link>
+            <Link href="/" className="flex items-center justify-center">
+            <div className="relative h-10 w-10 md:h-12 md:w-12 rounded-full bg-[#f5eee6] flex items-center justify-center shadow-md">
+            <Image src="/exp-realty-logo.webp" alt="exp-realty-logo" width={40} height={40} />
+            </div>
             </Link>
           </div>
 
-          {/* Desktop Navigation - Right */}
-          <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-end">
-            {rightNavItems.map((item) => (
-              <Link href={item.href} key={item.name}>
-                <Button
-                  variant="ghost"
-                  className={`px-3 py-2 text-sm font-medium text-white hover:text-[#D4AF37] hover:bg-[#13304A] focus:bg-[#13304A] focus:text-[#D4AF37]`}
-                >
-                  {item.name}
-                </Button>
-              </Link>
-            ))}
-            {/* Contact Button */}
-            <Link href="/contact">
-              <Button className="ml-4 bg-[#D4AF37] text-[#13304A] font-semibold px-5 py-2 rounded hover:bg-[#bfa13a] border-none shadow-none">
-                Contact
-              </Button>
+          {/* Right Nav */}
+          <nav className="hidden lg:flex items-center space-x-6 flex-1 justify-end">
+            <Link href="/about" className="text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors">About</Link>
+            <Link href="/contact" className="text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors">Contact</Link>
+            <Link href="/auth/login">
+              <Button className="ml-4 bg-yellow-400 text-slate-900 font-semibold px-5 py-2 rounded-full shadow-sm hover:bg-yellow-300 border-none transition-colors text-sm">Login</Button>
             </Link>
           </nav>
 
@@ -146,7 +137,7 @@ export default function Navbar() {
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden text-white p-1"
+            className="lg:hidden text-slate-900 p-1"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -157,7 +148,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-[#13304A] border-t border-slate-200 mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="lg:hidden bg-[#FAF4ED] border-t border-[#f0e9e0] mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="container mx-auto px-4 py-4">
             <nav className="flex flex-col space-y-2">
               {navItems.map((item) => (
