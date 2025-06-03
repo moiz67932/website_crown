@@ -95,7 +95,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
           <div className="flex items-center gap-1">
             <Maximize className="h-4 w-4" />
-            {property.living_area_sqft !== '-' ? `${property.living_area_sqft.toLocaleString?.() ?? property.living_area_sqft} sqft` : '- sqft'}
+            {property.lot_size_sqft  ? `${property?.lot_size_sqft.toLocaleString?.() ?? '-'} sqft` : '- sqft'}
           </div>
         </div>
       </div>
