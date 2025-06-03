@@ -273,7 +273,7 @@ const losAngelesData: CityData = {
   id: "los-angeles",
   name: "Los Angeles",
   fullName: "Los Angeles, California",
-  heroImage: "/los-angeles-skyline-sunset.png",
+  heroImage: "/los.jpg",
   heroTitle: "Live the LA Dream",
   heroSubtitle: "From Hollywood glamour to sun-soaked beaches, discover your place in the City of Angels.",
   introText:
@@ -498,7 +498,7 @@ const sanFranciscoData: CityData = {
   id: "san-francisco",
   name: "San Francisco",
   fullName: "San Francisco, California",
-  heroImage: "/san-francisco-golden-gate-sunset.png",
+  heroImage: "/san-fan.jpg",
   heroTitle: "Experience San Francisco",
   heroSubtitle: "Iconic hills, vibrant neighborhoods, and world-class culture await in the City by the Bay.",
   introText:

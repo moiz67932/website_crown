@@ -36,7 +36,6 @@ export default function HomePage() {
     status: item.property_type !== "ResidentailLease" ? "FOR SALE" : "FOR RENT",
     property_type: item.property_type,
     statusColor: "bg-blue-100 text-blue-800", // You can adjust color logic as needed
-    publicRemarks: item.public_remarks,
     favorite: false,
     _id: item.listing_id,
     images: item.images,

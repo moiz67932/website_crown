@@ -76,7 +76,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <h3 className="text-lg font-bold text-[#1CA7A6] truncate">{property.address}</h3>
           <div className="flex items-center text-[#6B7280] text-sm mt-1">
             <MapPin className="h-4 w-4 mr-1" />
-            {property.location}
+            {property.city}
           </div>
         </div>
 
