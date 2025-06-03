@@ -9,22 +9,9 @@ import { Badge } from "@/components/ui/badge"
 import SearchBar from "@/components/home/search-bar"
 import useListProperties from "@/hooks/queries/useGetListProperties";
 import Loading from "@/components/shared/loading"
+import { Property } from "@/interfaces"
 
-interface Property {
-  id: string;
-  image: string;
-  listing_key: string;
-  property_type: string;
-  title: string;
-  location: string;
-  price: number;
-  beds: string | number;
-  baths: string | number;
-  sqft: string | number;
-  status: string;
-  statusColor: string;
-  publicRemarks: string;
-}
+
 
 export default function HomePage() {
   const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 4 });
@@ -247,7 +234,7 @@ export default function HomePage() {
       </section> */}
 
       {/* Popular California Cities Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-[#F6EEE7]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-[#2D3A4A] mb-2">Explore Popular California Cities</h2>
@@ -479,33 +466,33 @@ const popularCities = [
   },
   {
     name: 'Los Angeles',
-    image: '/san-diego-bay-sunset.png', // Add image path if available
+    image: '/los.jpg', // Add image path if available
     description: "Discover this iconic California city, home to Hollywood, beautiful beaches, and vibrant neighborhoods.",
     link: '/discover/los-angeles',
   },
   {
     name: 'San Francisco',
-    image: '/san-diego-bay-sunset.png', // Add image path if available
+    image: '/san-fan.jpg', // Add image path if available
     description: "Discover this iconic California city, famous for the Golden Gate Bridge, tech innovation, and unique culture.",
     link: '/discover/san-francisco',
   },
-  {
-    name: 'Malibu',
-    image: '/san-diego-bay-sunset.png',
-    description: "San Diego, renowned for its idyllic climate, 70 miles of pristine beaches, and a dazzling array of world-class attractions.",
-    link: '/buy/malibu',
-  },
-  {
-    name: 'Anta Barbara',
-    image: '/san-diego-bay-sunset.png', // Add image path if available
-    description: "Discover this iconic California city, home to Hollywood, beautiful beaches, and vibrant neighborhoods.",
-    link: '/discover/anta-barbara',
-  },
-  {
-    name: 'San Francisco',
-    image: '/san-diego-bay-sunset.png', // Add image path if available
-    description: "Discover this iconic California city, famous for the Golden Gate Bridge, tech innovation, and unique culture.",
-    link: '/buy/san-francisco',
-  },
+  // {
+  //   name: 'Malibu',
+  //   image: '/san-diego-bay-sunset.png',
+  //   description: "San Diego, renowned for its idyllic climate, 70 miles of pristine beaches, and a dazzling array of world-class attractions.",
+  //   link: '/buy/malibu',
+  // },
+  // {
+  //   name: 'Anta Barbara',
+  //   image: '/san-diego-bay-sunset.png', // Add image path if available
+  //   description: "Discover this iconic California city, home to Hollywood, beautiful beaches, and vibrant neighborhoods.",
+  //   link: '/discover/anta-barbara',
+  // },
+  // {
+  //   name: 'Orange',
+  //   image: '/san-diego-bay-sunset.png', // Add image path if available
+  //   description: "Discover this iconic California city, famous for the Golden Gate Bridge, tech innovation, and unique culture.",
+  //   link: '/buy/orange',
+  // },
   // Add more cities as needed
 ];

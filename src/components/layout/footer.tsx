@@ -20,6 +20,11 @@ const Footer: FC = () => {
               alt="mlsimport logo"
               className="h-24 w-24 mb-4 p-2 bg-gray-200 object-contain rounded"
             />
+                 <img
+              src="/crmls.webp"
+              alt="crmls logo"
+              className="h-24 w-24 mb-4 p-2 bg-gray-200 object-contain rounded"
+            />
             </div>
              
             <p className="mb-4 text-center md:text-left text-sm text-gray-200">

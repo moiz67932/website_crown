@@ -15,10 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crown Real Estate",
-  description: "Crown Real Estate",
-};
-
+  title: "Crown Coastal Homes - Premium California Real Estate",
+  description:
+    "Discover luxury coastal properties and homes throughout California. Buy, rent, and invest in premium real estate with Crown Coastal Homes.",}
 export default function RootLayout({
   children,
 }: Readonly<{

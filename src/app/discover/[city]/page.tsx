@@ -1,4 +1,4 @@
-import { getCityData } from "@/lib/city-data"
+import { getCityData, MappingCityIdToCityName } from "@/lib/city-data"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -9,7 +9,8 @@ import { ArrowRight, Search, MapPin, StarIcon, MessageSquare } from "lucide-reac
 import type { Metadata } from "next"
 import { PropertyCard } from "@/components/property-card"
 import { cn } from "@/lib/utils"
-import { use } from "react";
+import { Property } from "@/interfaces"
+import CityMapWrapper from "@/components/city-map"
 
 // Sample properties for the city - in a real app, this would be fetched
 const sampleCityProperties = [
@@ -51,8 +52,6 @@ const sampleCityProperties = [
   },
 ]
 
-
-
 export async function generateMetadata({ params }: {params: Promise<{ city: string }> }): Promise<Metadata> {
   const { city } = await params;
   const cityData = getCityData(city || '')
@@ -82,7 +81,7 @@ export async function generateMetadata({ params }: {params: Promise<{ city: stri
 // Simple Search Widget Component
 function CitySearchWidget({ cityName, cityId }: { cityName: string; cityId: string }) {
   return (
-    <div className="bg-brand-white/90 backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-strong max-w-2xl mx-auto">
+    <div className="backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-strong max-w-2xl mx-auto" style={{ backgroundColor: 'hsl(0 0% 100%/.9)' }}>
       <h3 className="text-2xl font-semibold text-brand-midnightCove mb-4 text-center">Find Your Home in {cityName}</h3>
       <form action="/buy" method="GET" className="flex flex-col sm:flex-row items-center gap-3">
         <input type="hidden" name="location" value={cityId} />
@@ -117,15 +116,21 @@ function CitySearchWidget({ cityName, cityId }: { cityName: string; cityId: stri
 
 export default async function CityPage({ params }: { params: Promise<{ city: string }> }) {
   const { city } = await params;
-
   const cityData = getCityData(city || '')
 
   if (!cityData) {
     notFound()
   }
 
+  // Fetch properties using server-side data fetching
+  const response = await fetch(`${process.env.API_BASE_URL}/api/properties?skip=0&limit=3&county=${MappingCityIdToCityName(city)}`, { 
+    cache: 'no-store'
+  });
+  const featuredPropertiesRaw = await response.json();
+  console.log(featuredPropertiesRaw)
+
   return (
-    <div className="bg-brand-californiaSand min-h-screen">
+    <div className="bg-[#F6EEE7] min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[400px] sm:min-h-[500px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
@@ -148,7 +153,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
       <div className="max-w-screen-xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         {/* Intro Text & Search Widget Section */}
         <section className="mb-12 sm:mb-16 grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
-          <div className="lg:col-span-3 bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
+          <div className="lg:col-span-3 p-6 sm:p-8 rounded-xl shadow-medium" style={{ backgroundColor: 'hsl(0 0% 100%/.9)' }}>
             <h2 className="text-3xl font-bold text-brand-midnightCove mb-4">Welcome to {cityData.name}</h2>
             <p className="text-gray-700 leading-relaxed whitespace-pre-line">{cityData.introText}</p>
           </div>
@@ -162,15 +167,9 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
           <h2 className="text-3xl font-bold text-brand-midnightCove mb-6 text-center">
             Explore {cityData.name} on the Map
           </h2>
-          <div className="aspect-video bg-gray-200 rounded-xl shadow-medium flex items-center justify-center overflow-hidden">
-            <Image
-              src={cityData.mapPlaceholderImage || "/placeholder.svg"}
-              alt={`Map of ${cityData.name}`}
-              width={800}
-              height={500}
-              className="object-cover w-full h-full"
-            />
-          </div>
+          {cityData.osmBoundingBox && (
+            <CityMapWrapper bounds={cityData.osmBoundingBox} />
+          )}
         </section>
 
         {/* Neighborhoods Section */}
@@ -305,7 +304,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
             Featured Properties in {cityData.name}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {sampleCityProperties.map((property) => (
+            {featuredPropertiesRaw?.listings?.map((property: Property) => (
               <PropertyCard key={property.id} property={property} />
             ))}
           </div>
