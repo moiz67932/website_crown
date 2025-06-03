@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/pagination"
 import useListProperties from "@/hooks/queries/useGetListProperties"
 import { useSearchParams } from "next/navigation"
+import { PropertyCard } from "@/components/property-card"
+import { Property } from "@/interfaces"
 
 // Dynamically import FilterSidebar and MobileFilterDrawer with SSR disabled
 const FilterSidebar = dynamic(() => import("./filter-sidebar"), { ssr: false })
@@ -126,7 +128,13 @@ function PropertiesPageContent() {
 
           {/* Properties Grid */}
           <div className="w-full lg:w-3/4 xl:w-4/5">
-            {isLoading ? <PropertyGridSkeleton /> : <PropertiesGrid properties={properties} />}
+            {isLoading ? <PropertyGridSkeleton /> :
+            <div className="flex flex-wrap justify-center gap-8 mb-10">
+            {properties.map((property: Property) => (
+              <PropertyCard key={property.listing_key} property={property} />
+            ))}
+          </div>
+            }
             
             {/* Pagination */}
             {!isLoading && totalPages > 1 && (

@@ -49,10 +49,22 @@ function CityMap({ bounds }: { bounds: [number, number, number, number] }) {
   )
 }
 
-// Dynamically import the map components to avoid SSR issues
-const MapWithNoSSR = dynamic(() => Promise.resolve(CityMap), {
-  ssr: false,
-})
+// Dynamically import both react-leaflet and the map component to avoid SSR issues
+const MapWithNoSSR = dynamic(
+  () => import("leaflet").then((L) => {
+    // This is needed for leaflet icons to work
+    delete (L.Icon.Default.prototype as any)._getIconUrl
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "leaflet/dist/images/marker-icon-2x.png",
+      iconUrl: "leaflet/dist/images/marker-icon.png",
+      shadowUrl: "leaflet/dist/images/marker-shadow.png",
+    })
+    return Promise.resolve(CityMap)
+  }),
+  {
+    ssr: false,
+  }
+)
 
 interface CityMapWrapperProps {
   bounds: [number, number, number, number]

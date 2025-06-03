@@ -41,27 +41,26 @@ const Footer: FC = () => {
           <div>
             <h3 className="mb-4 font-bold text-lg tracking-wider">EXPLORE</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-gray-400 text-sm">Home</a></li>
-              <li><a href="#" className="hover:text-gray-400 text-sm">Listings</a></li>
-              <li><a href="#" className="hover:text-gray-400 text-sm">Neighborhoods</a></li>
+              <li><a href="/" className="hover:text-gray-400 text-sm">Home</a></li>
+              <li><a href="/properties" className="hover:text-gray-400 text-sm">Listings</a></li>
+              <li><a href="/neighborhoods" className="hover:text-gray-400 text-sm">Neighborhoods</a></li>
             </ul>
           </div>
           {/* COMPANY */}
           <div>
             <h3 className="mb-4 font-bold text-lg tracking-wider">COMPANY</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-gray-400 text-sm">About Us</a></li>
-              <li><a href="#" className="hover:text-gray-400 text-sm">Careers</a></li>
-              <li><a href="#" className="hover:text-gray-400 text-sm">Blog</a></li>
+              <li><a href="/about" className="hover:text-gray-400 text-sm">About Us</a></li>
+              {/* <li><a href="#" className="hover:text-gray-400 text-sm">Blog</a></li> */}
             </ul>
           </div>
           {/* SUPPORT */}
           <div>
             <h3 className="mb-4 font-bold text-lg tracking-wider">SUPPORT</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-gray-400 text-sm">Contact</a></li>
-              <li><a href="#" className="hover:text-gray-400 text-sm">FAQ</a></li>
-              <li><a href="#" className="hover:text-gray-400 text-sm">Help Center</a></li>
+              <li><a href="/contact" className="hover:text-gray-400 text-sm">Contact</a></li>
+              {/* <li><a href="/faq" className="hover:text-gray-400 text-sm">FAQ</a></li> */}
+              {/* <li><a href="#" className="hover:text-gray-400 text-sm">Help Center</a></li> */}
             </ul>
           </div>
         </div>
