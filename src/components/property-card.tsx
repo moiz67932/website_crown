@@ -27,7 +27,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <Link
-      href={`/properties/${property.address.replace(/\s+/g, '-').toLowerCase()}/${property.listing_key}`}
+      href={`/properties/${property?.address ? property?.address?.replace(/\s+/g, '-').toLowerCase() : 'address'}/${property.listing_key}`}
       key={property.listing_key}
       className="bg-white rounded-2xl shadow-lg p-0 w-full max-w-xs flex flex-col relative transition hover:shadow-xl"
     >
