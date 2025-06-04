@@ -33,7 +33,7 @@ export default function MortgageCalculatorModal({
   hoaFees = 0, // Default $0/month
   buttonVariant = "default",
   buttonText = "Calculate Mortgage",
-  buttonClassName = "w-full",
+  buttonClassName = "w-full border-brand-pacificTeal text-brand-pacificTeal hover:bg-brand-pacificTeal/10 hover:text-brand-pacificTeal cursor-pointer",
 }: MortgageCalculatorModalProps) {
   // State for user inputs
   const [downPaymentPercent, setDownPaymentPercent] = useState(20)

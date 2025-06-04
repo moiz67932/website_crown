@@ -101,7 +101,7 @@ export default function ContactForm({ propertyId, proertyData }: ContactFormProp
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="w-full cursor-pointer bg-brand-sunsetBlush hover:bg-brand-sunsetBlush/90 text-white" disabled={isSubmitting}>
         {isSubmitting ? "Sending..." : "Send Message"}
       </Button>
 
@@ -116,7 +116,7 @@ export default function ContactForm({ propertyId, proertyData }: ContactFormProp
         </div>
         <div className="flex items-center text-sm">
           <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-          <Button variant="link" className="h-auto p-0 text-sm">
+          <Button variant="link" className="h-auto p-0 text-sm cursor-pointer">
             Schedule a Tour
           </Button>
         </div>

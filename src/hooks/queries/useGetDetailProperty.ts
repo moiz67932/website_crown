@@ -68,6 +68,7 @@ export interface PropertyDetail {
   page_content: string | null
   meta_description: string | null
   title: string | null
+  other_info: any
 }
 
 const fetchPropertyDetail = async (id: string): Promise<PropertyDetail> => {
