@@ -65,7 +65,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       {/* Property image */}
       <div className="h-60 bg-[#F3F4F6] flex items-center justify-center rounded-t-2xl overflow-hidden">
         <img
-          src={property.images[0]}
+          src={property.images[0] ?? "/california-coastal-sunset.png"} 
           alt={property.address}
           className="rounded-t-2xl w-full h-full object-cover"
         />
@@ -76,7 +76,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <h3 className="text-lg font-bold text-[#1CA7A6] truncate">{property.address}</h3>
           <div className="flex items-center text-[#6B7280] text-sm mt-1">
             <MapPin className="h-4 w-4 mr-1" />
-            {property.city}
+            {property.city}, {property.county}
           </div>
         </div>
 

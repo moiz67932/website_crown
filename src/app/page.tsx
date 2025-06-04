@@ -29,10 +29,12 @@ export default function HomePage() {
     image: item.images[0] || "/placeholder.svg",
     address: item.address,
     location: item.city,
+    county: item.county,
     list_price: item.list_price,
     bedrooms: item.bedrooms ?? "-",
     bathrooms: item.bathrooms ?? "-",
     living_area_sqft: item.living_area_sqft ?? "-",
+    lot_size_sqft: item.lot_size_sqft ?? "-",
     status: item.property_type !== "ResidentailLease" ? "FOR SALE" : "FOR RENT",
     property_type: item.property_type,
     statusColor: "bg-blue-100 text-blue-800", // You can adjust color logic as needed

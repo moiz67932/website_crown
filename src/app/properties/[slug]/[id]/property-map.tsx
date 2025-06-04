@@ -57,7 +57,7 @@ export default function PropertyMap({ location, address }: PropertyMapProps) {
   if (!isClient) return <div className="relative h-[300px] rounded-lg overflow-hidden" />
 
   return (
-    <div className="relative h-[300px] rounded-lg overflow-hidden">
+    <div className="relative h-[300px] rounded-lg overflow-hidden z-0">
       <MapContainer
         center={[location.lat, location.lng]}
         zoom={16}

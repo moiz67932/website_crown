@@ -143,6 +143,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </CarouselItem>
               ))}
+              {propertyData.images.length === 0 && (
+                <CarouselItem>
+                  <div className="relative w-full h-[400px] sm:h-[500px] md:h-[650px]">
+                    <Image src="/luxury-modern-house-exterior.png" alt="Property Image" fill className="object-cover" />
+                  </div>
+                </CarouselItem>
+              )}
             </CarouselContent>
             <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-brand-white/80 hover:bg-brand-white text-brand-midnightCove rounded-full" />
             <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-brand-white/80 hover:bg-brand-white text-brand-midnightCove rounded-full" />
@@ -170,11 +177,11 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                       For {propertyData.property_type === "ResidentialLease" ? "Rent" : "Sale"}
                     </Badge>
                     <h1 className="text-3xl sm:text-4xl font-bold text-brand-midnightCove mb-1">
-                      {propertyData.title}
+                      {propertyData.address}
                     </h1>
                     <div className="flex items-center text-gray-600 text-sm sm:text-base">
                       <MapPin className="h-4 w-4 mr-1.5 text-gray-500" />
-                      {propertyData.address}
+                      {propertyData.city}, {propertyData.county}
                     </div>
                   </div>
                   <div className="flex space-x-2 mt-4 sm:mt-0">

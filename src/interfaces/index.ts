@@ -22,5 +22,6 @@ export interface Property {
   latitude: number;
   longitude: number;
   createdAt: string;
+  county: string;
   updatedAt: string;
 }
