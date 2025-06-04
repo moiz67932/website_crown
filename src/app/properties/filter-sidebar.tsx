@@ -267,7 +267,7 @@ export default function FilterSidebar({ filters, onFilterChange, closeDrawer }: 
 
           {/* Area */}
           <AccordionItem value="area">
-            <AccordionTrigger className="text-base font-medium">Area (Sq Ft)</AccordionTrigger>
+            <AccordionTrigger className="text-base font-medium">Living Area (Sq Ft)</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2">
                 <Slider
