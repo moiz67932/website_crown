@@ -18,6 +18,9 @@ import {
   Utensils,
   TreePine,
   TrendingUp,
+  Building2,
+  Car,
+  Eye,
 } from "lucide-react"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 import { PropertyCard } from "@/components/property-card" // For Similar Properties
@@ -181,7 +184,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     </h1>
                     <div className="flex items-center text-gray-600 text-sm sm:text-base">
                       <MapPin className="h-4 w-4 mr-1.5 text-gray-500" />
-                      {propertyData.city}, {propertyData.county}
+                      {propertyData.city}, {propertyData.county}, CA, {propertyData.postal_code}
                     </div>
                   </div>
                   <div className="flex space-x-2 mt-4 sm:mt-0">
@@ -206,7 +209,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </div>
                 {propertyData?.list_price !== undefined && (
                   <div className="text-sm font-bold text-brand-pacificTeal/80 mb-4" itemProp="price">
-                    Est. ${Math.round(propertyData.list_price / 360).toLocaleString()}/month
+                    Estimated payment ${Math.round(propertyData.list_price / 360).toLocaleString()}/month
                   </div>
                 )}
 
@@ -232,6 +235,136 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">{propertyData.public_remarks}</p>
               </div>
 
+              <div className="bg-brand-white p-8 sm:p-10 rounded-2xl shadow-lg">
+                <h2 className="text-3xl font-extrabold text-brand-midnightCove mb-8 flex items-center gap-3">
+                  <Building2 className="h-8 w-8 text-brand-pacificTeal drop-shadow" />
+                  Home Details
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+                  <div className="flex flex-col items-center bg-gradient-to-br from-[#F3E9D8] to-[#E6F7F7] rounded-xl p-6 shadow transition hover:scale-105 hover:shadow-lg">
+                    <Building2 className="h-7 w-7 text-brand-pacificTeal mb-2" />
+                    <div className="text-xs text-gray-500">Home Type</div>
+                    <div className="text-lg font-bold text-brand-graphitePeak">{propertyData.property_type}</div>
+                    <div className="text-xs text-gray-500">{propertyData.property_sub_type}</div>
+                  </div>
+                  <div className="flex flex-col items-center bg-gradient-to-br from-[#F3E9D8] to-[#E6F7F7] rounded-xl p-6 shadow transition hover:scale-105 hover:shadow-lg">
+                    <Calendar className="h-7 w-7 text-brand-pacificTeal mb-2" />
+                    <div className="text-xs text-gray-500">Year Built</div>
+                    <div className="text-lg font-bold text-brand-graphitePeak">{propertyData.year_built}</div>
+                  </div>
+                  <div className="flex flex-col items-center bg-gradient-to-br from-[#F3E9D8] to-[#E6F7F7] rounded-xl p-6 shadow transition hover:scale-105 hover:shadow-lg">
+                    <Bed className="h-7 w-7 text-brand-pacificTeal mb-2" />
+                    <div className="text-xs text-gray-500">Bedrooms</div>
+                    <div className="text-lg font-bold text-brand-graphitePeak">{propertyData.bedrooms}</div>
+                  </div>
+                  <div className="flex flex-col items-center bg-gradient-to-br from-[#F3E9D8] to-[#E6F7F7] rounded-xl p-6 shadow transition hover:scale-105 hover:shadow-lg">
+                    <Bath className="h-7 w-7 text-brand-pacificTeal mb-2" />
+                    <div className="text-xs text-gray-500">Bathrooms</div>
+                    <div className="text-lg font-bold text-brand-graphitePeak">{propertyData.bathrooms}</div>
+                  </div>
+                  <div className="flex flex-col items-center bg-gradient-to-br from-[#F3E9D8] to-[#E6F7F7] rounded-xl p-6 shadow transition hover:scale-105 hover:shadow-lg">
+                    <Car className="h-7 w-7 text-brand-pacificTeal mb-2" />
+                    <div className="text-xs text-gray-500">Parking</div>
+                    <div className="text-lg font-bold text-brand-graphitePeak">{propertyData.parking_total ?? "N/A"} Parking</div>
+                  </div>
+                  <div className="flex flex-col items-center bg-gradient-to-br from-[#F3E9D8] to-[#E6F7F7] rounded-xl p-6 shadow transition hover:scale-105 hover:shadow-lg">
+                    <School className="h-7 w-7 text-brand-pacificTeal mb-2" />
+                    <div className="text-xs text-gray-500">School District</div>
+                    <div className="text-lg font-bold text-brand-graphitePeak">{propertyData.other_info?.HighSchoolDistrict ?? "N/A"}</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-brand-graphitePeak flex items-center gap-2 mb-1">
+                      <Eye className="h-5 w-5 text-brand-pacificTeal" />
+                      Property Views
+                    </h3>
+                    {propertyData.view ? propertyData.view.split(",").map((value: string) => (
+                      <p className="text-gray-700">{value.trim()}</p>
+                    )) : <p className="text-gray-700">N/A</p>}
+                  </div>
+                  <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-brand-graphitePeak flex items-center gap-2 mb-1">
+                      <Building className="h-5 w-5 text-brand-pacificTeal" />
+                      Listing Details
+                    </h3>
+                    <p className="text-gray-700">
+                      MLS Status: <span className="font-semibold">{propertyData.mls_status}</span><br />
+                      {(() => {
+                        const dateNow = new Date();
+                        const onMarketDate = new Date(propertyData.on_market_timestamp);
+                        const timeDiff = dateNow.getTime() - onMarketDate.getTime();
+                        const daysOnMarket = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+                        if (daysOnMarket < 1) {
+                          const hoursOnMarket = Math.floor(timeDiff / (1000 * 3600));
+                          return (
+                            <>
+                              Hours on Market: <span className="font-semibold">{hoursOnMarket} hours</span>
+                            </>
+                          );
+                        } else {
+                          return (
+                            <>
+                              Days on Market: <span className="font-semibold">{daysOnMarket} days</span>
+                            </>
+                          );
+                        }
+                      })()}
+                    </p>
+                  </div>
+                  <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-brand-graphitePeak flex items-center gap-2 mb-1">
+                      <Square className="h-5 w-5 text-brand-pacificTeal" />
+                      Utilities
+                    </h3>
+                    {propertyData.heating && <p className="text-gray-700">{propertyData.heating}</p>}
+                  </div>
+                  <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2 col-span-1 md:col-span-3">
+                    <h3 className="text-lg font-semibold text-brand-graphitePeak flex items-center gap-2 mb-1">
+                      <Bath className="h-5 w-5 text-brand-pacificTeal" />
+                      Interior Spaces
+                    </h3>
+                    {propertyData.living_area_sqft && <p className="text-gray-700">{propertyData.living_area_sqft} Sq Ft Home</p>}
+                    {propertyData.lot_size_sqft && <p className="text-gray-700">{propertyData.lot_size_sqft} Lot Size {propertyData.lot_size_sqft > 43560 ? "Acres" : "Sq Ft"}</p>}
+                    {propertyData.stories && <p className="text-gray-700">{propertyData.stories}-Story Property</p>}
+                    {propertyData.interior_features && <p className="text-gray-700">{propertyData.interior_features} Interior Features</p>}
+                    {propertyData.pool_features && <p className="text-gray-700">{propertyData.pool_features} Pool</p>}
+                  </div>
+                </div>
+
+                <h2 className="text-2xl font-bold text-brand-midnightCove mb-6 flex items-center gap-2">
+                  <Building2 className="h-7 w-7 text-brand-pacificTeal" />
+                  Community Details
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-brand-graphitePeak flex items-center gap-2 mb-1">
+                      <Building2 className="h-5 w-5 text-brand-pacificTeal" />
+                      Overview
+                    </h3>
+                    <p className="text-gray-700">{propertyData.subdivision_name || "N/A"}</p>
+                  </div>
+                  <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-brand-graphitePeak flex items-center gap-2 mb-1">
+                      <Utensils className="h-5 w-5 text-brand-pacificTeal" />
+                      Local Amenities
+                    </h3>
+                    {propertyData.other_info?.CommunityFeatures?.split(",").map((value: string) => (
+                      <p className="text-gray-700">{value.trim()}</p>
+                    )) || <p className="text-gray-700">N/A</p>}
+                  </div>
+                  <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-brand-graphitePeak flex items-center gap-2 mb-1">
+                      <TreePine className="h-5 w-5 text-brand-pacificTeal" />
+                      Recreation
+                    </h3>
+                    <p className="text-gray-700">{propertyData.other_info?.RecreationFeatures || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Features Section */}
               {/* <div className="bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
                 <h2 className="text-2xl font-bold text-brand-midnightCove mb-6">Features & Amenities</h2>
@@ -252,7 +385,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               {/* Neighborhood Information Section (New) */}
-              <div className="bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
+              {/* <div className="bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
                 <h2 className="text-2xl font-bold text-brand-midnightCove mb-6">
                   Neighborhood Insights: {propertyData.city}
                 </h2>
@@ -264,7 +397,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     <ul className="list-disc list-inside text-gray-600 space-y-1 text-sm">
                       <li>Malibu High School (Rated 9/10) - 2 miles</li>
                       <li>Webster Elementary (Rated 8/10) - 1.5 miles</li>
-                      {/* Add more or make dynamic */}
                     </ul>
                   </div>
                   <div>
@@ -300,6 +432,53 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <Button variant="link" className="text-brand-pacificTeal hover:text-brand-midnightCove mt-4 px-0">
                   Learn more about {propertyData.city} &rarr;
                 </Button>
+              </div> */}
+              <Card className="mb-6 sm:p-8 rounded-xl shadow-medium space-y-6" >
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4">Mortgage Calculator</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Home Price</p>
+                      <div className="font-medium">${propertyData.list_price.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Down Payment (20%)</p>
+                      <div className="font-medium">${(propertyData.list_price * 0.2).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
+                      <div className="font-medium">${(propertyData.list_price * 0.8).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Estimated Monthly Payment</p>
+                      <div className="font-medium">${Math.round(propertyData.list_price / 360).toLocaleString()}/month</div>
+                    </div>
+                    <MortgageCalculatorModal
+                      propertyPrice={propertyData.list_price}
+                      propertyTaxRate={0.0125}
+                      insuranceRate={0.0035}
+                      hoaFees={0.05}
+                      buttonText="Full Calculator"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+              <div className="mt-6  border border-gray-100 rounded-lg bg-gray-50/50 p-4">
+                <p className="text-sm text-muted-foreground mb-3">Listing Agent</p>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Name: </span>
+                    <span itemProp="agent">{propertyData.list_agent_full_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Phone: </span>
+                    <span>{propertyData.list_agent_phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Email: </span>
+                    <span>{propertyData.list_agent_email}</span>
+                  </div>
+                </div>
               </div>
               {faqs && faqs.length > 0 && (
                 <div className="bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
@@ -364,7 +543,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   Listing ID: CCH-{propertyData.id.toString().padStart(5, "0")}
                 </div>
               </div> */}
-              <Card className="mb-6 top-24 bg-brand-white sm:p-8 rounded-xl shadow-medium space-y-6" >
+              <Card className="sticky mb-6 top-24 bg-brand-white sm:p-8 rounded-xl shadow-medium space-y-6" >
                 <CardContent>
                   <div className="mb-4">
                     <h3 className="font-semibold">Contact the Crown Coastal Team</h3>
@@ -373,53 +552,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <ContactForm propertyId={propertyData.listing_key} proertyData={propertyData} />
                 </CardContent>
               </Card>
-              <Card className="mb-6 sm:p-8 rounded-xl shadow-medium space-y-6" >
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4">Mortgage Calculator</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Home Price</p>
-                      <div className="font-medium">${propertyData.list_price.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Down Payment (20%)</p>
-                      <div className="font-medium">${(propertyData.list_price * 0.2).toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
-                      <div className="font-medium">${(propertyData.list_price * 0.8).toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Estimated Monthly Payment</p>
-                      <div className="font-medium">${Math.round(propertyData.list_price / 360).toLocaleString()}/month</div>
-                    </div>
-                    <MortgageCalculatorModal
-                      propertyPrice={propertyData.list_price}
-                      propertyTaxRate={0.0125}
-                      insuranceRate={0.0035}
-                      hoaFees={0.05}
-                      buttonText="Full Calculator"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-              <div className="mt-6  border border-gray-100 rounded-lg bg-gray-50/50 p-4">
-                <p className="text-sm text-muted-foreground mb-3">Listing Agent</p>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Name: </span>
-                    <span itemProp="agent">{propertyData.list_agent_full_name}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Phone: </span>
-                    <span>{propertyData.list_agent_phone}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Email: </span>
-                    <span>{propertyData.list_agent_email}</span>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </div>
 
