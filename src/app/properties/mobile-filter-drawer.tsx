@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { SlidersHorizontal, X } from "lucide-react"
+import { SlidersHorizontal } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import FilterSidebar from "./filter-sidebar"
 
@@ -49,12 +49,7 @@ export default function MobileFilterDrawer({ filters, onFilterChange }: FilterSi
         </SheetTrigger>
         <SheetContent side="left" className="w-full sm:max-w-md p-0">
           <SheetHeader className="p-4 border-b border-slate-200">
-            <div className="flex items-center justify-between">
-              <SheetTitle>Filters</SheetTitle>
-              <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <SheetTitle>Filters</SheetTitle>
           </SheetHeader>
           <div className="overflow-y-auto h-[calc(100vh-5rem)]">
             <FilterSidebar filters={filters} onFilterChange={onFilterChange} />

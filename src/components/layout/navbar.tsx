@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Menu, X, ChevronDown, User, Heart, Bell } from "lucide-react"
+import { Menu, X, ChevronDown, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
@@ -44,6 +44,35 @@ export default function Navbar() {
     // { name: "Contact", href: "/contact" },
     // { name: "Help", href: "/help" },
   ];
+
+  // Mobile menu dropdowns for Buy and Rent
+  const mobileBuyItems = [
+    { label: "Houses", href: "/properties?propertyType=Residential&status=for-sale" },
+    { label: "Townhouses", href: "/properties?propertyType=Residential&status=for-sale" },
+    { label: "Condos", href: "/properties?propertyType=Condo&status=for-sale" },
+    { label: "Manufactured", href: "/properties?propertyType=ManufacturedInPark&status=for-sale" },
+    { label: "Lot/Land", href: "/properties?propertyType=Land&status=for-sale" },
+    { label: "New Homes/New Construction", href: "/properties?propertyType=Residential&status=for-sale" },
+    { label: "All Homes", href: "/properties?status=for-sale" },
+  ];
+  const mobileRentItems = [
+    { label: "Houses for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
+    { label: "Apartments for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
+    { label: "Townhomes for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
+    { label: "All Rentals", href: "/properties?status=for-rent" },
+  ];
+
+  // State for mobile dropdowns
+  const [mobileBuyOpen, setMobileBuyOpen] = useState(false);
+  const [mobileRentOpen, setMobileRentOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setMobileBuyOpen(false);
+    setMobileRentOpen(false);
+    // eslint-disable-next-line
+  }, [pathname]);
 
   return (
     <header
@@ -118,9 +147,9 @@ export default function Navbar() {
               </div>
             </Link>
             <Link href="/" className="flex items-center justify-center">
-            <div className="relative h-10 w-10 md:h-12 md:w-12 rounded-full bg-[#f5eee6] flex items-center justify-center shadow-md">
-            <Image src="/exp-realty-logo.webp" alt="exp-realty-logo" width={40} height={40} />
-            </div>
+              <div className="relative h-10 w-10 md:h-12 md:w-12 rounded-full bg-[#f5eee6] flex items-center justify-center shadow-md">
+                <Image src="/exp-realty-logo.webp" alt="exp-realty-logo" width={40} height={40} />
+              </div>
             </Link>
           </div>
 
@@ -148,28 +177,94 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-[#FAF4ED] border-t border-[#f0e9e0] mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="lg:hidden bg-[#FAF4ED] border-t border-[#f0e9e0] mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto z-50">
           <div className="container mx-auto px-4 py-4">
-            <nav className="flex flex-col space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  href={item.href}
-                  key={item.name}
-                  className={`px-3 py-2 font-medium rounded-md text-white hover:text-[#D4AF37] hover:bg-[#13304A]`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+            <nav className="flex flex-col space-y-1">
+              {/* Buy Dropdown */}
+              <div>
+                <button
+                  className="w-full flex items-center justify-between px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                  onClick={() => {
+                    setMobileBuyOpen((open) => !open);
+                    setMobileRentOpen(false);
+                  }}
+                  aria-expanded={mobileBuyOpen}
+                  aria-controls="mobile-buy-menu"
+                  type="button"
                 >
-                  {item.name}
-                </Link>
-              ))}
+                  <span>Buy</span>
+                  <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${mobileBuyOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileBuyOpen && (
+                  <div id="mobile-buy-menu" className="ml-4 mt-1 flex flex-col space-y-1">
+                    {mobileBuyItems.map((item) => (
+                      <Link
+                        href={item.href}
+                        key={item.label}
+                        className="block px-3 py-2 text-sm rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Rent Dropdown */}
+              <div>
+                <button
+                  className="w-full flex items-center justify-between px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                  onClick={() => {
+                    setMobileRentOpen((open) => !open);
+                    setMobileBuyOpen(false);
+                  }}
+                  aria-expanded={mobileRentOpen}
+                  aria-controls="mobile-rent-menu"
+                  type="button"
+                >
+                  <span>Rent</span>
+                  <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${mobileRentOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileRentOpen && (
+                  <div id="mobile-rent-menu" className="ml-4 mt-1 flex flex-col space-y-1">
+                    {mobileRentItems.map((item) => (
+                      <Link
+                        href={item.href}
+                        key={item.label}
+                        className="block px-3 py-2 text-sm rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Other nav items */}
+              {navItems
+                .filter(item => item.name !== "Home" && item.name !== "Buy" && item.name !== "Rent")
+                .map((item) => (
+                  <Link
+                    href={item.href}
+                    key={item.name}
+                    className="px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
             </nav>
             <div className="mt-4 flex flex-col space-y-2">
               <Link href="/auth/login">
-                <Button variant="outline" className="justify-center w-full text-white border-white hover:bg-[#D4AF37] hover:text-[#13304A]">
+                <Button variant="outline" className="justify-center w-full text-slate-900 border-slate-900 hover:bg-[#D4AF37] hover:text-[#13304A]">
                   <User className="h-4 w-4 mr-2" />
                   Sign In
                 </Button>
               </Link>
+              <Link href="/properties/">
               <Button className="bg-[#D4AF37] hover:bg-[#bfa13a] text-[#13304A] justify-center w-full font-semibold">List Property</Button>
+
+              </Link>
             </div>
           </div>
         </div>
