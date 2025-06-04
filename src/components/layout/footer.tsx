@@ -13,17 +13,13 @@ const Footer: FC = () => {
             <img
               src="/logo.svg"
               alt="logo"
-              className="h-24 w-24 mb-4 bg-gray-200 object-contain rounded"
+              className="h-24 w-24 mb-4  object-contain rounded"
             />
-                 <img
-              src="/mlsimport-logo.webp"
-              alt="mlsimport logo"
-              className="h-24 w-24 mb-4 p-2 bg-gray-200 object-contain rounded"
-            />
+
                  <img
               src="/crmls.webp"
               alt="crmls logo"
-              className="h-24 w-24 mb-4 p-2 bg-gray-200 object-contain rounded"
+              className="h-24 w-24 mb-4 p-2  object-contain rounded"
             />
             </div>
              

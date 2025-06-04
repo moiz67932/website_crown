@@ -12,45 +12,6 @@ import { cn } from "@/lib/utils"
 import { Property } from "@/interfaces"
 import CityMapWrapper from "@/components/city-map"
 
-// Sample properties for the city - in a real app, this would be fetched
-const sampleCityProperties = [
-  {
-    id: 201,
-    title: "Charming Craftsman in North Park",
-    price: "$1,250,000",
-    location: "North Park, San Diego, CA",
-    beds: 3,
-    baths: 2,
-    sqft: "1,800",
-    image: "/placeholder.svg?height=300&width=400",
-    type: "sale" as const,
-    architecturalStyle: "Craftsman",
-  },
-  {
-    id: 202,
-    title: "Luxury Condo in Gaslamp Quarter",
-    price: "$980,000",
-    location: "Gaslamp, San Diego, CA",
-    beds: 2,
-    baths: 2,
-    sqft: "1,500",
-    image: "/placeholder.svg?height=300&width=400",
-    type: "sale" as const,
-    tags: ["City Views"],
-  },
-  {
-    id: 203,
-    title: "La Jolla Ocean View Home",
-    price: "$5,800,000",
-    location: "La Jolla, San Diego, CA",
-    beds: 4,
-    baths: 5,
-    sqft: "4,500",
-    image: "/placeholder.svg?height=300&width=400",
-    type: "sale" as const,
-    architecturalStyle: "Contemporary",
-  },
-]
 
 export async function generateMetadata({ params }: {params: Promise<{ city: string }> }): Promise<Metadata> {
   const { city } = await params;
@@ -127,14 +88,18 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
     cache: 'no-store'
   });
   const featuredPropertiesRaw = await response.json();
-  console.log(featuredPropertiesRaw)
+
+  const responseImage = await fetch(`${process.env.API_BASE_URL}/api/counties-images?county=${MappingCityIdToCityName(city)} County`, { 
+    cache: 'no-store'
+  });
+  const imageData = await responseImage.json();
 
   return (
     <div className="bg-[#F6EEE7] min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[400px] sm:min-h-[500px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
-          src={cityData.heroImage || "/placeholder.svg"}
+          src={imageData[0].image_url}
           alt={`Panoramic view of ${cityData.name}`}
           fill
           className="object-cover"
@@ -188,7 +153,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
                     <div className="bg-brand-white rounded-xl shadow-medium overflow-hidden transition-all duration-300 hover:shadow-strong">
                       <div className="relative h-56">
                         <Image
-                          src={hood.image || "/placeholder.svg?height=224&width=400&query=neighborhood+scene"}
+                          src={imageData[Math.floor(Math.random() * imageData.length)].image_url}
                           alt={`View of ${hood.name}, ${cityData.name}`}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -310,7 +275,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
           </div>
           <div className="text-center mt-10">
             <Button asChild size="lg" className="bg-brand-sunsetBlush hover:bg-brand-sunsetBlush/90 text-white">
-              <Link href={`/buy?location=${cityData.id}&city=${cityData.name}`}>
+              <Link href={`/properties?location=${cityData.name}&searchLocationType=county`}>
                 <Search className="h-5 w-5 mr-2" />
                 View All Properties in {cityData.name}
               </Link>

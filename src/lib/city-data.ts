@@ -123,7 +123,7 @@ const sanDiegoData: CityData = {
           name: "Little Italy",
           description: "Trendy neighborhood with Italian eateries, boutiques, and art galleries.",
           href: "/buy/san-diego/little-italy",
-          image: "/little-italy-san-diego.png",
+          image: "/city/little_italy.jpg",
         },
         {
           name: "East Village",
