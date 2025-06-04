@@ -38,9 +38,10 @@ interface FilterSidebarProps {
     min_sqft: number | undefined;
     sortBy: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
   }) => void;
+  closeDrawer?: () => void;
 }
 
-export default function FilterSidebar({ filters, onFilterChange }: FilterSidebarProps) {
+export default function FilterSidebar({ filters, onFilterChange, closeDrawer }: FilterSidebarProps) {
   const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 5000000])
   const [areaRange, setAreaRange] = useState([0, 10000])
   const { data: propertyTypes, isLoading } = useGetPropertyTypes()
@@ -92,6 +93,13 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
       ...filters,
       yearBuilt: year,
     });
+  }
+  const handleApplyFilters = () => {
+    onFilterChange({
+      ...filters,
+      sortBy: "recommended"
+    })
+    closeDrawer?.()
   }
 
   const handleReset = () => {
@@ -415,7 +423,7 @@ export default function FilterSidebar({ filters, onFilterChange }: FilterSidebar
 
       <div className="p-4 border-t border-slate-200 bg-slate-50">
         <div className="flex gap-2">
-          <Button className="w-full bg-slate-800 hover:bg-slate-900">Apply Filters</Button>
+          <Button className="w-full bg-slate-800 hover:bg-slate-900" onClick={handleApplyFilters}>Apply Filters</Button>
           <Button variant="outline" className="flex-shrink-0" onClick={handleReset}>
             Reset
           </Button>

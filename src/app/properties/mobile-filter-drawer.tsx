@@ -37,6 +37,9 @@ interface FilterSidebarProps {
 
 export default function MobileFilterDrawer({ filters, onFilterChange }: FilterSidebarProps) {
   const [open, setOpen] = useState(false)
+  const closeDrawer = () => {
+    setOpen(false)
+  }
 
   return (
     <div className="mb-4">
@@ -52,7 +55,7 @@ export default function MobileFilterDrawer({ filters, onFilterChange }: FilterSi
             <SheetTitle>Filters</SheetTitle>
           </SheetHeader>
           <div className="overflow-y-auto h-[calc(100vh-5rem)]">
-            <FilterSidebar filters={filters} onFilterChange={onFilterChange} />
+            <FilterSidebar filters={filters} onFilterChange={onFilterChange} closeDrawer={closeDrawer} />
           </div>
         </SheetContent>
       </Sheet>
