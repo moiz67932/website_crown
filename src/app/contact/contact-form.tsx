@@ -35,13 +35,27 @@ export default function ContactForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch('/api/contact-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      })
 
-    console.log(values)
-    setIsSubmitting(false)
-    setIsSuccess(true)
-    form.reset()
+      if (!response.ok) {
+        throw new Error('Failed to send message')
+      }
+
+      console.log(values)
+      setIsSuccess(true)
+      form.reset()
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
+    }
 
     // Reset success message after 5 seconds
     setTimeout(() => setIsSuccess(false), 5000)
