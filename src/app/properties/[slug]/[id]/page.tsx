@@ -463,23 +463,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </CardContent>
               </Card>
-              <div className="mt-6  border border-gray-100 rounded-lg bg-gray-50/50 p-4">
-                <p className="text-sm text-muted-foreground mb-3">Listing Agent</p>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Name: </span>
-                    <span itemProp="agent">{propertyData.list_agent_full_name}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Phone: </span>
-                    <span>{propertyData.list_agent_phone}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Email: </span>
-                    <span>{propertyData.list_agent_email}</span>
-                  </div>
-                </div>
-              </div>
+
               {faqs && faqs.length > 0 && (
                 <div className="bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
                   <PropertyFAQ
@@ -551,8 +535,24 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <Separator className="my-4" />
                   <ContactForm propertyId={propertyData.listing_key} proertyData={propertyData} />
                 </CardContent>
+                <div className="mt-6  border border-gray-100 rounded-lg bg-gray-50/50 p-4">
+                <p className="text-sm text-muted-foreground mb-3">Listing Agent</p>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Name: </span>
+                    <span itemProp="agent">{propertyData.list_agent_full_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Phone: </span>
+                    <span>{propertyData.list_agent_phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Email: </span>
+                    <span>{propertyData.list_agent_email}</span>
+                  </div>
+                </div>
+              </div>
               </Card>
-
             </div>
           </div>
 
