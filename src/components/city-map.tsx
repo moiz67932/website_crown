@@ -32,18 +32,7 @@ function CityMap({ bounds }: { bounds: [number, number, number, number] }) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Rectangle
-        bounds={[
-          [bounds[0], bounds[1]], // Southwest coordinates
-          [bounds[2], bounds[3]]  // Northeast coordinates
-        ]}
-        pathOptions={{
-          color: "#3b82f6",
-          fillColor: "#3b82f6",
-          fillOpacity: 0.1,
-          weight: 2
-        }}
-      />
+
       <MapBoundsController bounds={bounds} />
     </MapContainer>
   )

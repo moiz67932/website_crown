@@ -114,7 +114,7 @@ function PropertiesPageContent() {
         onSortChange={(newSort) => handleFilterChange({ ...filters, sortBy: newSort })}
       />
 
-      <section className="container mx-auto px-4 py-8">
+      <section className="container mx-auto px-2 md:px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Desktop Filter Sidebar */}
           <div className="hidden lg:block w-full lg:w-1/4 xl:w-1/5">
