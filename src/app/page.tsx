@@ -178,7 +178,7 @@ export default function HomePage() {
             {/* Card 2 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
               <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
-              <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              <img src="/client/client1.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-lg text-slate-900 mb-2">World-Class Affiliates</h3>
               <p className="text-slate-600 text-sm mb-4">Access to our exclusive network of premium service providers, from interior designers to property managers.</p>
@@ -194,7 +194,7 @@ export default function HomePage() {
             {/* Card 3 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
               <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
-                    <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+                    <img src="/client/client2.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-lg text-slate-900 mb-2">Tailored Landing Solutions</h3>
               <p className="text-slate-600 text-sm mb-4">Personalized relocation services designed to make your transition to coastal living seamless and stress-free.</p>
@@ -210,7 +210,7 @@ export default function HomePage() {
             {/* Card 4 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
               <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
-              <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              <img src="/client/client3.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-lg text-slate-900 mb-2">Investment Management</h3>
               <p className="text-slate-600 text-sm mb-4">Expert guidance on property investments with comprehensive support for maximizing your real estate portfolio.</p>
@@ -464,17 +464,17 @@ const categories = [
 const testimonials = [
   {
     name: "Sarah Johnson",
-    avatar: "/professional-real-estate-agent.png",
+    avatar: "/client/client1.jpeg",
     text: "Working with this real estate agency was a dream. They helped me find the perfect home for my family in just two weeks!",
   },
   {
     name: "Michael Chen",
-    avatar: "/34.jpg",
+    avatar: "/client/client2.jpeg",
     text: "The team went above and beyond to help me sell my property at a great price. Their market knowledge is exceptional.",
   },
   {
     name: "Emily Rodriguez",
-    avatar: "/27.jpg",
+    avatar: "/client/client4.jpeg",
     text: "I was impressed by their attention to detail and personalized service. They truly understood what I was looking for.",
   },
 ]
