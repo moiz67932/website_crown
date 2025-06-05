@@ -1,7 +1,7 @@
 "use client"
 import Image from "next/image"
 import Link from "next/link"
-import { Home, Building, MapPin, Bed, Bath, Maximize, ArrowRight, Star, Phone, Mail } from "lucide-react"
+import { Home, Building, MapPin, Bed, Bath, Maximize, ArrowRight, Star, Phone, Mail, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,11 +11,12 @@ import useListProperties from "@/hooks/queries/useGetListProperties";
 import Loading from "@/components/shared/loading"
 import { Property } from "@/interfaces"
 import { PropertyCard } from "@/components/property-card"
+import { Carousel } from "@/components/ui/carousel"
 
 
 
 export default function HomePage() {
-  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 8 });
+  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 6 });
 
 
   if (!featuredPropertiesRaw) {
@@ -85,20 +86,62 @@ export default function HomePage() {
       {/* Featured Properties Section */}
       <section className="py-16 bg-[#F6EEE7]">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#2D3A4A] mb-2">Featured Properties</h2>
-            <p className="text-base md:text-lg text-[#6B7280] max-w-2xl mx-auto">
-              Handpicked selection of premium coastal homes and investment opportunities in California.
+        <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Homes For You</h2>
+            <div className="w-16 h-1 bg-yellow-400 mx-auto mb-4" />
+            <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto">
+            Based on homes you may be interested
             </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-8 mb-10">
-            {featuredProperties.map((property) => (
-              <PropertyCard key={property.listing_key} property={property} />
-            ))}
+
+          {/* Horizontal Scroll for Featured Properties */}
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+              {featuredProperties.map((property) => (
+                <div
+                  key={property.listing_key}
+                  className="min-w-[320px] max-w-xs flex-shrink-0"
+                >
+                  <PropertyCard property={property} />
+                </div>
+              ))}
+            </div>
+            {/* Optional: Add left/right scroll buttons if desired */}
+            
+            {/* Scroll Buttons for Featured Properties */}
+            <button
+              type="button"
+              aria-label="Scroll right"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full shadow p-2 z-20"
+              onClick={() => {
+                const container = document.querySelector('.hide-scrollbar');
+                if (container) {
+                  (container as HTMLElement).scrollBy({ left: 350, behavior: 'smooth' });
+                }
+              }}
+            >
+              <ChevronRightIcon />
+            </button>
+            <button
+              type="button"
+              aria-label="Scroll left"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white rounded-full shadow p-2 z-20"
+              onClick={() => {
+                const container = document.querySelector('.hide-scrollbar');
+                if (container) {
+                  (container as HTMLElement).scrollBy({ left: -350, behavior: 'smooth' });
+                }
+              }}
+            >
+              <ChevronLeftIcon />
+            </button>
+           
           </div>
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-4">
             <Link href="/properties">
-              <button className="px-8 py-2 border-2 border-[#1CA7A6] text-[#1CA7A6] rounded-full font-semibold bg-white hover:bg-[#F6EEE7] transition-all shadow-sm">View All Properties</button>
+              <button className="px-8 py-2 border-2 border-[#1CA7A6] text-[#1CA7A6] rounded-full font-semibold bg-white hover:bg-[#F6EEE7] transition-all shadow-sm">
+                View All Properties
+              </button>
             </Link>
           </div>
         </div>
