@@ -59,7 +59,7 @@ export default function Navbar() {
     { label: "Houses for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
     { label: "Apartments for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
     { label: "Townhomes for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
-    { label: "All Rentals", href: "/properties?status=for-rent" },
+    { label: "All Rentals", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
   ];
 
   // State for mobile dropdowns
@@ -95,14 +95,17 @@ export default function Navbar() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="min-w-[260px] p-0 bg-[#FAF4ED] text-slate-900 border-none shadow-lg" sideOffset={8}>
-                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-slate-900">For Sale</DropdownMenuLabel>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Houses</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Townhouses</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Condos</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Manufactured</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Lot/Land</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">New Homes/New Construction</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">All Homes</DropdownMenuItem>
+              <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-slate-900">For Sale</DropdownMenuLabel>
+
+                {mobileBuyItems.map((item) => (
+                                      <Link href={item.href}>
+
+                  <DropdownMenuItem key={item.label} className="px-6 py-2 text-base hover:text-[#D4AF37]">
+                    {item.label}
+                  </DropdownMenuItem>
+                  </Link>
+
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
             {/* Rent Dropdown */}
@@ -119,10 +122,15 @@ export default function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="min-w-[260px] p-0 bg-[#FAF4ED] text-slate-900 border-none shadow-lg" sideOffset={8}>
                 <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-slate-900">For Rent</DropdownMenuLabel>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Houses for Rent</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Apartments for Rent</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">Townhomes for Rent</DropdownMenuItem>
-                <DropdownMenuItem className="px-6 py-2 text-base hover:text-[#D4AF37]">All Rentals</DropdownMenuItem>
+                {mobileRentItems.map((item) => (
+                  <Link href={item.href}>
+
+                  <DropdownMenuItem key={item.label} className="px-6 py-2 text-base hover:text-[#D4AF37]">
+                    {item.label}
+                  </DropdownMenuItem>
+                  </Link>
+
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
             {/* Other left nav items */}

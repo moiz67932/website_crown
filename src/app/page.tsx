@@ -15,7 +15,7 @@ import { PropertyCard } from "@/components/property-card"
 
 
 export default function HomePage() {
-  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 4 });
+  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 8 });
 
 
   if (!featuredPropertiesRaw) {
