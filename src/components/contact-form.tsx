@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Phone, Mail, Calendar } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 
 interface ContactFormProps {
   propertyId: string
@@ -105,6 +106,20 @@ export default function ContactForm({ propertyId, proertyData }: ContactFormProp
         {isSubmitting ? "Sending..." : "Send Message"}
       </Button>
 
+      <div className="flex items-center gap-2">
+                    <Avatar className="w-25 h-25">
+                      <AvatarImage src={"/agent.jpg"} />
+                      <AvatarFallback>
+                        Reza Barghlameno
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold">Reza Barghlameno</h3>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">eXp of California</p>
+                    </div>
+                  </div>
       <div className="flex flex-col gap-2 mt-4">
         <div className="flex items-center text-sm">
           <Phone className="h-4 w-4 mr-2 text-muted-foreground" />

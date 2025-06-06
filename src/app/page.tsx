@@ -416,66 +416,21 @@ export default function HomePage() {
 }
 
 
-const categories = [
-  {
-    name: "Houses",
-    count: 1245,
-    icon: <Home className="h-6 w-6 text-slate-700" />,
-    bgColor: "bg-slate-100",
-    link: "/properties?category=houses",
-  },
-  {
-    name: "Apartments",
-    count: 873,
-    icon: <Building className="h-6 w-6 text-slate-700" />,
-    bgColor: "bg-slate-100",
-    link: "/properties?category=apartments",
-  },
-  {
-    name: "Villas",
-    count: 542,
-    icon: <Home className="h-6 w-6 text-slate-700" />,
-    bgColor: "bg-slate-100",
-    link: "/properties?category=villas",
-  },
-  {
-    name: "Commercial",
-    count: 327,
-    icon: <Building className="h-6 w-6 text-slate-700" />,
-    bgColor: "bg-slate-100",
-    link: "/properties?category=commercial",
-  },
-  {
-    name: "Luxury",
-    count: 157,
-    icon: <Home className="h-6 w-6 text-slate-700" />,
-    bgColor: "bg-slate-100",
-    link: "/properties?category=luxury",
-  },
-  {
-    name: "Land",
-    count: 89,
-    icon: <MapPin className="h-6 w-6 text-slate-700" />,
-    bgColor: "bg-slate-100",
-    link: "/properties?category=land",
-  },
-]
-
 const testimonials = [
   {
-    name: "Sarah Johnson",
+    name: "Jacob Oenter",
     avatar: "/client/client1.jpeg",
-    text: "Working with this real estate agency was a dream. They helped me find the perfect home for my family in just two weeks!",
+    text: "Recently sold my home, and I couldn’t be more grateful for the outstanding work my real estate agent did throughout the entire process. From our first meeting to closing day, they were professional, knowledgeable, and truly dedicated to getting the best outcome for me. They provided expert advice on pricing, staging, and marketing, and their strategy brought in strong interest right away. Communication was consistent and clear, and I always felt like I was in good hands. They went above and beyond, handling every detail with care and making what could have been a stressful process feel smooth and manageable. Thanks to their expertise and hard work, my home sold quickly and at a great price. I highly recommend Reza Barghlameno to anyone looking to buy or sell a home—you won’t be disappointed!",
   },
   {
-    name: "Michael Chen",
+    name: "Maxim Gantman",
     avatar: "/client/client2.jpeg",
-    text: "The team went above and beyond to help me sell my property at a great price. Their market knowledge is exceptional.",
+    text: "I have met many realtors in my day but there’s no one I could ever trust like Reza. His passion for real estate & the extra mile he goes at every step is something truly rare. During every interaction we had with Reza he genuinely listened to our needs & concerns. He was always prepared with solutions to any challenges. I wholeheartedly recommend Reza to anyone looking for an exceptional service.",
   },
   {
-    name: "Emily Rodriguez",
+    name: "Jill Conaty",
     avatar: "/client/client4.jpeg",
-    text: "I was impressed by their attention to detail and personalized service. They truly understood what I was looking for.",
+    text: "I have met many realtors in my day but there’s no one I could ever trust like Reza. His passion for real estate & the extra mile he goes at every step is something truly rare. During every interaction we had with Reza he genuinely listened to our needs & concerns. He was always prepared with solutions to any challenges. I wholeheartedly recommend Reza to anyone looking for an exceptional service.",
   },
 ]
 

@@ -33,6 +33,7 @@ import { Separator } from "@radix-ui/react-dropdown-menu"
 import MortgageCalculatorModal from "./mortage-calculator-modal"
 import PropertyMap from "./property-map"
 import PropertyFAQ from "./property-faq"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 
 
@@ -532,6 +533,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <div className="mb-4">
                     <h3 className="font-semibold">Contact the Crown Coastal Team</h3>
                   </div>
+
                   <Separator className="my-4" />
                   <ContactForm propertyId={propertyData.listing_key} proertyData={propertyData} />
                 </CardContent>
