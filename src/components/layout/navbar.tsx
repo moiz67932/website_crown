@@ -35,7 +35,7 @@ export default function Navbar() {
   const leftNavItems = [
     { name: "Buy", href: "/buy" },
     { name: "Rent", href: "/rent" },
-    // { name: "Sell", href: "/sell" },
+    { name: "Sell", href: "/sell" },
     // { name: "Get a mortgage", href: "/mortgage" },
     // { name: "Find an Agent", href: "/agent" },
   ];
