@@ -173,7 +173,7 @@ export default function HomePage() {
                 <li>Transaction management</li>
                 <li>Post-purchase support</li>
               </ul>
-              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+              <Link href="/services/concierge-home-buying" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</Link>
             </div>
             {/* Card 2 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
@@ -189,7 +189,7 @@ export default function HomePage() {
                 <li>Legal and financial advisors</li>
                 <li>Luxury lifestyle concierge</li>
               </ul>
-              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+              <Link href="/services/affiliates" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</Link>
             </div>
             {/* Card 3 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
@@ -205,7 +205,7 @@ export default function HomePage() {
                 <li>Temporary housing assistance</li>
                 <li>Local service provider connections</li>
               </ul>
-              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+              <Link href="/services/relocation" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</Link>
             </div>
             {/* Card 4 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
@@ -221,7 +221,7 @@ export default function HomePage() {
                 <li>Property management solutions</li>
                 <li>Tax and legal considerations</li>
               </ul>
-              <a href="#" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</a>
+              <Link href="/services/investment" className="text-yellow-500 font-medium text-sm mt-auto hover:underline">Learn More &gt;</Link>
             </div>
           </div>
         </div>
