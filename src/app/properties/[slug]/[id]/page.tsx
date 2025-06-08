@@ -382,7 +382,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               {/* Map Section (Placeholder) */}
               <div className="bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
                 <h2 className="text-2xl font-bold text-brand-midnightCove mb-4">Location</h2>
-                <PropertyMap location={{ lat: propertyData.latitude, lng: propertyData.longitude }} address={propertyData.address} />
+                {propertyData.latitude && propertyData.longitude && (
+                  <PropertyMap location={{ lat: propertyData.latitude, lng: propertyData.longitude }} address={propertyData.address} />
+                )}
               </div>
 
               {/* Neighborhood Information Section (New) */}
