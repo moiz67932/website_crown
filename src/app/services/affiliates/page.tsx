@@ -127,7 +127,7 @@ const successStories = [
   {
     service: "Interior Design",
     quote:
-      "The interior designer recommended by Crown Coastal transformed our Malibu home into a stunning showcase. The attention to detail and luxury finishes exceeded our expectations.",
+    "Where do I start! We received such an exceptional service from Reza every step of the way. He presented us with the best options and kept us informed with every development. Reza’s resources are top notch, we felt fully taken care of by the professionals he recommended us. Our neighbors were raving about the open house party they attended at our house. We couldn’t be more happier with the decision to trust our house with Reza.",
     author: "Jennifer & Michael Thompson",
     location: "Malibu, CA",
     project: "Complete home renovation",
@@ -136,18 +136,18 @@ const successStories = [
   {
     service: "Property Management",
     quote:
-      "Their property management partner has been exceptional. Our Newport Beach investment property is consistently booked and beautifully maintained.",
-    author: "Robert Chen",
-    location: "Newport Beach, CA",
+    "Reza was incredibly helpful in our home search and in securing our first house! He had knowledge about the area and was always responsive to our questions. He made our first time homeownership process very seamless and handled contact with the seller's agent easily. We highly recommend Reza as he treats his clients as if they were family and wants to make sure the best service is given to them. We really appreciate all his efforts and him being our agent for our first home!",
+    author: "zuser20200608130554070",
+    location: "Oceanside, CA",
     project: "Vacation rental management",
     rating: 5,
   },
   {
     service: "Legal Services",
     quote:
-      "The real estate attorney they connected us with made our complex transaction seamless. Their expertise in California coastal property law was invaluable.",
-    author: "The Rodriguez Family",
-    location: "Santa Barbara, CA",
+    "Reza is a true standout in the real estate world. His expertise and ability to navigate the market’s complexities while keeping us calm and well-informed were nothing short of remarkable. From expertly staging our home to negotiating the best possible offer, he made the entire selling process effortless and stress-free. His recommendations for contractors and stagers turned our home into an absolute showstopper. We wouldn’t think of working with anyone else for our future real estate needs!",
+    author: "Mateo Torres",
+    location: "San marcos, CA",
     project: "Estate planning and purchase",
     rating: 5,
   },
@@ -305,7 +305,7 @@ export default function AffiliatesPage() {
             {partnershipProcess.map((step, index) => (
               <Card key={index} className="bg-brand-white shadow-medium text-center">
                 <CardHeader>
-                  <div className="bg-brand-goldenHour rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-brand-midnightCove font-bold text-lg">
+                  <div className="bg-brand-sunsetBlush rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-white font-bold text-lg">
                     {step.step}
                   </div>
                   <CardTitle className="text-lg text-brand-midnightCove">{step.title}</CardTitle>

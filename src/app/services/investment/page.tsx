@@ -98,10 +98,10 @@ const investmentBenefits = [
     stat: "12.5% avg annual return",
   },
   {
-    title: "Risk Management",
+    title: "Asset Management",
     description: "Sophisticated risk assessment and mitigation strategies to protect your investments.",
     icon: Shield,
-    stat: "95% portfolio protection",
+    stat: "100% portfolio protection",
   },
   {
     title: "Market Expertise",
@@ -246,12 +246,12 @@ export default function InvestmentPage() {
           className="object-cover object-right"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-l from-black/70 via-black/40 to-transparent" />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-right">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-left">
           <Badge className="mb-4 bg-brand-goldenHour text-brand-midnightCove px-4 py-2 text-sm font-semibold">
             Investment Specialists
           </Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight font-heading text-brand-white shadow-text">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight font-heading text-brand-white text-center shadow-text">
             Investment Management
             <span className="block text-brand-goldenHour drop-shadow-md">Services</span>
           </h1>
@@ -259,7 +259,7 @@ export default function InvestmentPage() {
             Expert guidance on property investments with comprehensive support for maximizing your real estate portfolio
             returns.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-end">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
               className="bg-brand-sunsetBlush hover:bg-brand-sunsetBlush/90 text-white px-8 py-4 text-lg"
@@ -270,7 +270,7 @@ export default function InvestmentPage() {
             <Button
               variant="outline"
               size="lg"
-              className="border-2 border-brand-white text-brand-white hover:bg-brand-white hover:text-brand-midnightCove px-8 py-4 text-lg"
+              className="border-2 border-brand-white text-black hover:bg-brand-white hover:text-brand-midnightCove px-8 py-4 text-lg"
             >
               <Phone className="h-5 w-5 mr-2" />
               Speak with Advisor
@@ -388,9 +388,10 @@ export default function InvestmentPage() {
             {investmentProcess.map((step, index) => (
               <Card key={index} className="bg-brand-white shadow-medium">
                 <CardHeader>
-                  <div className="bg-brand-goldenHour rounded-full w-12 h-12 flex items-center justify-center mb-4 text-brand-midnightCove font-bold text-lg">
-                    {step.step}
-                  </div>
+                <div className="bg-brand-sunsetBlush rounded-full w-12 h-12 flex items-center justify-center text-white font-bold text-lg">
+                      {step.step}
+                    </div>
+                  
                   <CardTitle className="text-lg text-brand-midnightCove">{step.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -427,7 +428,7 @@ export default function InvestmentPage() {
         </section>
 
         {/* Success Stories */}
-        <section className="mb-20">
+        {/* <section className="mb-20">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-6">Investment Success Stories</h2>
             <p className="text-xl text-gray-600">See how our clients have achieved exceptional investment returns.</p>
@@ -455,7 +456,7 @@ export default function InvestmentPage() {
               </Card>
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* CTA Section */}
         <section>

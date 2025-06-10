@@ -159,26 +159,26 @@ const relocationProcess = [
 const clientTestimonials = [
   {
     quote:
-      "The relocation team made our move from New York to San Diego seamless. They found us the perfect home and helped our kids transition to new schools. Exceptional service!",
-    author: "The Johnson Family",
-    location: "Relocated to San Diego, CA",
-    origin: "From New York, NY",
+      "Reza is a true standout in the real estate world. His expertise and ability to navigate the market’s complexities while keeping us calm and well-informed were nothing short of remarkable. From expertly staging our home to negotiating the best possible offer, he made the entire selling process effortless and stress-free. His recommendations for contractors and stagers turned our home into an absolute showstopper. We wouldn’t think of working with anyone else for our future real estate needs!",
+    author: "Mateo Torres",
+    location: "Relocated to San Marcos, CA",
+    origin: "From San Diego, CA",
     rating: 5,
   },
   {
     quote:
-      "As a corporate executive, I needed a smooth relocation process. Crown Coastal handled everything from temporary housing to finding our dream home in Malibu.",
-    author: "David Chen, CEO",
-    location: "Relocated to Malibu, CA",
-    origin: "From Chicago, IL",
+      "Recently sold my home, and I couldn’t be more grateful for the outstanding work my real estate agent did throughout the entire process. From our first meeting to closing day, they were professional, knowledgeable, and truly dedicated to getting the best outcome for me. They provided expert advice on pricing, staging, and marketing, and their strategy brought in strong interest right away. Communication was consistent and clear, and I always felt like I was in good hands. They went above and beyond, handling every detail with care and making what could have been a stressful process feel smooth and manageable. Thanks to their expertise and hard work, my home sold quickly and at a great price. I highly recommend Reza Barghlameno to anyone looking to buy or sell a home—you won’t be disappointed!",
+    author: "jacoboenter",
+    location: "Relocated to San Marcos, CA",
+    origin: "From San Diego, CA",
     rating: 5,
   },
   {
     quote:
-      "Their knowledge of the local schools and communities was invaluable. They helped us find the perfect neighborhood for our family's needs.",
-    author: "Maria & Carlos Rodriguez",
-    location: "Relocated to Santa Barbara, CA",
-    origin: "From Phoenix, AZ",
+      "About six months ago, we decided to expand our non-commercial investment portfolio in the San Diego real estate market. Reza was introduced to us by a mutual friend. From the outset, he provided us with a wealth of valuable information about this region's real estate market. He also connected us with a lending brokerage that shared financial insights we hadn’t previously considered regarding our borrowing potential. Reza has shown us numerous excellent properties, most of which align with our investment goals. He has been remarkably candid, clearly identifying which opportunities make sense and which do not, always backing his opinions with solid data. Through his dedication, honesty, and hard work, he has earned our trust. We know exactly who to call when the time is right to buy",
+    author: "Jeff B",
+    location: "Relocated to San Marcos, CA",
+    origin: "From San Diego, CA",
     rating: 5,
   },
 ]
@@ -218,12 +218,12 @@ export default function RelocationPage() {
           className="object-cover object-right"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-l from-black/70 via-black/40 to-transparent" />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-right">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-left">
           <Badge className="mb-4 bg-brand-goldenHour text-brand-midnightCove px-4 py-2 text-sm font-semibold">
             Relocation Specialists
           </Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight font-heading text-brand-white shadow-text">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight font-heading text-brand-white text-center shadow-text">
             Tailored Relocation
             <span className="block text-brand-goldenHour drop-shadow-md">Solutions</span>
           </h1>
@@ -231,7 +231,7 @@ export default function RelocationPage() {
             Personalized relocation services designed to make your transition to coastal California seamless and
             stress-free.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-end">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
               className="bg-brand-sunsetBlush hover:bg-brand-sunsetBlush/90 text-white px-8 py-4 text-lg"

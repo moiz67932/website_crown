@@ -97,30 +97,28 @@ const serviceAdvantages = [
 const clientTestimonials = [
   {
     quote:
-      "Crown Coastal Homes demonstrated exceptional professionalism throughout our home sale. Their market analysis was accurate, and they achieved a sale price that exceeded our expectations. The entire process was handled with the utmost care and attention to detail.",
-    author: "Dr. Jennifer Thompson & Mark Thompson",
-    location: "Malibu, California",
-    salePrice: "$4.2M",
+      "Reza is a true standout in the real estate world. His expertise and ability to navigate the market’s complexities while keeping us calm and well-informed were nothing short of remarkable. From expertly staging our home to negotiating the best possible offer, he made the entire selling process effortless and stress-free. His recommendations for contractors and stagers turned our home into an absolute showstopper. We wouldn’t think of working with anyone else for our future real estate needs!.",
+    author: "Mateo Torres",
+    location: "San marcos, CA",
+    salePrice: "$1.495M",
     rating: 5,
-    timeframe: "Sold in 21 days",
+    timeframe: "Sold in 55 days",
   },
   {
-    quote:
-      "After an unsuccessful listing with another agency, Crown Coastal Homes took over and sold our property within 30 days. Their strategic approach and market knowledge made all the difference. I would highly recommend their services.",
-    author: "Robert Chen, CEO",
-    location: "Newport Beach, California",
-    salePrice: "$2.8M",
+    quote: "Recently sold my home, and I couldn’t be more grateful for the outstanding work my real estate agent did throughout the entire process. From our first meeting to closing day, they were professional, knowledgeable, and truly dedicated to getting the best outcome for me. They provided expert advice on pricing, staging, and marketing, and their strategy brought in strong interest right away. Communication was consistent and clear, and I always felt like I was in good hands. They went above and beyond, handling every detail with care and making what could have been a stressful process feel smooth and manageable. Thanks to their expertise and hard work, my home sold quickly and at a great price. I highly recommend Reza Barghlameno to anyone looking to buy or sell a home—you won’t be disappointed!",
+    author: "jacoboenter",
+    location: "La sierra acres, Riverside, CA",
+    salePrice: "$880K",
     rating: 5,
-    timeframe: "Sold in 30 days",
+    timeframe: "Sold in 28 days",
   },
   {
-    quote:
-      "The team at Crown Coastal Homes provided outstanding service during our relocation. They managed everything remotely and kept us informed every step of the way. Their professionalism and expertise are truly exceptional.",
-    author: "The Rodriguez Family",
-    location: "Santa Barbara, California",
-    salePrice: "$1.9M",
+    quote: "My husband and I are first time buyers in San Diego which, as those of us fortunate enough to live here know, has one of the most expensive and competitive housing markets in the nation. We came into this process with very high hopes and very little knowledge. From the moment we met him, Reza has been helpful, understanding, patient, professional, empathetic, and has operated with the highest level of integrity. Our experience was a difficult one, and Reza did a phenomenal job of managing our expectations without squashing our excitement. He helped us maintain our momentum through frustrating loses, and allowed us the space and humanity to grieve when things did not turn out in the ways we expected it. Reza stuck through a huge amount of hurdles with us over the last 7 months. We had the *pleasure* of entering escrow twice during our hunt for the perfect house. The first time we entered escrow was for a house that had a deed attached to it. It was not until after we had entered escrow that Reza discovered there was a significant limit placed on the total annual family income for this house (something both the sellers AND the city of San Marcos were unaware of at the time) that made our family ineligible to live there. He fought for our family, going as far as meeting with a representative of the City of San Marcos at town hall to determine what the issue was with our purchasing of this property. Reza kept us updated both by text and over the phone during every step, and was able to explain the issues at hand in language that allowed us to understand the legalities and complications. He helped us navigate exiting escrow, and grieved with us when our disappointment became overwhelming. The second house we entered escrow (which is now our family home) also had a arduous process that Reza helped us navigate. We had so many issues arise that were completely out of ours, and his, hands; he tackled each one with professionalism and never gave up on our family. We have navigated issues with the seller, disappointing inspection results, a canceled loan, issues with the title that resulted in the loss of our investor, issues with expired HOA documents, and more. The number of times we thought we were going to have to restart this process was overwhelming, but with each new challenge, Reza helped keep us level-headed, fought for us, and found creative ways to work around and through them. His diligence has allowed us to find the home that we are excited to raise our children in, and a community in which we can thrive. In the future, we look forward to working with Reza again, and will continue to recommend him to anyone and everyone we meet that is also going through this process. Purchasing a home is a very frustrating process, and is definitely not for the weak. Knowing that there are people like Reza out there makes it just that much better, safer, enjoyable, and helpful. Thank you, Reza, for all that you have done for our family. We can't wait to have you over for dinner once we are moved in!",
+    author: "Maxim Gantman",
+    location: "Escondido, CA",
+    salePrice: "$515K",
     rating: 5,
-    timeframe: "Sold in 35 days",
+    timeframe: "Sold in 100 days",
   },
 ]
 
@@ -317,9 +315,7 @@ export default function SellPageClient() {
                       <div className="bg-brand-sunsetBlush rounded-full w-16 h-16 flex items-center justify-center">
                         <step.icon className="h-8 w-8 text-white" />
                       </div>
-                      <div className="absolute -top-2 -right-2 bg-brand-goldenHour text-brand-midnightCove rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                        {step.step}
-                      </div>
+
                     </div>
                     <div>
                       <CardTitle className="text-xl text-brand-midnightCove">{step.title}</CardTitle>
@@ -567,7 +563,7 @@ export default function SellPageClient() {
                   <MessageSquare className="h-8 w-8 text-brand-pacificTeal/30 mb-3" />
                 </CardHeader>
                 <CardContent>
-                  <blockquote className="text-gray-600 italic mb-6 leading-relaxed">"{testimonial.quote}"</blockquote>
+                  <blockquote className="text-gray-600 italic mb-6 leading-relaxed">"{testimonial.quote.substring(0, 300)}..."</blockquote>
                   <div className="border-t border-brand-silverMist/50 pt-4">
                     <p className="font-semibold text-brand-graphitePeak">{testimonial.author}</p>
                     <p className="text-sm text-gray-500 mb-2">{testimonial.location}</p>

@@ -134,7 +134,7 @@ const clientBenefits = [
     title: "Exclusive Access",
     description: "Access to off-market properties and exclusive listings not available to the public.",
     icon: Star,
-    stat: "30% more options",
+    stat: "30% more options with off market opportunities",
   },
   {
     title: "Expert Guidance",
@@ -153,26 +153,26 @@ const clientBenefits = [
 const testimonials = [
   {
     quote:
-      "The concierge service was exceptional. They found us the perfect home before it even hit the market and handled every detail of the purchase. Truly white-glove service.",
+      "Where do I start! We received such an exceptional service from Reza every step of the way. He presented us with the best options and kept us informed with every development. Reza’s resources are top notch, we felt fully taken care of by the professionals he recommended us. Our neighbors were raving about the open house party they attended at our house. We couldn’t be more happier with the decision to trust our house with Reza.",
     author: "Michael & Sarah Chen",
-    location: "La Jolla, CA",
-    property: "$3.2M Oceanfront Villa",
+    location: "Vista, CA",
+    property: "$1.035M 1995 Casablanca Ct, Vista, CA",
     rating: 5,
   },
   {
     quote:
-      "As busy professionals, we didn't have time to search for homes. The concierge team did everything for us and found our dream home in just two weeks.",
-    author: "Dr. James Rodriguez",
-    location: "Newport Beach, CA",
-    property: "$2.8M Contemporary Home",
+      "Reza was incredibly helpful in our home search and in securing our first house! He had knowledge about the area and was always responsive to our questions. He made our first time homeownership process very seamless and handled contact with the seller's agent easily. We highly recommend Reza as he treats his clients as if they were family and wants to make sure the best service is given to them. We really appreciate all his efforts and him being our agent for our first home!",
+    author: "zuser20200608130554070",
+    location: "Oceanside, CA",
+    property: "$880K 375 Ventasso Way Fallbrook, CA",
     rating: 5,
   },
   {
     quote:
-      "The level of service and attention to detail was outstanding. They made the entire home buying process effortless and enjoyable.",
-    author: "The Thompson Family",
-    location: "Malibu, CA",
-    property: "$4.5M Beachfront Estate",
+      "Reza is a true standout in the real estate world. His expertise and ability to navigate the market’s complexities while keeping us calm and well-informed were nothing short of remarkable. From expertly staging our home to negotiating the best possible offer, he made the entire selling process effortless and stress-free. His recommendations for contractors and stagers turned our home into an absolute showstopper. We wouldn’t think of working with anyone else for our future real estate needs!",
+    author: "Mateo Torres",
+    location: "San marcos, CA",
+    property: "$1.495M 708 Pascali Ct San Marcos, CA, 92069",
     rating: 5,
   },
 ]
@@ -309,9 +309,9 @@ export default function ConciergeBuyingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {clientBenefits.map((benefit, index) => (
               <div key={index} className="text-center">
-                <div className="bg-brand-pacificTeal/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <benefit.icon className="h-8 w-8 text-brand-pacificTeal" />
-                </div>
+                  <div className="bg-brand-pacificTeal/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <benefit.icon className="h-8 w-8 text-brand-pacificTeal" />
+                  </div>
                 <h3 className="text-xl font-semibold text-brand-midnightCove mb-2">{benefit.title}</h3>
                 <p className="text-gray-600 mb-3">{benefit.description}</p>
                 <div className="text-2xl font-bold text-brand-sunsetBlush">{benefit.stat}</div>
