@@ -248,6 +248,14 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+              <Link
+                    href="/sell"
+                    key="Sell"
+                    className="px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Sell
+                  </Link>
               {/* Other nav items */}
               {navItems
                 .filter(item => item.name !== "Home" && item.name !== "Buy" && item.name !== "Rent")
