@@ -20,6 +20,7 @@ import {
   Network,
   Sparkles,
 } from "lucide-react"
+import CustomerReview from "@/components/customer-review"
 
 export const metadata: Metadata = {
   title: "World-Class Affiliate Network | Crown Coastal Homes",
@@ -325,30 +326,7 @@ export default function AffiliatesPage() {
             <p className="text-xl text-gray-600">See how our affiliate partners have delivered exceptional results.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {successStories.map((story, index) => (
-              <Card key={index} className="bg-brand-white shadow-medium">
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-4">
-                    <Badge className="bg-brand-pacificTeal text-white">{story.service}</Badge>
-                    <div className="flex">
-                      {[...Array(story.rating)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 text-brand-goldenHour fill-brand-goldenHour" />
-                      ))}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <blockquote className="text-gray-600 italic mb-6 leading-relaxed">"{story.quote}"</blockquote>
-                  <div className="border-t border-brand-silverMist/50 pt-4">
-                    <p className="font-semibold text-brand-graphitePeak">{story.author}</p>
-                    <p className="text-sm text-gray-500 mb-1">{story.location}</p>
-                    <p className="text-sm font-semibold text-brand-pacificTeal">{story.project}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+            <CustomerReview />
         </section>
 
         {/* CTA Section */}

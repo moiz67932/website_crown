@@ -19,6 +19,7 @@ import {
   Target,
   Heart,
 } from "lucide-react"
+import CustomerReview from "@/components/customer-review"
 
 export const metadata: Metadata = {
   title: "Concierge Home Buying Services | Crown Coastal Homes",
@@ -196,7 +197,7 @@ export default function ConciergeBuyingPage() {
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight font-heading text-brand-white shadow-text">
             Concierge Home Buying
-            <span className="block text-brand-goldenHour drop-shadow-md">Services</span>
+            Services
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl mb-8 text-gray-100 max-w-2xl shadow-text leading-relaxed">
             Experience white-glove service throughout your entire home buying journey, from property selection to
@@ -327,27 +328,7 @@ export default function ConciergeBuyingPage() {
             <p className="text-xl text-gray-600">Hear from clients who experienced our concierge service firsthand.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="bg-brand-white shadow-medium">
-                <CardHeader>
-                  <div className="flex mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-brand-goldenHour fill-brand-goldenHour" />
-                    ))}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <blockquote className="text-gray-600 italic mb-6 leading-relaxed">"{testimonial.quote}"</blockquote>
-                  <div className="border-t border-brand-silverMist/50 pt-4">
-                    <p className="font-semibold text-brand-graphitePeak">{testimonial.author}</p>
-                    <p className="text-sm text-gray-500 mb-1">{testimonial.location}</p>
-                    <p className="text-sm font-semibold text-brand-pacificTeal">{testimonial.property}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+            <CustomerReview />
         </section>
 
         {/* CTA Section */}

@@ -20,6 +20,7 @@ import {
   DollarSign,
   BarChart3,
 } from "lucide-react"
+import CustomerReview from "@/components/customer-review"
 
 export const metadata: Metadata = {
   title: "Investment Management Services | Crown Coastal Homes",
@@ -95,25 +96,25 @@ const investmentBenefits = [
     title: "Proven Track Record",
     description: "Consistent investment performance with average annual returns exceeding market benchmarks.",
     icon: Award,
-    stat: "12.5% avg annual return",
+    stat: "12.5% Avg. Annual Return",
   },
   {
     title: "Asset Management",
     description: "Sophisticated risk assessment and mitigation strategies to protect your investments.",
     icon: Shield,
-    stat: "100% portfolio protection",
+    stat: "100% Portfolio Protection",
   },
   {
     title: "Market Expertise",
     description: "Deep knowledge of California coastal markets and investment opportunities.",
     icon: Target,
-    stat: "15+ years experience",
+    stat: "15+ Years Experience",
   },
   {
     title: "Comprehensive Service",
     description: "End-to-end investment management from acquisition to disposition.",
     icon: BarChart3,
-    stat: "Full-service solutions",
+    stat: "Full-Service Solutions",
   },
 ]
 
@@ -253,7 +254,7 @@ export default function InvestmentPage() {
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight font-heading text-brand-white text-center shadow-text">
             Investment Management
-            <span className="block text-brand-goldenHour drop-shadow-md">Services</span>
+            Services
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl mb-8 text-gray-100 max-w-2xl ml-auto shadow-text leading-relaxed">
             Expert guidance on property investments with comprehensive support for maximizing your real estate portfolio
@@ -428,35 +429,14 @@ export default function InvestmentPage() {
         </section>
 
         {/* Success Stories */}
-        {/* <section className="mb-20">
+        <section className="mb-20">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-6">Investment Success Stories</h2>
             <p className="text-xl text-gray-600">See how our clients have achieved exceptional investment returns.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {clientSuccessStories.map((story, index) => (
-              <Card key={index} className="bg-brand-white shadow-medium">
-                <CardHeader>
-                  <div className="flex mb-4">
-                    {[...Array(story.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-brand-goldenHour fill-brand-goldenHour" />
-                    ))}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <blockquote className="text-gray-600 italic mb-6 leading-relaxed">"{story.quote}"</blockquote>
-                  <div className="border-t border-brand-silverMist/50 pt-4">
-                    <p className="font-semibold text-brand-graphitePeak">{story.author}</p>
-                    <p className="text-sm text-gray-500 mb-1">{story.location}</p>
-                    <p className="text-sm font-semibold text-brand-pacificTeal mb-1">{story.investment}</p>
-                    <p className="text-sm font-bold text-brand-sunsetBlush">{story.return}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section> */}
+            <CustomerReview />
+        </section>
 
         {/* CTA Section */}
         <section>
