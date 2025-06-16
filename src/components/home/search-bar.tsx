@@ -109,6 +109,29 @@ export default function SearchBar() {
 
   return (
     <div>
+      <div className="justify-center flex items-center pl-2 pb-5 pr-2">
+        {searchMethodOptions.map(option => (
+          <button
+            key={option.value}
+            type="button"
+            className={`cursor-pointer flex items-center px-3 py-1 rounded-full text-base font-semibold transition-colors focus:outline-none
+              ${searchMethod === option.value
+                ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md"
+                : "bg-transparent text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+              }`}
+            onClick={() => setSearchMethod(option.value)}
+            aria-pressed={searchMethod === option.value}
+            style={{ marginRight: 4, marginLeft: 0, letterSpacing: 0.5 }}
+          >
+            <span className={`${searchMethod === option.value ? "text-white" : "text-orange-500"} mr-1`}>
+              {option.icon}
+            </span>
+            <span className={`${searchMethod === option.value ? "font-bold text-white drop-shadow" : "font-semibold text-orange-600"}`}>
+              {option.label}
+            </span>
+          </button>
+        ))}
+      </div>
     <form
       onSubmit={handleSearch}
       className="flex items-center bg-white rounded-full text-left text-slate-900 border border-slate-200 shadow-sm px-4 py-2 w-full max-w-4xl"
@@ -223,29 +246,7 @@ export default function SearchBar() {
       </button>
     </form>
      {/* Search Method Selection */}
-     <div className="justify-center flex items-center pl-2 pt-5 pr-2 border-r border-slate-200">
-        {searchMethodOptions.map(option => (
-          <button
-            key={option.value}
-            type="button"
-            className={`flex items-center px-3 py-1 rounded-full text-base font-semibold transition-colors focus:outline-none
-              ${searchMethod === option.value
-                ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md"
-                : "bg-transparent text-slate-700 hover:bg-orange-50 hover:text-orange-600"
-              }`}
-            onClick={() => setSearchMethod(option.value)}
-            aria-pressed={searchMethod === option.value}
-            style={{ marginRight: 4, marginLeft: 0, letterSpacing: 0.5 }}
-          >
-            <span className={`${searchMethod === option.value ? "text-white" : "text-orange-500"} mr-1`}>
-              {option.icon}
-            </span>
-            <span className={`${searchMethod === option.value ? "font-bold text-white drop-shadow" : "font-semibold text-orange-600"}`}>
-              {option.label}
-            </span>
-          </button>
-        ))}
-      </div>
+     
     </div>
   )
 }
