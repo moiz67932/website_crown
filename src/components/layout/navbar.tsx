@@ -147,16 +147,16 @@ export default function Navbar() {
           </nav>
 
           {/* Logo Centered */}
-          <div className="flex-0 flex justify-center items-center w-12 md:w-16 absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0">
+          <div className="flex-0 flex justify-center items-center w-20 md:w-32 absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0">
             <Link href="/" className="flex items-center justify-center">
-              <div className="relative h-10 w-10 md:h-12 md:w-12 rounded-full bg-[#f5eee6] flex items-center justify-center shadow-md">
+              <div className="relative h-16 w-16 md:h-24 md:w-24 flex items-center justify-center">
                 {/* Placeholder for logo icon */}
-                <Image src="/logo.svg" alt="Logo" width={40} height={40} />
+                <Image src="/logo.svg" alt="Logo" width={80} height={80} />
               </div>
             </Link>
-            <Link href="/" className="flex items-center justify-center">
-              <div className="relative h-10 w-10 md:h-12 md:w-12 rounded-full bg-[#f5eee6] flex items-center justify-center shadow-md">
-                <Image src="/exp-realty-logo.webp" alt="exp-realty-logo" width={40} height={40} />
+            <Link href="/" className="flex items-center justify-center ml-4">
+              <div className="relative h-16 w-16 md:h-24 md:w-24 flex items-center justify-center">
+                <Image src="/exp-realty-logo.webp" alt="exp-realty-logo" width={80} height={80} />
               </div>
             </Link>
           </div>
