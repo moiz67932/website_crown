@@ -152,7 +152,7 @@ function MapLocationController({
   locationQuery: string | null
 }) {
   const map = useMap()
-
+  console.log("locationQuery", locationQuery)
   // Set initial center
   useEffect(() => {
     map.setView(center, map.getZoom())
@@ -171,128 +171,128 @@ function MapLocationController({
         let searchCenter: [number, number] = [34.0522, -118.2437] // Default to Los Angeles
 
 
-        if (locationQuery.toLowerCase().includes("alameda-county")) {
+        if (locationQuery.toLowerCase().includes("alameda")) {
           searchCenter = [37.6017, -121.7195];
-        } else if (locationQuery.toLowerCase().includes("alpine-county")) {
+        } else if (locationQuery.toLowerCase().includes("alpine")) {
           searchCenter = [38.5942, -119.8815];
-        } else if (locationQuery.toLowerCase().includes("amador-county")) {
+        } else if (locationQuery.toLowerCase().includes("amador")) {
           searchCenter = [38.4468, -120.6560];
-        } else if (locationQuery.toLowerCase().includes("butte-county")) {
+        } else if (locationQuery.toLowerCase().includes("butte")) {
           searchCenter = [39.5910, -121.6340];
-        } else if (locationQuery.toLowerCase().includes("calaveras-county")) {
+        } else if (locationQuery.toLowerCase().includes("calaveras")) {
           searchCenter = [38.1965, -120.6800];
-        } else if (locationQuery.toLowerCase().includes("colusa-county")) {
+        } else if (locationQuery.toLowerCase().includes("colusa")) {
           searchCenter = [39.2140, -122.0090];
-        } else if (locationQuery.toLowerCase().includes("contra-costa-county")) {
+        } else if (locationQuery.toLowerCase().includes("contra costa")) {
           searchCenter = [37.8534, -121.9018];
-        } else if (locationQuery.toLowerCase().includes("del-norte-county")) {
+        } else if (locationQuery.toLowerCase().includes("del norte")) {
           searchCenter = [41.7076, -123.9500];
-        } else if (locationQuery.toLowerCase().includes("el-dorado-county")) {
+        } else if (locationQuery.toLowerCase().includes("el dorado")) {
           searchCenter = [38.7426, -120.4358];
-        } else if (locationQuery.toLowerCase().includes("fresno-county")) {
+        } else if (locationQuery.toLowerCase().includes("fresno")) {
           searchCenter = [36.9859, -119.2321];
-        } else if (locationQuery.toLowerCase().includes("glenn-county")) {
+        } else if (locationQuery.toLowerCase().includes("glenn")) {
           searchCenter = [39.5910, -122.3930];
-        } else if (locationQuery.toLowerCase().includes("humboldt-county")) {
+        } else if (locationQuery.toLowerCase().includes("humboldt")) {
           searchCenter = [40.7450, -123.8695];
-        } else if (locationQuery.toLowerCase().includes("imperial-county")) {
+        } else if (locationQuery.toLowerCase().includes("imperial")) {
           searchCenter = [32.7920, -115.4734];
-        } else if (locationQuery.toLowerCase().includes("inyo-county")) {
+        } else if (locationQuery.toLowerCase().includes("inyo")) {
           searchCenter = [36.5761, -117.0702];
-        } else if (locationQuery.toLowerCase().includes("kern-county")) {
+        } else if (locationQuery.toLowerCase().includes("kern")) {
           searchCenter = [35.4937, -118.8597];
-        } else if (locationQuery.toLowerCase().includes("kings-county")) {
+        } else if (locationQuery.toLowerCase().includes("kings")) {
           searchCenter = [36.0988, -119.8815];
-        } else if (locationQuery.toLowerCase().includes("lake-county")) {
+        } else if (locationQuery.toLowerCase().includes("lake")) {
           searchCenter = [39.0916, -122.7530];
-        } else if (locationQuery.toLowerCase().includes("lassen-county")) {
+        } else if (locationQuery.toLowerCase().includes("lassen")) {
           searchCenter = [40.6760, -120.6180];
-        } else if (locationQuery.toLowerCase().includes("los-angeles-county")) {
+        } else if (locationQuery.toLowerCase().includes("los angeles")) {
           searchCenter = [34.0522, -118.2437];
-        } else if (locationQuery.toLowerCase().includes("madera-county")) {
+        } else if (locationQuery.toLowerCase().includes("madera")) {
           searchCenter = [37.2519, -119.6963];
-        } else if (locationQuery.toLowerCase().includes("marin-county")) {
+        } else if (locationQuery.toLowerCase().includes("marin")) {
           searchCenter = [38.0834, -122.7633];
-        } else if (locationQuery.toLowerCase().includes("mariposa-county")) {
+        } else if (locationQuery.toLowerCase().includes("mariposa")) {
           searchCenter = [37.5700, -119.9030];
-        } else if (locationQuery.toLowerCase().includes("mendocino-county")) {
+        } else if (locationQuery.toLowerCase().includes("mendocino")) {
           searchCenter = [39.5500, -123.4380];
-        } else if (locationQuery.toLowerCase().includes("merced-county")) {
+        } else if (locationQuery.toLowerCase().includes("merced")) {
           searchCenter = [37.3022, -120.4820];
-        } else if (locationQuery.toLowerCase().includes("modoc-county")) {
+        } else if (locationQuery.toLowerCase().includes("modoc")) {
           searchCenter = [41.5910, -120.7240];
-        } else if (locationQuery.toLowerCase().includes("mono-county")) {
+        } else if (locationQuery.toLowerCase().includes("mono")) {
           searchCenter = [37.9219, -118.9520];
-        } else if (locationQuery.toLowerCase().includes("monterey-county")) {
+        } else if (locationQuery.toLowerCase().includes("monterey")) {
           searchCenter = [36.3136, -121.3542];
-        } else if (locationQuery.toLowerCase().includes("napa-county")) {
+        } else if (locationQuery.toLowerCase().includes("napa")) {
           searchCenter = [38.5025, -122.2654];
-        } else if (locationQuery.toLowerCase().includes("nevada-county")) {
+        } else if (locationQuery.toLowerCase().includes("nevada")) {
           searchCenter = [39.1347, -120.1390];
-        } else if (locationQuery.toLowerCase().includes("orange-county")) {
+        } else if (locationQuery.toLowerCase().includes("orange")) {
           searchCenter = [33.7175, -117.8311];
-        } else if (locationQuery.toLowerCase().includes("placer-county")) {
+        } else if (locationQuery.toLowerCase().includes("placer")) {
           searchCenter = [39.0916, -120.8039];
-        } else if (locationQuery.toLowerCase().includes("plumas-county")) {
+        } else if (locationQuery.toLowerCase().includes("plumas")) {
           searchCenter = [40.0036, -120.8039];
-        } else if (locationQuery.toLowerCase().includes("riverside-county")) {
+        } else if (locationQuery.toLowerCase().includes("riverside")) {
           searchCenter = [33.9533, -117.3961];
-        } else if (locationQuery.toLowerCase().includes("sacramento-county")) {
+        } else if (locationQuery.toLowerCase().includes("sacramento")) {
           searchCenter = [38.4747, -121.3542];
-        } else if (locationQuery.toLowerCase().includes("san-benito-county")) {
+        } else if (locationQuery.toLowerCase().includes("san benito")) {
           searchCenter = [36.5761, -121.0028];
-        } else if (locationQuery.toLowerCase().includes("san-bernardino-county")) {
+        } else if (locationQuery.toLowerCase().includes("san bernardino")) {
           searchCenter = [34.9592, -116.4194];
-        } else if (locationQuery.toLowerCase().includes("san-diego-county")) {
+        } else if (locationQuery.toLowerCase().includes("san diego")) {
           searchCenter = [32.7157, -117.1611];
-        } else if (locationQuery.toLowerCase().includes("san-francisco-county")) {
+        } else if (locationQuery.toLowerCase().includes("san francisco")) {
           searchCenter = [37.7749, -122.4194];
-        } else if (locationQuery.toLowerCase().includes("san-joaquin-county")) {
+        } else if (locationQuery.toLowerCase().includes("san joaquin")) {
           searchCenter = [37.9176, -121.1710];
-        } else if (locationQuery.toLowerCase().includes("san-luis-obispo-county")) {
+        } else if (locationQuery.toLowerCase().includes("san luis obispo")) {
           searchCenter = [35.2828, -120.6596];
-        } else if (locationQuery.toLowerCase().includes("san-mateo-county")) {
+        } else if (locationQuery.toLowerCase().includes("san mateo")) {
           searchCenter = [37.4337, -122.4014];
-        } else if (locationQuery.toLowerCase().includes("santa-barbara-county")) {
+        } else if (locationQuery.toLowerCase().includes("santa barbara")) {
           searchCenter = [34.4208, -119.6982];
-        } else if (locationQuery.toLowerCase().includes("santa-clara-county")) {
+        } else if (locationQuery.toLowerCase().includes("santa clara")) {
           searchCenter = [37.3541, -121.9552];
-        } else if (locationQuery.toLowerCase().includes("santa-cruz-county")) {
+        } else if (locationQuery.toLowerCase().includes("santa cruz")) {
           searchCenter = [36.9741, -122.0308];
-        } else if (locationQuery.toLowerCase().includes("shasta-county")) {
+        } else if (locationQuery.toLowerCase().includes("shasta")) {
           searchCenter = [40.7909, -121.8478];
-        } else if (locationQuery.toLowerCase().includes("sierra-county")) {
+        } else if (locationQuery.toLowerCase().includes("sierra")) {
           searchCenter = [39.5910, -120.5210];
-        } else if (locationQuery.toLowerCase().includes("siskiyou-county")) {
+        } else if (locationQuery.toLowerCase().includes("siskiyou")) {
           searchCenter = [41.5910, -122.5400];
-        } else if (locationQuery.toLowerCase().includes("solano-county")) {
+        } else if (locationQuery.toLowerCase().includes("solano")) {
           searchCenter = [38.3105, -121.9018];
-        } else if (locationQuery.toLowerCase().includes("sonoma-county")) {
+        } else if (locationQuery.toLowerCase().includes("sonoma")) {
           searchCenter = [38.5780, -122.9888];
-        } else if (locationQuery.toLowerCase().includes("stanislaus-county")) {
+        } else if (locationQuery.toLowerCase().includes("stanislaus")) {
           searchCenter = [37.5091, -120.9876];
-        } else if (locationQuery.toLowerCase().includes("sutter-county")) {
+        } else if (locationQuery.toLowerCase().includes("sutter")) {
           searchCenter = [39.0210, -121.6739];
-        } else if (locationQuery.toLowerCase().includes("tehama-county")) {
+        } else if (locationQuery.toLowerCase().includes("tehama")) {
           searchCenter = [40.0982, -122.1746];
-        } else if (locationQuery.toLowerCase().includes("trinity-county")) {
+        } else if (locationQuery.toLowerCase().includes("trinity")) {
           searchCenter = [40.7450, -123.1140];
-        } else if (locationQuery.toLowerCase().includes("tulare-county")) {
+        } else if (locationQuery.toLowerCase().includes("tulare")) {
           searchCenter = [36.1342, -118.8597];
-        } else if (locationQuery.toLowerCase().includes("tuolumne-county")) {
+        } else if (locationQuery.toLowerCase().includes("tuolumne")) {
           searchCenter = [38.0296, -119.9741];
-        } else if (locationQuery.toLowerCase().includes("ventura-county")) {
+        } else if (locationQuery.toLowerCase().includes("ventura")) {
           searchCenter = [34.3705, -119.1391];
-        } else if (locationQuery.toLowerCase().includes("yolo-county")) {
+        } else if (locationQuery.toLowerCase().includes("yolo")) {
           searchCenter = [38.7646, -121.9018];
-        } else if (locationQuery.toLowerCase().includes("yuba-county")) {
+        } else if (locationQuery.toLowerCase().includes("yuba")) {
           searchCenter = [39.2547, -121.3999];
         } else {
           // Default coordinates if county is not found
           searchCenter = [36.7783, -119.4179]; // Center of California
         }
+        console.log("searchCenter", searchCenter)
         
-
         // Zoom to the location
         map.setView(searchCenter, 12)
 
@@ -321,9 +321,11 @@ function formatDistance(meters: number): string {
 interface PropertyMapProps {
   filteredPropertyIds?: string[]
   initialLocationQuery?: string | null
+  searchLocationType?: string | null
+  county?: string | null
 }
 
-function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null }: PropertyMapProps) {
+function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, searchLocationType = null, county = null }: PropertyMapProps) {
   const router = useRouter()
 
   // Center the map on California
@@ -332,81 +334,92 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null }
     return [36.7783, -119.4179]
   }, [])
 
-  // Determine the county from the initialLocationQuery
-  const county = useMemo(() => {
-    const countyMap: Record<string, string> = {
-      "los-angeles-county": "Los Angeles",
-      "orange-county": "Orange",
-      "san-diego-county": "San Diego",
-      "santa-clara-county": "Santa Clara",
-      "alameda-county": "Alameda",
-      "sacramento-county": "Sacramento",
-      "san-francisco-county": "San Francisco",
-      "riverside-county": "Riverside",
-      "san-bernardino-county": "San Bernardino",
-      "san-joaquin-county": "San Joaquin",
-      "san-luis-obispo-county": "San Luis Obispo",
-      "san-mateo-county": "San Mateo",
-      "santa-barbara-county": "Santa Barbara",
-      "santa-cruz-county": "Santa Cruz",
-      "shasta-county": "Shasta",
-      "sierra-county": "Sierra",
-      "siskiyou-county": "Siskiyou",
-      "solano-county": "Solano",
-      "sonoma-county": "Sonoma",
-      "stanislaus-county": "Stanislaus",
-      "sutter-county": "Sutter",
-      "tehama-county": "Tehama",
-      "trinity-county": "Trinity",
-      "tulare-county": "Tulare",
-      "tuolumne-county": "Tuolumne",
-      "ventura-county": "Ventura",
-      "yolo-county": "Yolo",
-      "yuba-county": "Yuba",
-      "alpine-county": "Alpine",
-      "amador-county": "Amador",
-      "butte-county": "Butte",
-      "calaveras-county": "Calaveras",
-      "colusa-county": "Colusa",
-      "contra-costa-county": "Contra Costa",
-      "del-norte-county": "Del Norte",
-      "el-dorado-county": "El Dorado",
-      "fresno-county": "Fresno",
-      "glenn-county": "Glenn",
-      "humboldt-county": "Humboldt",
-      "imperial-county": "Imperial",
-      "inyo-county": "Inyo",
-      "kern-county": "Kern",
-      "kings-county": "Kings",
-      "lake-county": "Lake",
-      "lassen-county": "Lassen",
-      "madera-county": "Madera",
-      "marin-county": "Marin",
-      "mariposa-county": "Mariposa",
-      "mendocino-county": "Mendocino",
-      "merced-county": "Merced",
-      "modoc-county": "Modoc",
-      "mono-county": "Mono",
-      "monterey-county": "Monterey",
-      "napa-county": "Napa",
-      "nevada-county": "Nevada",
-      "placer-county": "Placer",
-      "plumas-county": "Plumas",
-      "san-benito-county": "San Benito",
-    };
+  // // Determine the county from the initialLocationQuery
+  // const county = useMemo(() => {
+  //   const countyMap: Record<string, string> = {
+  //     "los-angeles-county": "Los Angeles",
+  //     "orange-county": "Orange",
+  //     "san-diego-county": "San Diego",
+  //     "santa-clara-county": "Santa Clara",
+  //     "alameda-county": "Alameda",
+  //     "sacramento-county": "Sacramento",
+  //     "san-francisco-county": "San Francisco",
+  //     "riverside-county": "Riverside",
+  //     "san-bernardino-county": "San Bernardino",
+  //     "san-joaquin-county": "San Joaquin",
+  //     "san-luis-obispo-county": "San Luis Obispo",
+  //     "san-mateo-county": "San Mateo",
+  //     "santa-barbara-county": "Santa Barbara",
+  //     "santa-cruz-county": "Santa Cruz",
+  //     "shasta-county": "Shasta",
+  //     "sierra-county": "Sierra",
+  //     "siskiyou-county": "Siskiyou",
+  //     "solano-county": "Solano",
+  //     "sonoma-county": "Sonoma",
+  //     "stanislaus-county": "Stanislaus",
+  //     "sutter-county": "Sutter",
+  //     "tehama-county": "Tehama",
+  //     "trinity-county": "Trinity",
+  //     "tulare-county": "Tulare",
+  //     "tuolumne-county": "Tuolumne",
+  //     "ventura-county": "Ventura",
+  //     "yolo-county": "Yolo",
+  //     "yuba-county": "Yuba",
+  //     "alpine-county": "Alpine",
+  //     "amador-county": "Amador",
+  //     "butte-county": "Butte",
+  //     "calaveras-county": "Calaveras",
+  //     "colusa-county": "Colusa",
+  //     "contra-costa-county": "Contra Costa",
+  //     "del-norte-county": "Del Norte",
+  //     "el-dorado-county": "El Dorado",
+  //     "fresno-county": "Fresno",
+  //     "glenn-county": "Glenn",
+  //     "humboldt-county": "Humboldt",
+  //     "imperial-county": "Imperial",
+  //     "inyo-county": "Inyo",
+  //     "kern-county": "Kern",
+  //     "kings-county": "Kings",
+  //     "lake-county": "Lake",
+  //     "lassen-county": "Lassen",
+  //     "madera-county": "Madera",
+  //     "marin-county": "Marin",
+  //     "mariposa-county": "Mariposa",
+  //     "mendocino-county": "Mendocino",
+  //     "merced-county": "Merced",
+  //     "modoc-county": "Modoc",
+  //     "mono-county": "Mono",
+  //     "monterey-county": "Monterey",
+  //     "napa-county": "Napa",
+  //     "nevada-county": "Nevada",
+  //     "placer-county": "Placer",
+  //     "plumas-county": "Plumas",
+  //     "san-benito-county": "San Benito",
+  //   };
 
-    if (!initialLocationQuery) return null;
+  //   if (!initialLocationQuery) return null;
 
-    const query = initialLocationQuery.toLowerCase();
-    for (const [key, value] of Object.entries(countyMap)) {
-      if (query.includes(key)) return value;
-    }
+  //   const query = initialLocationQuery.toLowerCase();
+  //   for (const [key, value] of Object.entries(countyMap)) {
+  //     if (query.includes(key)) return value;
+  //   }
 
-    return null;
-  }, [initialLocationQuery])
+  //   return null;
+  // }, [initialLocationQuery])
 
   // --- Use the hook to get 100 properties, filtered by county if available ---
-  const { data: properties = {listings: [], total_items: 0}, isLoading, isError } = useGetListProperties({ limit: 100, county: county ?? undefined })
+
+    // --- Use the hook to get 100 properties, filtered by county or city if available ---
+  const locationParam =
+    searchLocationType === "county"
+      ? { county: initialLocationQuery ?? undefined }
+      : { city: initialLocationQuery ?? undefined }
+
+  const {
+    data: properties = { listings: [], total_items: 0 },
+    isLoading,
+    isError,
+  } = useGetListProperties({ limit: 100, ...locationParam })
 
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null)
   // California polygon is always drawn, so set as default
@@ -593,7 +606,7 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null }
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <ZoomControl position="bottomright" />
-        <MapLocationController center={center} locationQuery={initialLocationQuery} />
+        <MapLocationController center={center} locationQuery={county} />
 
         {/* California Polygon Area */}
         <LeafletPolygon

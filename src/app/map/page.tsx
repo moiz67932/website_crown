@@ -31,7 +31,8 @@ function MapViewPage() {
   const locationQuery = searchParams.get("location")
   const propertyType = searchParams.get("propertyType")
   const priceRange = searchParams.get("priceRange")
-
+  const searchLocationType = searchParams.get("searchLocationType")
+  const county = searchParams.get("county")
   const convertPriceRange = (priceRange: string) => {
     if (priceRange === "100k-500k") return [100000, 500000]
     if (priceRange === "500k-1m") return [500000, 1000000]
@@ -46,79 +47,6 @@ function MapViewPage() {
     }
     return null
   }, [priceRange])
-
-  // Determine the county from the locationQuery
-  const county = useMemo(() => {
-    if (!locationQuery) return null;
-
-    const countyMap: Record<string, string> = {
-      "los-angeles-county": "Los Angeles",
-      "orange-county": "Orange",
-      "san-diego-county": "San Diego",
-      "santa-clara-county": "Santa Clara",
-      "alameda-county": "Alameda",
-      "sacramento-county": "Sacramento",
-      "san-francisco-county": "San Francisco",
-      "riverside-county": "Riverside",
-      "san-bernardino-county": "San Bernardino",
-      "san-joaquin-county": "San Joaquin",
-      "san-luis-obispo-county": "San Luis Obispo",
-      "san-mateo-county": "San Mateo",
-      "santa-barbara-county": "Santa Barbara",
-      "santa-cruz-county": "Santa Cruz",
-      "shasta-county": "Shasta",
-      "sierra-county": "Sierra",
-      "siskiyou-county": "Siskiyou",
-      "solano-county": "Solano",
-      "sonoma-county": "Sonoma",
-      "stanislaus-county": "Stanislaus",
-      "sutter-county": "Sutter",
-      "tehama-county": "Tehama",
-      "trinity-county": "Trinity",
-      "tulare-county": "Tulare",
-      "tuolumne-county": "Tuolumne",
-      "ventura-county": "Ventura",
-      "yolo-county": "Yolo",
-      "yuba-county": "Yuba",
-      "alpine-county": "Alpine",
-      "amador-county": "Amador",
-      "butte-county": "Butte",
-      "calaveras-county": "Calaveras",
-      "colusa-county": "Colusa",
-      "contra-costa-county": "Contra Costa",
-      "del-norte-county": "Del Norte",
-      "el-dorado-county": "El Dorado",
-      "fresno-county": "Fresno",
-      "glenn-county": "Glenn",
-      "humboldt-county": "Humboldt",
-      "imperial-county": "Imperial",
-      "inyo-county": "Inyo",
-      "kern-county": "Kern",
-      "kings-county": "Kings",
-      "lake-county": "Lake",
-      "lassen-county": "Lassen",
-      "madera-county": "Madera",
-      "marin-county": "Marin",
-      "mariposa-county": "Mariposa",
-      "mendocino-county": "Mendocino",
-      "merced-county": "Merced",
-      "modoc-county": "Modoc",
-      "mono-county": "Mono",
-      "monterey-county": "Monterey",
-      "napa-county": "Napa",
-      "nevada-county": "Nevada",
-      "placer-county": "Placer",
-      "plumas-county": "Plumas",
-      "san-benito-county": "San Benito",
-    };
-
-    const query = locationQuery.toLowerCase();
-    for (const [key, value] of Object.entries(countyMap)) {
-      if (query.includes(key)) return value;
-    }
-
-    return null;
-  }, [locationQuery, propertyType, priceRange]);
 
   // Map activeFilters to API params for useListProperties
   const apiParams = useMemo(() => {
@@ -153,12 +81,14 @@ function MapViewPage() {
       params.min_sqft = activeFilters.areaRange[0]
       params.max_sqft = activeFilters.areaRange[1]
     }
-    if (county) {
-      params.county = county
+    if (searchLocationType === "county") {
+      params.county = locationQuery
+    } else {
+      params.city = locationQuery
     }
     // You can add more mappings as needed (e.g., city, yearBuilt, etc.)
     return params
-  }, [activeFilters, county])
+  }, [activeFilters, searchLocationType])
 
 
   const { data, isLoading } = useListProperties(apiParams)
@@ -198,7 +128,7 @@ function MapViewPage() {
   }
 
   return (
-    <main className="pt-16 h-screen flex flex-col">
+    <main className="pt-22 h-screen flex flex-col">
       <MapViewHeader
         activeFilters={activeFilters}
         onFilterChange={handleFilterChange}
@@ -210,7 +140,7 @@ function MapViewPage() {
         {/* Map Container */}
         <div className="flex-1 relative h-[calc(100vh-100px)]">
           <Suspense fallback={<MapLoadingSkeleton />}>
-            <PropertyMap filteredPropertyIds={filteredPropertyIds} initialLocationQuery={locationQuery} />
+            <PropertyMap filteredPropertyIds={filteredPropertyIds} initialLocationQuery={locationQuery} searchLocationType={searchLocationType} county={county} />
           </Suspense>
 
           {/* Mobile Filter Drawer - Only visible on mobile */}

@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useState, useRef, useEffect } from "react"
-import { Search, MapPin, Home, DollarSign } from "lucide-react"
+import { Search, MapPin, Home, DollarSign, Map } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
@@ -13,7 +13,7 @@ export default function SearchBar() {
   const [isSearching, setIsSearching] = useState(false)
   const [searchLocationType, setSearchLocationType] = useState("city") // New state for search location type
   const router = useRouter()
-
+  const [searchMethod, setSearchMethod] = useState("properties")
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState('All')
@@ -22,6 +22,12 @@ export default function SearchBar() {
     { value: "buy", label: "For Sale" },
     { value: "rent", label: "For Rent" },
     { value: "all", label: "All Properties" },
+  ]
+
+  // Add search method options
+  const searchMethodOptions = [
+    { value: "properties", label: "List", icon: <Home className="w-4 h-4 mr-1" /> },
+    { value: "map", label: "Map", icon: <Map className="w-4 h-4 mr-1" /> },
   ]
 
   // Tab options for autocomplete
@@ -65,22 +71,22 @@ export default function SearchBar() {
     if (searchLocationType) {
       params.append("searchLocationType", searchLocationType)
     }
-
+    
     // Simulate a network request
     setTimeout(() => {
       setIsSearching(false)
-      // Redirect to map page with search parameters
-      router.push(`/properties?${params.toString()}`)
+      if (searchMethod === "properties") {
+        // Redirect to properties page with search parameters
+        router.push(`/properties?${params.toString()}`)
+      } else {
+        // Redirect to map page with search parameters
+        router.push(`/map?${params.toString()}`)
+      }
     }, 1000)
   }
 
-  // const handleKeyPress = (e: React.KeyboardEvent) => {
-  //   if (e.key === 'Enter') {
-  //     handleSearch(e as unknown as FormEvent)
-  //   }
-  // }
 
-  const handleAutoCompleteClick = (value: string, type: string) => {
+  const handleAutoCompleteClick = (value: string, type: string, county?: string) => {
     setLocation(value)
     setSearchLocationType(type) // Set the search location type
     const params = new URLSearchParams()
@@ -89,14 +95,25 @@ export default function SearchBar() {
       params.append("searchType", searchType)
     }
     params.append("searchLocationType", type)
-    router.push(`/properties?${params.toString()}`)
+    if (county) {
+      params.append("county", county)
+    } else {
+      params.append("county", value)
+    }
+    if (searchMethod === "properties") {
+      router.push(`/properties?${params.toString()}`)
+    } else {
+      router.push(`/map?${params.toString()}`)
+    }
   }
 
   return (
+    <div>
     <form
       onSubmit={handleSearch}
       className="flex items-center bg-white rounded-full text-left text-slate-900 border border-slate-200 shadow-sm px-4 py-2 w-full max-w-4xl"
     >
+      {/* Search Type Dropdown */}
       <div className="relative flex items-center pr-2 border-r border-slate-200" ref={dropdownRef}>
         <button
           type="button"
@@ -130,6 +147,8 @@ export default function SearchBar() {
           </div>
         )}
       </div>
+     
+      {/* Location Input and Autocomplete */}
       <div className="flex items-center flex-1 px-3 relative">
         <MapPin className="h-5 w-5 text-slate-400 mr-2" />
         <Input
@@ -166,7 +185,7 @@ export default function SearchBar() {
                     <div
                       key={index}
                       className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).city, 'city')}
+                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).city, 'city', typeof result.value === 'string' ? '' : (result.value as any).county)}
                     >
                       <div className="font-medium text-black">{typeof result.value === 'string' ? result.value : (result.value as any).city + (result.value && (result.value as any).county ? ', ' + (result.value as any).county : '')}</div>
                       <div className="text-slate-400 text-base leading-tight">City</div>
@@ -203,5 +222,30 @@ export default function SearchBar() {
         <svg className="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
       </button>
     </form>
+     {/* Search Method Selection */}
+     <div className="justify-center flex items-center pl-2 pt-5 pr-2 border-r border-slate-200">
+        {searchMethodOptions.map(option => (
+          <button
+            key={option.value}
+            type="button"
+            className={`flex items-center px-3 py-1 rounded-full text-base font-semibold transition-colors focus:outline-none
+              ${searchMethod === option.value
+                ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md"
+                : "bg-transparent text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+              }`}
+            onClick={() => setSearchMethod(option.value)}
+            aria-pressed={searchMethod === option.value}
+            style={{ marginRight: 4, marginLeft: 0, letterSpacing: 0.5 }}
+          >
+            <span className={`${searchMethod === option.value ? "text-white" : "text-orange-500"} mr-1`}>
+              {option.icon}
+            </span>
+            <span className={`${searchMethod === option.value ? "font-bold text-white drop-shadow" : "font-semibold text-orange-600"}`}>
+              {option.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
