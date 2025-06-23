@@ -1,17 +1,13 @@
 "use client"
 import Image from "next/image"
 import Link from "next/link"
-import { Home, Building, MapPin, Bed, Bath, Maximize, ArrowRight, Star, Phone, Mail, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import SearchBar from "@/components/home/search-bar"
 import useListProperties from "@/hooks/queries/useGetListProperties";
 import Loading from "@/components/shared/loading"
 import { Property } from "@/interfaces"
 import { PropertyCard } from "@/components/property-card"
-import { Carousel } from "@/components/ui/carousel"
 import CustomerReview from "@/components/customer-review"
 
 

@@ -109,9 +109,11 @@ function PropertiesPageContent() {
     <main className="bg-slate-50 min-h-screen pt-16 md:pt-20">
       <PropertyListingHeader 
         currentPage={currentPage} 
-        totalProperties={totalItems} 
+        totalProperties={totalItems}
+        propertyType={filters.propertyType}
         sortBy={filters.sortBy}
         onSortChange={(newSort) => handleFilterChange({ ...filters, sortBy: newSort })}
+        onBuyClick={(type: string | undefined) => handleFilterChange({ ...filters, propertyType: type || "" })}
       />
 
       <section className="container mx-auto px-2 md:px-4 py-8">

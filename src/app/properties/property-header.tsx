@@ -6,10 +6,12 @@ interface IPropertyListingHeaderProps {
   totalProperties: number
   currentPage: number
   sortBy: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
+  propertyType: string
   onSortChange: (sort: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc") => void
+  onBuyClick: (type: "Residential" | "ResidentialLease") => void
 }
 
-export default function PropertyListingHeader({ totalProperties, currentPage, sortBy, onSortChange }: IPropertyListingHeaderProps) {
+export default function PropertyListingHeader({ totalProperties, currentPage, sortBy, propertyType, onSortChange, onBuyClick }: IPropertyListingHeaderProps) {
   const startIndex = (currentPage - 1) * 12 + 1
   const endIndex = Math.min(startIndex + 11, totalProperties)
   return (
@@ -30,11 +32,21 @@ export default function PropertyListingHeader({ totalProperties, currentPage, so
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <div className="flex items-center border rounded-md overflow-hidden">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r">
-                  <GridIcon className="h-4 w-4" />
+                <Button
+                  variant="default"
+                  size="sm"
+                  className={`h-8 px-4 rounded-none border-r-0 font-semibold text-sm ${propertyType !== "ResidentialLease" ? "bg-brand-sunsetBlush text-white hover:bg-brand-sunsetBlush/90 focus:bg-brand-sunsetBlush/90" : "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:bg-slate-200"}`}
+                  onClick={() => onBuyClick("Residential")}
+                >
+                  Buy
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none">
-                  <LayoutList className="h-4 w-4" />
+                <Button
+                  variant="default"
+                  size="sm"
+                  className={`h-8 px-4 rounded-none border-r-0 font-semibold text-sm ${propertyType === "ResidentialLease" ?  "bg-brand-sunsetBlush text-white hover:bg-brand-sunsetBlush/90 focus:bg-brand-sunsetBlush/90" : "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:bg-slate-200"}`}
+                  onClick={() => onBuyClick("ResidentialLease")}
+                >
+                  Lease
                 </Button>
               </div>
 

@@ -8,6 +8,7 @@ import { Menu, X, ChevronDown, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
+import { navStyles } from "./navbar.styles"
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -76,31 +77,31 @@ export default function Navbar() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#FAF4ED] py-3 md:py-4 border-b border-[#f0e9e0] shadow-sm"
+      className={navStyles.header}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
+      <div className={navStyles.container}>
+        <div className={navStyles.navContainer}>
           {/* Desktop Navigation - Left */}
-          <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-start">
+          <nav className={navStyles.desktopNav}>
             {/* Buy Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="relative group">
                   <Button
                     variant="ghost"
-                    className={`px-3 py-2 text-sm font-text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors focus:bg-[#13304A]`}
+                    className={navStyles.desktopDropdownButton}
                   >
                     Buy
                   </Button>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#FAF4ED] text-slate-900 border-none shadow-lg" sideOffset={8}>
-              <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-slate-900">For Sale</DropdownMenuLabel>
+              <DropdownMenuContent className={navStyles.dropdownContent} sideOffset={8}>
+              <DropdownMenuLabel className={navStyles.dropdownLabel}>For Sale</DropdownMenuLabel>
 
                 {mobileBuyItems.map((item) => (
-                                      <Link href={item.href}>
+                                      <Link href={item.href} key={item.label}>
 
-                  <DropdownMenuItem key={item.label} className="px-6 py-2 text-base hover:text-[#D4AF37]">
+                  <DropdownMenuItem className={navStyles.dropdownItem}>
                     {item.label}
                   </DropdownMenuItem>
                   </Link>
@@ -114,18 +115,18 @@ export default function Navbar() {
                 <div className="relative group">
                   <Button
                     variant="ghost"
-                    className={`px-3 py-2 text-sm font-text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors focus:bg-[#13304A]`}
+                    className={navStyles.desktopDropdownButton}
                   >
                     Rent
                   </Button>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-[260px] p-0 bg-[#FAF4ED] text-slate-900 border-none shadow-lg" sideOffset={8}>
-                <DropdownMenuLabel className="text-lg font-semibold px-6 py-4 text-slate-900">For Rent</DropdownMenuLabel>
+              <DropdownMenuContent className={navStyles.dropdownContent} sideOffset={8}>
+                <DropdownMenuLabel className={navStyles.dropdownLabel}>For Rent</DropdownMenuLabel>
                 {mobileRentItems.map((item) => (
-                  <Link href={item.href}>
+                  <Link href={item.href} key={item.label}>
 
-                  <DropdownMenuItem key={item.label} className="px-6 py-2 text-base hover:text-[#D4AF37]">
+                  <DropdownMenuItem className={navStyles.dropdownItem}>
                     {item.label}
                   </DropdownMenuItem>
                   </Link>
@@ -138,7 +139,7 @@ export default function Navbar() {
               <Link href={item.href} key={item.name}>
                 <Button
                   variant="ghost"
-                  className={`px-3 py-2 text-sm font-medium text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors`}
+                  className={navStyles.desktopNavLink}
                 >
                   {item.name}
                 </Button>
@@ -147,9 +148,9 @@ export default function Navbar() {
           </nav>
 
           {/* Logo Centered - Bigger */}
-          <div className="flex-0 flex justify-center items-center w-48 md:w-72 absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0">
-            <Link href="/" className="flex items-center justify-center">
-              <div className="relative h-36 w-36 md:h-56 md:w-56 flex items-center justify-center">
+          <div className={navStyles.logoContainer}>
+            <Link href="/" className={navStyles.logoLink}>
+              <div className={navStyles.logoImageContainer}>
                 {/* Placeholder for logo icon */}
                 <Image src="/logo.png" alt="Logo" width={224} height={224} />
               </div>
@@ -157,19 +158,17 @@ export default function Navbar() {
           </div>
 
           {/* Right Nav */}
-          <nav className="hidden lg:flex items-center space-x-6 flex-1 justify-end">
-            <Link href="/about" className="text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors">About</Link>
-            <Link href="/contact" className="text-slate-900 font-medium text-sm hover:text-yellow-600 transition-colors">Contact</Link>
-            <Link href="/auth/login">
-              <Button className="ml-4 bg-yellow-400 text-slate-900 font-semibold px-5 py-2 rounded-full shadow-sm hover:bg-yellow-300 border-none transition-colors text-sm">Login</Button>
-            </Link>
+          <nav className={navStyles.rightNav}>
+            <Link href="/about" className={navStyles.rightNavLink}>About</Link>
+            <Link href="/contact" className={navStyles.rightNavLink}>Contact</Link>
+           
           </nav>
 
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden text-slate-900 p-1"
+            className={navStyles.mobileMenuButton}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -180,13 +179,13 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-[#FAF4ED] border-t border-[#f0e9e0] mt-2 absolute left-0 right-0 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto z-50">
-          <div className="container mx-auto px-4 py-4">
-            <nav className="flex flex-col space-y-1">
+        <div className={navStyles.mobileMenuContainer}>
+          <div className={navStyles.container}>
+            <nav className={navStyles.mobileNav}>
               {/* Buy Dropdown */}
               <div>
                 <button
-                  className="w-full flex items-center justify-between px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                  className={navStyles.mobileDropdownButton}
                   onClick={() => {
                     setMobileBuyOpen((open) => !open);
                     setMobileRentOpen(false);
@@ -196,15 +195,15 @@ export default function Navbar() {
                   type="button"
                 >
                   <span>Buy</span>
-                  <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${mobileBuyOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={navStyles.mobileChevron(mobileBuyOpen)} />
                 </button>
                 {mobileBuyOpen && (
-                  <div id="mobile-buy-menu" className="ml-4 mt-1 flex flex-col space-y-1">
+                  <div id="mobile-buy-menu" className={navStyles.mobileDropdownContent}>
                     {mobileBuyItems.map((item) => (
                       <Link
                         href={item.href}
                         key={item.label}
-                        className="block px-3 py-2 text-sm rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                        className={navStyles.mobileDropdownItem}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         {item.label}
@@ -216,7 +215,7 @@ export default function Navbar() {
               {/* Rent Dropdown */}
               <div>
                 <button
-                  className="w-full flex items-center justify-between px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                  className={navStyles.mobileDropdownButton}
                   onClick={() => {
                     setMobileRentOpen((open) => !open);
                     setMobileBuyOpen(false);
@@ -226,15 +225,15 @@ export default function Navbar() {
                   type="button"
                 >
                   <span>Rent</span>
-                  <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${mobileRentOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={navStyles.mobileChevron(mobileRentOpen)} />
                 </button>
                 {mobileRentOpen && (
-                  <div id="mobile-rent-menu" className="ml-4 mt-1 flex flex-col space-y-1">
+                  <div id="mobile-rent-menu" className={navStyles.mobileDropdownContent}>
                     {mobileRentItems.map((item) => (
                       <Link
                         href={item.href}
                         key={item.label}
-                        className="block px-3 py-2 text-sm rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                        className={navStyles.mobileDropdownItem}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         {item.label}
@@ -246,7 +245,7 @@ export default function Navbar() {
               <Link
                     href="/sell"
                     key="Sell"
-                    className="px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                    className={navStyles.mobileNavLink}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sell
@@ -258,22 +257,17 @@ export default function Navbar() {
                   <Link
                     href={item.href}
                     key={item.name}
-                    className="px-3 py-2 font-medium rounded-md text-slate-900 hover:text-[#D4AF37] hover:bg-[#13304A]/10 transition-colors"
+                    className={navStyles.mobileNavLink}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
                 ))}
             </nav>
-            <div className="mt-4 flex flex-col space-y-2">
-              <Link href="/auth/login">
-                <Button variant="outline" className="justify-center w-full text-slate-900 border-slate-900 hover:bg-[#D4AF37] hover:text-[#13304A]">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Button>
-              </Link>
+            <div className={navStyles.mobileButtonsContainer}>
+
               <Link href="/properties/">
-              <Button className="bg-[#D4AF37] hover:bg-[#bfa13a] text-[#13304A] justify-center w-full font-semibold">List Property</Button>
+              <Button className={navStyles.mobileListPropertyButton}>List Property</Button>
 
               </Link>
             </div>
