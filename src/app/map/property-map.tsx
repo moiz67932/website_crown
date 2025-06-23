@@ -32,7 +32,7 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon
 
 // Custom marker icons
-const createCustomIcon = (price: number, status: string, propertyType: string, isInSearchArea = false) => {
+export const createCustomIcon = (price: number, status: string, propertyType: string, isInSearchArea = false) => {
   // Determine icon color based on status
   const bgColor = status === "For Sale" ? "bg-green-600" : "bg-blue-600"
 
@@ -152,7 +152,6 @@ function MapLocationController({
   locationQuery: string | null
 }) {
   const map = useMap()
-  console.log("locationQuery", locationQuery)
   // Set initial center
   useEffect(() => {
     map.setView(center, map.getZoom())
@@ -678,7 +677,7 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
                     <span>•</span>
                     <span>{property.bathrooms} baths</span>
                     <span>•</span>
-                    <span>                      {property.living_area_sqft ? `${property?.living_area_sqft?.toLocaleString?.() ?? property.living_area_sqft} Sq Ft` : `${property?.lot_size_sqft?.toLocaleString?.() ?? property.lot_size_sqft} sq ft`}                    </span>
+                    <span>s{property.living_area_sqft ? `${property?.living_area_sqft?.toLocaleString?.() ?? property.living_area_sqft} Sq Ft` : `${property?.lot_size_sqft?.toLocaleString?.() ?? property.lot_size_sqft} sq ft`}                    </span>
                   </div>
 
                   {/* Features */}

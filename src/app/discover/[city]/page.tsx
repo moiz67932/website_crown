@@ -5,13 +5,14 @@ import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Search, MapPin, StarIcon, MessageSquare } from "lucide-react"
+import { ArrowRight, Search, MapPin, StarIcon, MessageSquare, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import type { Metadata } from "next"
 import { PropertyCard } from "@/components/property-card"
 import { cn } from "@/lib/utils"
 import { Property } from "@/interfaces"
 import CityMapWrapper from "@/components/city-map"
 import { cityPageStyles, citySearchWidgetStyles } from "./page.styles"
+import ScrollButton from "./_components/ScrollButton"
 
 
 export async function generateMetadata({ params }: {params: Promise<{ city: string }> }): Promise<Metadata> {
@@ -79,17 +80,17 @@ function CitySearchWidget({ cityName, cityId }: { cityName: string; cityId: stri
 export default async function CityPage({ params }: { params: Promise<{ city: string }> }) {
   const { city } = await params;
   const cityData = getCityData(city || '')
-
+  
   if (!cityData) {
     notFound()
   }
 
   // Fetch properties using server-side data fetching
-  const response = await fetch(`${process.env.API_BASE_URL}/api/properties?skip=0&limit=3&county=${MappingCityIdToCityName(city)}`, { 
+  const response = await fetch(`${process.env.API_BASE_URL}/api/listings?skip=0&limit=30&county=${MappingCityIdToCityName(city)}`, { 
     cache: 'no-store'
   });
-  const featuredPropertiesRaw = await response.json();
 
+  const featuredPropertiesRaw = await response.json();
   const responseImage = await fetch(`${process.env.API_BASE_URL}/api/counties-images?county=${MappingCityIdToCityName(city)} County`, { 
     cache: 'no-store'
   });
@@ -134,7 +135,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
             Explore {cityData.name} on the Map
           </h2>
           {cityData.osmBoundingBox && (
-            <CityMapWrapper bounds={cityData.osmBoundingBox} />
+            <CityMapWrapper bounds={cityData.osmBoundingBox} properties={featuredPropertiesRaw.listings} />
           )}
         </section>
 
@@ -269,10 +270,20 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
           <h2 className={cityPageStyles.sectionTitle}>
             Featured Properties in {cityData.name}
           </h2>
-          <div className={cityPageStyles.propertyGrid}>
-            {featuredPropertiesRaw?.listings?.map((property: Property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+              {featuredPropertiesRaw.listings.map((property: any) => (
+                <div
+                  key={property.listing_key}
+                  className="min-w-[320px] max-w-xs flex-shrink-0"
+                >
+                  <PropertyCard property={property} />
+                </div>
+              ))}
+            </div>
+            
+            <ScrollButton />
+           
           </div>
           <div className={cityPageStyles.propertiesButtonContainer}>
             <Button asChild size="lg" className={cityPageStyles.propertiesViewAllButton}>
