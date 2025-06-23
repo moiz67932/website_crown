@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+// import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts"
 
 interface PropertyStatisticsProps {
@@ -198,7 +198,7 @@ export default function PropertyStatistics({ properties }: PropertyStatisticsPro
           <Separator />
 
           {/* Bedroom Distribution */}
-          <div>
+          {/* <div>
             <h4 className="text-sm font-medium mb-3">Bedroom Distribution</h4>
             <div className="h-[120px]">
               <ChartContainer
@@ -219,7 +219,7 @@ export default function PropertyStatistics({ properties }: PropertyStatisticsPro
                 </ResponsiveContainer>
               </ChartContainer>
             </div>
-          </div>
+          </div> */}
 
           <Separator />
 
@@ -265,7 +265,7 @@ export default function PropertyStatistics({ properties }: PropertyStatisticsPro
                   </span>
                   <span className="text-sm">Avg: {stats.yearBuiltStats.avgYear}</span>
                 </div>
-                {stats.yearBuiltStats.decadeDistribution.length > 1 && (
+                {/* {stats.yearBuiltStats.decadeDistribution.length > 1 && (
                   <div className="h-[100px]">
                     <ChartContainer
                       config={{
@@ -285,7 +285,7 @@ export default function PropertyStatistics({ properties }: PropertyStatisticsPro
                       </ResponsiveContainer>
                     </ChartContainer>
                   </div>
-                )}
+                )} */}
               </div>
             </>
           )}
