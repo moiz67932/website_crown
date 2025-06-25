@@ -208,7 +208,7 @@ const popularDestinations = [
 
 export default function RelocationPage() {
   return (
-    <div className="bg-brand-californiaSand min-h-screen">
+    <div className="bg-brand-californiaSand pt-20 min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image

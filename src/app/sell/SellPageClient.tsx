@@ -193,7 +193,7 @@ export default function SellPageClient() {
   }
 
   return (
-    <div className="bg-brand-californiaSand min-h-screen">
+    <div className="bg-brand-californiaSand pt-20 min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[75vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
@@ -512,7 +512,7 @@ export default function SellPageClient() {
 
                       <Button
                         type="submit"
-                        className="w-full bg-brand-sunsetBlush hover:bg-brand-sunsetBlush/90 text-white py-3 text-lg font-semibold"
+                        className="w-full bg-brand-sunsetBlush hover:bg-brand-sunsetBlush/90 text-white py-3 text-sm sm:text-sm font-semibold"
                       >
                         Request Complimentary Valuation
                       </Button>

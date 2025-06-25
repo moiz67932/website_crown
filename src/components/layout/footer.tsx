@@ -9,29 +9,28 @@ const Footer: FC = () => {
           {/* Logo, Description, Social */}
           <div className="flex flex-col items-center md:items-start">
 
-            <div className="flex items-center justify-center gap-4">
-            <img
-              src="/logo.svg"
-              alt="logo"
-              className="h-24 w-24 mb-4  object-contain rounded"
-            />
-
-                 <img
-              src="/crmls.webp"
-              alt="crmls logo"
-              className="h-24 w-24 mb-4 p-2  object-contain rounded"
-            />
-            <img
-              src="/exp-realty-logo.webp"
-              alt="exp-realty-logo"
-              className="h-24 w-24 mb-4 p-2  object-contain rounded"
-            />
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-2 lg:gap-4 w-full mb-2">
+              <img
+                src="/logo.png"
+                alt="logo"
+                className="h-24 w-24 sm:h-24 sm:w-24 mb-2 bg-brand-white object-contain rounded"
+              />
+              <img
+                src="/crmls.webp"
+                alt="crmls logo"
+                className="h-24 w-24 sm:h-20 sm:w-20 md:h-24 md:w-24 mb-2 p-2 bg-brand-white object-contain rounded"
+              />
+              <img
+                src="/exp-realty-logo.webp"
+                alt="exp-realty-logo"
+                className="h-24 w-24 sm:h-20 sm:w-20 md:h-24 md:w-24 mb-2 p-2 bg-brand-white object-contain rounded"
+              />
             </div>
              
-            <p className="mb-4 text-center md:text-left text-sm text-gray-200">
+            <p className="mb-4 text-center md:text-left text-sm text-gray-200 max-w-xs md:max-w-none">
               Your premier partner for luxury coastal real estate in California. Discover exceptional homes and unparalleled service.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex justify-center md:justify-start space-x-4 w-full">
               <a href="https://www.instagram.com/crown.coastal/" aria-label="Instagram" className="hover:text-gray-400"><Image src="/client/instagram.png" alt="instagram logo" width={24} height={24} /></a>
               <a href="https://www.linkedin.com/in/reza-barghlameno-252b1ab0/" aria-label="LinkedIn" className="hover:text-gray-400"><Image src="/client/linkedin.ico" alt="linkedin logo" width={24} height={24} /></a>
               <a href="https://www.homes.com/real-estate-agents/reza-barghlameno" aria-label="Homes.com" className="hover:text-gray-400">
