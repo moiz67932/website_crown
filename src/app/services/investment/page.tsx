@@ -238,7 +238,6 @@ const investmentProcess = [
 export default function InvestmentPage() {
   return (
     <div className="bg-brand-californiaSand pt-20 min-h-screen">
-      {/* Hero Section */}
       <section className="relative h-[70vh] min-h-[800px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
           src="/service/Investment-Management.png"

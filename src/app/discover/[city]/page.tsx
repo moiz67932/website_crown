@@ -86,7 +86,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
   }
 
   // Fetch properties using server-side data fetching
-  const response = await fetch(`${process.env.API_BASE_URL}/api/listings?skip=0&limit=30&county=${MappingCityIdToCityName(city)}`, { 
+  const response = await fetch(`${process.env.API_BASE_URL}/api/listings?skip=0&limit=100&county=${MappingCityIdToCityName(city)}`, { 
     cache: 'no-store'
   });
 
