@@ -210,9 +210,9 @@ export default function RelocationPage() {
   return (
     <div className="bg-brand-californiaSand pt-20 min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center text-white overflow-hidden">
+      <section className="relative h-[70vh] min-h-[800px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
-          src="/modern-ocean-house.png"
+          src="/service/Tailored-Landing-Solutions.png"
           alt="Happy family with SOLD sign celebrating successful relocation to California"
           fill
           className="object-cover object-right"

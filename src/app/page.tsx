@@ -159,7 +159,7 @@ export default function HomePage() {
             {/* Card 1 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
               <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
-              <img src="/service.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              <img src="/service/Concierge-Home-Buying-1.png" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-lg text-slate-900 mb-2">Concierge Home Buying</h3>
               <p className="text-slate-600 text-sm mb-4">White-glove service throughout your entire home buying journey, from property selection to closing.</p>
@@ -175,7 +175,7 @@ export default function HomePage() {
             {/* Card 2 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
               <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
-              <img src="/client/client1.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              <img src="/service/World-Class-Affiliates-1.png" alt="World-Class Affiliates"  className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-lg text-slate-900 mb-2">World-Class Affiliates</h3>
               <p className="text-slate-600 text-sm mb-4">Access to our exclusive network of premium service providers, from interior designers to property managers.</p>
@@ -191,7 +191,7 @@ export default function HomePage() {
             {/* Card 3 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
               <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
-                    <img src="/client/client2.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+                    <img src="/service/Tailored-Landing-Solutions-1.png" alt="Tailored Landing Solutions"  className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-lg text-slate-900 mb-2">Tailored Landing Solutions</h3>
               <p className="text-slate-600 text-sm mb-4">Personalized relocation services designed to make your transition to coastal living seamless and stress-free.</p>
@@ -207,7 +207,7 @@ export default function HomePage() {
             {/* Card 4 */}
             <div className="bg-slate-50 rounded-lg shadow-sm p-6 flex flex-col h-full">
               <div className="bg-slate-200 h-32 rounded-md flex items-center justify-center mb-6">
-              <img src="/client/client3.jpeg" alt="Concierge Home Buying"  className="w-full h-full object-cover" />
+              <img src="/service/Investment-Management-1.png" alt="Investment Management"  className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-lg text-slate-900 mb-2">Investment Management</h3>
               <p className="text-slate-600 text-sm mb-4">Expert guidance on property investments with comprehensive support for maximizing your real estate portfolio.</p>

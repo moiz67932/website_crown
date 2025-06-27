@@ -179,11 +179,11 @@ const partnershipProcess = [
 
 export default function AffiliatesPage() {
   return (
-    <div className="bg-brand-californiaSand pt-20 min-h-screen">
+    <div className="bg-brand-californiaSand pt-10 min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center text-white overflow-hidden">
+      <section className="relative h-[70vh] min-h-[800px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
-          src="/modern-beach-house.png"
+          src="/service/World-Class-Affiliates.png"
           alt="Luxury home interior with SOLD sign showcasing world-class affiliate services"
           fill
           className="object-cover object-center"

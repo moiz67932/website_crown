@@ -182,9 +182,9 @@ export default function ConciergeBuyingPage() {
   return (
     <div className="bg-brand-californiaSand pt-20 min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center text-white overflow-hidden">
+      <section className="relative h-[70vh] min-h-[800px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
-          src="/modern-ocean-house.png"
+          src="/service/Concierge_Home_Buying.png"
           alt="Happy couple receiving keys to their new home with professional concierge service"
           fill
           className="object-cover object-left"

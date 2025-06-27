@@ -239,9 +239,9 @@ export default function InvestmentPage() {
   return (
     <div className="bg-brand-californiaSand pt-20 min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center text-white overflow-hidden">
+      <section className="relative h-[70vh] min-h-[800px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
-          src="/modern-ocean-house.png"
+          src="/service/Investment-Management.png"
           alt="Successful real estate investors with SOLD sign celebrating investment property acquisition"
           fill
           className="object-cover object-right"
