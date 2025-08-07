@@ -4,16 +4,18 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Menu, X, ChevronDown, User } from "lucide-react"
+import { Menu, X, ChevronDown, User, LogOut, Settings } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { navStyles } from "./navbar.styles"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const { user, isLoading, isAuthenticated, logout } = useAuth()
 
   // Handle scroll effect
   useEffect(() => {
@@ -161,7 +163,61 @@ export default function Navbar() {
           <nav className={navStyles.rightNav}>
             <Link href="/about" className={navStyles.rightNavLink}>About</Link>
             <Link href="/contact" className={navStyles.rightNavLink}>Contact</Link>
-           
+            
+            {/* Authentication Section */}
+            {!isLoading && (
+              <>
+                {isAuthenticated && user ? (
+                  // User is logged in - show user dropdown
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="flex items-center gap-2 text-slate-700 hover:text-slate-900">
+                        <User className="h-4 w-4" />
+                        <span className="hidden md:block">{user.name.split(' ')[0]}</span>
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.name}</p>
+                          <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          Profile Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={logout}
+                        className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  // User is not logged in - show sign in/up buttons
+                  <div className="flex items-center gap-2">
+                    <Link href="/auth/login">
+                      <Button variant="ghost" className="text-slate-700 hover:text-slate-900">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth/resgister">
+                      <Button className="bg-slate-800 hover:bg-slate-900 text-white">
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -265,11 +321,55 @@ export default function Navbar() {
                 ))}
             </nav>
             <div className={navStyles.mobileButtonsContainer}>
-
               <Link href="/properties/">
-              <Button className={navStyles.mobileListPropertyButton}>List Property</Button>
-
+                <Button className={navStyles.mobileListPropertyButton}>List Property</Button>
               </Link>
+              
+              {/* Mobile Authentication Buttons */}
+              {!isLoading && (
+                <>
+                  {isAuthenticated && user ? (
+                    // User is logged in - show user info and logout
+                    <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200">
+                      <div className="px-4 py-2">
+                        <p className="text-sm font-medium text-slate-900">{user.name}</p>
+                        <p className="text-xs text-slate-500">{user.email}</p>
+                      </div>
+                      <Link href="/profile">
+                        <Button variant="ghost" className="w-full justify-start text-slate-700" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Settings className="h-4 w-4 mr-2" />
+                          Profile Settings
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start text-red-600 hover:text-red-700"
+                        onClick={() => {
+                          logout()
+                          setIsMobileMenuOpen(false)
+                        }}
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  ) : (
+                    // User is not logged in - show sign in/up buttons
+                    <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200">
+                      <Link href="/auth/login">
+                        <Button variant="outline" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link href="/auth/resgister">
+                        <Button className="w-full bg-slate-800 hover:bg-slate-900" onClick={() => setIsMobileMenuOpen(false)}>
+                          Sign Up
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

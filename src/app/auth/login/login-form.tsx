@@ -27,25 +27,31 @@ export default function LoginForm() {
     setError(null)
     setIsLoading(true)
 
-    // Simulate API call
     try {
       // Basic validation
       if (!email || !password) {
         throw new Error("Please enter both email and password")
       }
 
-      // Simulate network request
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-      // For demo purposes, let's simulate a successful login
-      // In a real app, you would validate credentials with your backend
-      if (email === "demo@example.com" && password === "password") {
-        router.push("/")
-      } else {
-        throw new Error("Invalid email or password")
+      const data = await response.json()
+
+      if (!data.success) {
+        setError(data.message || "Login failed")
+        return
       }
+
+      // Login successful - refresh page to update auth state
+      window.location.href = "/"
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }
