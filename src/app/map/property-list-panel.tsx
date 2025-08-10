@@ -55,7 +55,18 @@ export default function PropertyListPanel({
   data,
   isLoading,
 }: PropertyListPanelProps) {
-  // console.log(data);
+  // Debug: Log property structure to see available image fields
+  if (properties.length > 0) {
+    console.log('Property sample for debugging images:', {
+      images: properties[0].images,
+      image: properties[0].image,
+      main_image: properties[0].main_image,
+      photo_url: properties[0].photo_url,
+      listing_photos: properties[0].listing_photos,
+      allKeys: Object.keys(properties[0]).filter(key => key.toLowerCase().includes('image') || key.toLowerCase().includes('photo'))
+    });
+  }
+  
   const [favoriteProperties, setFavoriteProperties] = useState<string[]>([])
   const [hoveredProperty, setHoveredProperty] = useState<string | null>(null)
   const faqs = data?.faq_content ? JSON.parse(data.faq_content) : []
@@ -115,14 +126,21 @@ export default function PropertyListPanel({
                   <div className="relative h-24 w-40 flex-shrink-0">
                     <Image
                       src={
-                        property.image ||
-                        (property.images && property.images.length > 0
-                          ? property.images[0]
-                          : "/placeholder.svg")
+                        // Try multiple possible image field names from API
+                        property.images?.[0] || 
+                        property.image || 
+                        property.main_image || 
+                        property.photo_url || 
+                        property.listing_photos?.[0] ||
+                        "/placeholder.svg"
                       }
-                      alt={property.address}
+                      alt={property.address || 'Property'}
                       fill
                       className="object-cover rounded-md"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails to load
+                        e.currentTarget.src = "/placeholder.svg"
+                      }}
                     />
                     <Badge
                       className={`absolute top-1 left-1 text-xs bg-green-600` }

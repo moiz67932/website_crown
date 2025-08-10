@@ -65,9 +65,21 @@ export function PropertyCard({ property }: PropertyCardProps) {
       {/* Property image */}
       <div className="h-60 bg-[#F3F4F6] flex items-center justify-center rounded-t-2xl overflow-hidden">
         <img
-          src={property.images[0] ?? "/california-coastal-sunset.png"} 
-          alt={property.address}
+          src={
+            // Try multiple possible image field names from API
+            property.images?.[0] || 
+            property.image || 
+            property.main_image || 
+            property.photo_url || 
+            property.listing_photos?.[0] ||
+            "/california-coastal-sunset.png"
+          } 
+          alt={property.address || 'Property'}
           className="rounded-t-2xl w-full h-full object-cover"
+          onError={(e) => {
+            // Fallback to default image if image fails to load
+            e.currentTarget.src = "/california-coastal-sunset.png"
+          }}
         />
       </div>
 

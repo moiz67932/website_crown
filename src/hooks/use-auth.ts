@@ -34,7 +34,9 @@ export function useAuth() {
       setUser(null)
       setIsAuthenticated(false)
       // Optionally redirect to home page
-      window.location.href = '/'
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     } catch (error) {
       console.error('Error logging out:', error)
     }

@@ -21,6 +21,12 @@ const PropertyMap = dynamic(() => import("./property-map"), {
   loading: () => <MapLoadingSkeleton />,
 })
 
+// Prevent multiple map instances by using a global flag
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  window.mapInstanceCount = (window.mapInstanceCount || 0);
+}
+
 function MapViewPage() {
   const [activeFilters, setActiveFilters] = useState<FilterValues>({})
   const [showFAQ, setShowFAQ] = useState(false)

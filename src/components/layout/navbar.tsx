@@ -36,6 +36,7 @@ export default function Navbar() {
 
   // Split nav items for left and right of logo
   const leftNavItems = [
+    { name: "Home", href: "/" },
     { name: "Buy", href: "/buy" },
     { name: "Rent", href: "/rent" },
     { name: "Sell", href: "/sell" },
@@ -50,19 +51,19 @@ export default function Navbar() {
 
   // Mobile menu dropdowns for Buy and Rent
   const mobileBuyItems = [
-    { label: "Houses", href: "/properties?propertyType=Residential&status=for-sale" },
-    { label: "Townhouses", href: "/properties?propertyType=Residential&status=for-sale" },
-    { label: "Condos", href: "/properties?propertyType=Condo&status=for-sale" },
-    { label: "Manufactured", href: "/properties?propertyType=ManufacturedInPark&status=for-sale" },
-    { label: "Lot/Land", href: "/properties?propertyType=Land&status=for-sale" },
-    { label: "New Homes/New Construction", href: "/properties?propertyType=Residential&status=for-sale" },
-    { label: "All Homes", href: "/properties?status=for-sale" },
+    { label: "Houses", href: "/properties?propertyType=house&status=for_sale" },
+    { label: "Townhouses", href: "/properties?propertyType=townhouse&status=for_sale" },
+    { label: "Condos", href: "/properties?propertyType=condo&status=for_sale" },
+    { label: "Manufactured", href: "/properties?propertyType=manufactured&status=for_sale" },
+    { label: "Lot/Land", href: "/properties?propertyType=land&status=for_sale" },
+    { label: "New Homes/New Construction", href: "/properties?propertyType=house&status=for_sale&year=new" },
+    { label: "All Homes", href: "/properties?status=for_sale" },
   ];
   const mobileRentItems = [
-    { label: "Houses for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
-    { label: "Apartments for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
-    { label: "Townhomes for Rent", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
-    { label: "All Rentals", href: "/properties?propertyType=ResidentialLease&status=for-rent" },
+    { label: "Houses for Rent", href: "/properties?propertyType=house&status=for_rent" },
+    { label: "Apartments for Rent", href: "/properties?propertyType=apartment&status=for_rent" },
+    { label: "Townhomes for Rent", href: "/properties?propertyType=townhouse&status=for_rent" },
+    { label: "All Rentals", href: "/properties?status=for_rent" },
   ];
 
   // State for mobile dropdowns
@@ -238,6 +239,14 @@ export default function Navbar() {
         <div className={navStyles.mobileMenuContainer}>
           <div className={navStyles.container}>
             <nav className={navStyles.mobileNav}>
+              {/* Home Link */}
+              <Link
+                href="/"
+                className={navStyles.mobileNavLink}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
               {/* Buy Dropdown */}
               <div>
                 <button

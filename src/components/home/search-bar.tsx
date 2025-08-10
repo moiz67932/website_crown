@@ -13,7 +13,7 @@ export default function SearchBar() {
   const [isSearching, setIsSearching] = useState(false)
   const [searchLocationType, setSearchLocationType] = useState("city") // New state for search location type
   const router = useRouter()
-  const [searchMethod, setSearchMethod] = useState("properties")
+  const [searchMethod, setSearchMethod] = useState("properties") // Default to List view
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState('All')
@@ -59,51 +59,100 @@ export default function SearchBar() {
     e.preventDefault()
     setIsSearching(true)
 
-    // Build query parameters
-    const params = new URLSearchParams()
+    try {
+      // Build query parameters
+      const params = new URLSearchParams()
 
-    if (location) {
-      params.append("location", location)
-    }
-    if (searchType) {
-      params.append("searchType", searchType)
-    }
-    if (searchLocationType) {
-      params.append("searchLocationType", searchLocationType)
-    }
-    
-    // Simulate a network request
-    setTimeout(() => {
-      setIsSearching(false)
-      if (searchMethod === "properties") {
-        // Redirect to properties page with search parameters
-        router.push(`/properties?${params.toString()}`)
-      } else {
-        // Redirect to map page with search parameters
-        router.push(`/map?${params.toString()}`)
+      if (location) {
+        params.append("location", location)
+        params.append("search", location) // Add search parameter for the new filter system
       }
-    }, 1000)
+      if (searchType && searchType !== "all") {
+        params.append("searchType", searchType)
+        // Map searchType to status for new filter system
+        if (searchType === "buy") {
+          params.append("status", "for_sale")
+        } else if (searchType === "rent") {
+          params.append("status", "for_rent")
+        }
+      }
+      if (searchLocationType) {
+        params.append("searchLocationType", searchLocationType)
+        // Map location type to appropriate filter
+        if (searchLocationType === "city") {
+          params.append("city", location)
+        } else if (searchLocationType === "county") {
+          params.append("county", location)
+        }
+      }
+      
+      console.log('Homepage search method:', searchMethod);
+      console.log('Homepage search params:', params.toString());
+      
+      // Navigate immediately without timeout
+      if (searchMethod === "properties") {
+        const url = `/properties?${params.toString()}`;
+        console.log('Navigating to properties:', url);
+        router.push(url);
+      } else if (searchMethod === "map") {
+        const url = `/map?${params.toString()}`;
+        console.log('Navigating to map:', url);
+        router.push(url);
+      } else {
+        console.error('Unknown search method:', searchMethod);
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+    } finally {
+      setIsSearching(false)
+    }
   }
 
 
   const handleAutoCompleteClick = (value: string, type: string, county?: string) => {
     setLocation(value)
     setSearchLocationType(type) // Set the search location type
+    
     const params = new URLSearchParams()
     params.append("location", value)
-    if (searchType) {
+    params.append("search", value) // Add search parameter for new filter system
+    
+    if (searchType && searchType !== "all") {
       params.append("searchType", searchType)
+      // Map searchType to status for new filter system
+      if (searchType === "buy") {
+        params.append("status", "for_sale")
+      } else if (searchType === "rent") {
+        params.append("status", "for_rent")
+      }
     }
+    
     params.append("searchLocationType", type)
-    if (county) {
-      params.append("county", county)
-    } else {
-      params.append("county", value)
+    
+    // Map location type to appropriate filter
+    if (type === "city") {
+      params.append("city", value)
+    } else if (type === "county") {
+      if (county) {
+        params.append("county", county)
+      } else {
+        params.append("county", value)
+      }
     }
+    
+    console.log('Autocomplete search method:', searchMethod);
+    console.log('Autocomplete search params:', params.toString());
+    
     if (searchMethod === "properties") {
-      router.push(`/properties?${params.toString()}`)
+      const url = `/properties?${params.toString()}`;
+      console.log('Autocomplete navigating to properties:', url);
+      router.push(url);
+    } else if (searchMethod === "map") {
+      const url = `/map?${params.toString()}`;
+      console.log('Autocomplete navigating to map:', url);
+      router.push(url);
     } else {
-      router.push(`/map?${params.toString()}`)
+      console.error('Unknown autocomplete search method:', searchMethod);
     }
   }
 
@@ -114,19 +163,33 @@ export default function SearchBar() {
           <button
             key={option.value}
             type="button"
-            className={`cursor-pointer flex items-center px-3 py-1 rounded-full text-base font-semibold transition-colors focus:outline-none
+            className={`cursor-pointer flex items-center px-4 py-2 rounded-full text-base font-semibold transition-all duration-200 focus:outline-none border-2
               ${searchMethod === option.value
-                ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md"
-                : "bg-transparent text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+                ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-lg border-orange-300 transform scale-105"
+                : "bg-white text-slate-700 hover:bg-orange-50 hover:text-orange-600 border-orange-200 hover:border-orange-300 hover:shadow-md"
               }`}
-            onClick={() => setSearchMethod(option.value)}
+            onClick={() => {
+              console.log('Clicked on:', option.label, 'with value:', option.value);
+              console.log('Previous search method:', searchMethod);
+              setSearchMethod(option.value);
+              console.log('New search method set to:', option.value);
+              
+              // Navigate immediately based on the button clicked
+              if (option.value === "properties") {
+                console.log('Navigating to properties page immediately');
+                router.push('/properties');
+              } else if (option.value === "map") {
+                console.log('Navigating to map page immediately');
+                router.push('/map');
+              }
+            }}
             aria-pressed={searchMethod === option.value}
-            style={{ marginRight: 4, marginLeft: 0, letterSpacing: 0.5 }}
+            style={{ marginRight: 8, marginLeft: 0, letterSpacing: 0.5 }}
           >
-            <span className={`${searchMethod === option.value ? "text-white" : "text-orange-500"} mr-1`}>
+            <span className={`${searchMethod === option.value ? "text-white" : "text-orange-500"} mr-1 transition-colors`}>
               {option.icon}
             </span>
-            <span className={`${searchMethod === option.value ? "font-bold text-white drop-shadow" : "font-semibold text-orange-600"}`}>
+            <span className={`${searchMethod === option.value ? "font-bold text-white drop-shadow" : "font-semibold text-orange-600"} transition-colors`}>
               {option.label}
             </span>
           </button>

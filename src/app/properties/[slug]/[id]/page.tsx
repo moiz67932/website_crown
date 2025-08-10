@@ -281,8 +281,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                       <Eye className="h-5 w-5 text-brand-pacificTeal" />
                       Property Views
                     </h3>
-                    {propertyData.view ? propertyData.view.split(",").map((value: string) => (
-                      <p className="text-gray-700">{value.trim()}</p>
+                    {propertyData.view ? propertyData.view.split(",").map((value: string, index: number) => (
+                      <p key={index} className="text-gray-700">{value.trim()}</p>
                     )) : <p className="text-gray-700">N/A</p>}
                   </div>
                   <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">
@@ -352,8 +352,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                       <Utensils className="h-5 w-5 text-brand-pacificTeal" />
                       Local Amenities
                     </h3>
-                    {propertyData.other_info?.CommunityFeatures?.split(",").map((value: string) => (
-                      <p className="text-gray-700">{value.trim()}</p>
+                    {propertyData.other_info?.CommunityFeatures?.split(",").map((value: string, index: number) => (
+                      <p key={index} className="text-gray-700">{value.trim()}</p>
                     )) || <p className="text-gray-700">N/A</p>}
                   </div>
                   <div className="bg-[#F8F9FB] rounded-xl p-5 shadow-sm flex flex-col gap-2">

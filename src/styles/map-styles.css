@@ -36,6 +36,30 @@
   width: 100%;
 }
 
+/* Property image marker styles */
+.property-image-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.property-image-marker .relative {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.property-image-marker:hover .relative {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+}
+
+/* Property price marker styles */
+.property-price-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.property-price-marker div {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
 /* Cluster marker styles */
 .marker-cluster {
   background-color: rgba(59, 130, 246, 0.6);

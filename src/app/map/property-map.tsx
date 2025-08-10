@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, Suspense } from "react"
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Polygon as LeafletPolygon } from "react-leaflet"
+import PureLeafletMap from "@/components/map/pure-leaflet-map"
 import L from "leaflet"
 import * as turf from "@turf/turf"
 import type { Feature, Polygon as TurfPolygon } from "geojson"
@@ -326,6 +327,9 @@ interface PropertyMapProps {
 
 function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, searchLocationType = null, county = null }: PropertyMapProps) {
   const router = useRouter()
+  
+  const mapRef = useRef<L.Map | null>(null)
+  const mapKey = 'disabled-old-map' // For the disabled old MapContainer section
 
   // Center the map on California
   const center = useMemo<[number, number]>(() => {
@@ -436,7 +440,6 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
   const [streetViewOpen, setStreetViewOpen] = useState(false)
   const [streetViewProperty, setStreetViewProperty] = useState<any | null>(null)
   const featureGroupRef = useRef<L.FeatureGroup>(null)
-  const mapRef = useRef<L.Map | null>(null)
   const hasSearchArea = true // Always true, since California is always drawn
 
   // Determine which properties to display based on filters and drawn area
@@ -525,81 +528,30 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
 
   return (
     <>
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-        <div className="bg-white rounded-md shadow-md p-3">
-          <h3 className="text-sm font-semibold mb-2">California Area</h3>
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="default"
-                className="bg-slate-800"
-                disabled
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                California Area
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className=""
-                disabled
-              >
-                <CircleIcon className="h-4 w-4 mr-2" />
-                Draw Radius
-              </Button>
-            </div>
-            <Button size="sm" variant="outline" disabled>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
-          </div>
 
-          <div className="mt-3 pt-3 border-t border-slate-200">
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between items-center">
-                <p className="text-xs text-slate-600">
-                  <span className="font-semibold text-slate-800">{properties.total_items}</span> properties
-                  found in California
-                </p>
-                {propertiesInSearchArea.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 -mr-1"
-                    onClick={() => setShowStatistics(!showStatistics)}
-                  >
-                    <BarChart3 className="h-3.5 w-3.5 mr-1" />
-                    Stats
-                    {showStatistics ? (
-                      <ChevronUp className="h-3.5 w-3.5 ml-1" />
-                    ) : (
-                      <ChevronDown className="h-3.5 w-3.5 ml-1" />
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-md shadow-md p-3">
-          <p className="text-xs text-slate-600">
-            The area of California is highlighted on the map. All properties shown are within California.
-          </p>
-        </div>
-        {/* Statistics Panel */}
-        {showStatistics && propertiesInAreaData.length > 0 && <PropertyStatistics properties={propertiesInAreaData} />}
-      </div>
 
-      <MapContainer
+      <PureLeafletMap
         center={center}
         zoom={7}
-        maxZoom={18}
-        minZoom={6}
         style={{ height: "100%", width: "100%" }}
-        zoomControl={false}
-        ref={mapRef}
-      >
+        properties={displayedProperties}
+        onMapReady={(map) => {
+          mapRef.current = map
+          console.log('PropertyMapContent: Pure Leaflet map is ready')
+        }}
+      />
+      {false ? (
+        <MapContainer
+          key={`property-map-${mapKey}`}
+          center={center}
+          zoom={7}
+          maxZoom={18}
+          minZoom={6}
+          style={{ height: "100%", width: "100%" }}
+          zoomControl={false}
+          ref={mapRef}
+          whenReady={() => console.log('PropertyMapContent: Map is ready')}
+        >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -714,7 +666,12 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
             </Marker>
           ) : null
         })}
-      </MapContainer>
+        </MapContainer>
+      ) : (
+        <div style={{ height: "100%", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div>Loading map...</div>
+        </div>
+      )}
 
       {/* Street View Modal */}
       {streetViewProperty && (
