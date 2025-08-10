@@ -21,20 +21,23 @@ import { PropertyFilters } from "@/types/filters"
 import { generateSEOURL, parseURLToFilters } from "@/utils/url-filters"
 
 // Import the new enhanced components
-import EnhancedFilterSidebar from "@/components/filters/enhanced-filter-sidebar"
 import AdvancedSearch from "@/components/filters/advanced-search"
-const MobileFilterDrawer = dynamic(() => import("./mobile-filter-drawer"), { ssr: false })
 
 // Property Grid Skeleton
 const PropertyGridSkeleton = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {[...Array(6)].map((_, index) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+    {[...Array(18)].map((_, index) => (
       <div key={index} className="space-y-4">
-        <Skeleton className="h-48 w-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-64 w-full rounded-3xl" />
+        <div className="space-y-3 px-2">
+          <Skeleton className="h-5 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-6 w-1/4" />
+          <Skeleton className="h-6 w-1/3" />
+          <div className="flex gap-4 pt-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-16" />
+          </div>
         </div>
       </div>
     ))}
@@ -167,6 +170,11 @@ function PropertiesPageContent() {
     }
   }
 
+  // Monitor legacyFilters.sortBy changes
+  useEffect(() => {
+    console.log('🔥 legacyFilters.sortBy changed to:', legacyFilters.sortBy);
+  }, [legacyFilters.sortBy]);
+
   useEffect(() => {
     // Parse URL parameters into new filter format
     try {
@@ -238,8 +246,25 @@ function PropertiesPageContent() {
     }
   }, [searchParams])
 
-  const limit = 12
+  const limit = 18
   const skip = (currentPage - 1) * limit
+
+  // Add debugging for API parameters
+  console.log('API Parameters being sent:', {
+    skip, 
+    limit,
+    propertyType: legacyFilters.propertyType,
+    minPrice: legacyFilters.minPrice,
+    maxPrice: legacyFilters.maxPrice,
+    city: legacyFilters.city,
+    county: legacyFilters.county,
+    minBathroom: legacyFilters.minBathroom,
+    minBedroom: legacyFilters.minBedroom,
+    yearBuilt: legacyFilters.yearBuilt,
+    max_sqft: legacyFilters.max_sqft,
+    min_sqft: legacyFilters.min_sqft,
+    sortBy: legacyFilters.sortBy
+  });
 
   const { data, isLoading } = useListProperties({ 
     skip, 
@@ -268,12 +293,14 @@ function PropertiesPageContent() {
   // Enhanced filter change handler with SEO URLs
   const handleFilterChange = (newFilters: PropertyFilters) => {
     console.log('Filter change received:', newFilters);
+    console.log('Current sortBy:', newFilters.sortBy);
     setFilters(newFilters)
     setCurrentPage(1)
     
     // Convert to legacy format for API
     const legacy = convertToLegacyFilters(newFilters)
     console.log('Legacy filters converted:', legacy);
+    console.log('Legacy sortBy:', legacy.sortBy);
     setLegacyFilters(legacy)
     
     // Always use query parameter approach to avoid routing issues
@@ -335,113 +362,99 @@ function PropertiesPageContent() {
   }
 
   return (
-    <main className="bg-slate-50 min-h-screen pt-16 md:pt-20">
+    <main className="bg-slate-50 dark:bg-slate-900 min-h-screen pt-16 md:pt-20 theme-transition">
       <PropertyListingHeader 
         currentPage={currentPage} 
         totalProperties={totalItems}
         propertyType={legacyFilters.propertyType}
         sortBy={legacyFilters.sortBy}
-        onSortChange={(newSort) => handleFilterChange({ ...filters, sortBy: newSort })}
+        onSortChange={(newSort) => {
+          console.log('🔥 onSortChange called with:', newSort);
+          console.log('🔥 Current filters before update:', filters);
+          const updatedFilters = { ...filters, sortBy: newSort };
+          console.log('🔥 Updated filters:', updatedFilters);
+          handleFilterChange(updatedFilters);
+        }}
         onBuyClick={(type: string | undefined) => handleFilterChange({ ...filters, propertyType: type ? [type] : [] })}
       />
       
       {/* Advanced Search Component */}
-      <div className="container mx-auto px-2 md:px-4 py-4">
-        <AdvancedSearch
-          onSearch={handleFilterChange}
-          initialFilters={filters}
-          showMap={false}
-        />
+      <div className="bg-white dark:bg-slate-900 border-b border-neutral-200/50 dark:border-slate-700/50 theme-transition">
+        <div className="container mx-auto px-4 md:px-6 py-6">
+          <AdvancedSearch
+            onSearch={handleFilterChange}
+            initialFilters={filters}
+            showMap={false}
+          />
+        </div>
       </div>
 
-      <section className="container mx-auto px-2 md:px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Enhanced Desktop Filter Sidebar */}
-          <div className="hidden lg:block w-full lg:w-1/4 xl:w-1/5">
-            <EnhancedFilterSidebar 
-              filters={filters} 
-              onFilterChange={handleFilterChange}
-              showAdvanced={true}
-            />
-          </div>
-
-          {/* Mobile Filter using Enhanced Filter Sidebar */}
-          <div className="lg:hidden">
-            <div className="mb-4">
-              <EnhancedFilterSidebar 
-                filters={filters} 
-                onFilterChange={handleFilterChange}
-                showAdvanced={false}
-                compact={true}
-              />
-            </div>
-          </div>
-
-          {/* Properties Grid */}
-          <div className="w-full lg:w-3/4 xl:w-4/5">
-            {isLoading ? <PropertyGridSkeleton /> :
-            <div className="flex flex-wrap justify-center gap-8 mb-10">
-            {properties.map((property: Property) => (
-              <PropertyCard key={property.listing_key} property={property} />
-            ))}
-          </div>
-            }
+      <section className="container mx-auto px-4 md:px-6 py-8">
+        {/* Properties Grid - Full Width */}
+        <div className="w-full">
+          {isLoading ? <PropertyGridSkeleton /> :
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-10">
+          {properties.map((property: Property) => (
+            <PropertyCard key={property.listing_key} property={property} />
+          ))}
+        </div>
+          }
             
-            {/* Pagination */}
-            {!isLoading && totalPages > 1 && (
-              <div className="mt-8 flex justify-center">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
+          
+          {/* Pagination */}
+          {!isLoading && totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
 
-                    {Array.from({ length: totalPages }, (_, index) => {
-                      const page = index + 1
-                      
-                      if (
-                        page === 1 || 
-                        page === totalPages || 
-                        (page >= currentPage - 1 && page <= currentPage + 1)
-                      ) {
-                        return (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => handlePageChange(page)}
-                              isActive={page === currentPage}
-                              className="cursor-pointer"
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        )
-                      } else if (
-                        page === currentPage - 2 ||
-                        page === currentPage + 2
-                      ) {
-                        return (
-                          <PaginationItem key={page}>
-                            <span className="px-4">...</span>
-                          </PaginationItem>
-                        )
-                      }
-                      return null
-                    })}
+                  {Array.from({ length: totalPages }, (_, index) => {
+                    const page = index + 1
+                    
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={page === currentPage}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <span className="px-4">...</span>
+                        </PaginationItem>
+                      )
+                    }
+                    return null
+                  })}
 
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
-          </div>
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </section>
     </main>

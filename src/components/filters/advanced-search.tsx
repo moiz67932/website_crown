@@ -155,52 +155,52 @@ export default function AdvancedSearch({
   }, [filters]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className="w-full max-w-6xl mx-auto space-y-6">
       
       {/* Main Search Bar */}
-      <Card>
-        <CardContent className="p-4">
+      <Card className="glass-card border-neutral-200/50 dark:border-slate-700/50 theme-transition">
+        <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             
             {/* Search Input */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-neutral-500 h-5 w-5" />
                 <Input
                   placeholder="Search by address, city, zip code, or MLS number..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 text-base"
+                  className="pl-12 h-14 text-base bg-white dark:bg-slate-800 border-neutral-200 dark:border-slate-600 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 theme-transition"
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button 
                 onClick={handleSearch}
-                className="h-12 px-6 bg-blue-600 hover:bg-blue-700"
+                className="h-14 px-8 bg-gradient-primary hover:shadow-strong font-semibold rounded-2xl"
               >
-                <Search className="h-4 w-4 mr-2" />
+                <Search className="h-5 w-5 mr-2" />
                 Search
               </Button>
               
               <Sheet open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="h-12 px-4">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <Button variant="outline" className="h-14 px-6 border-neutral-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-slate-700 rounded-2xl font-semibold shadow-soft hover:shadow-medium transition-all duration-300 theme-transition">
+                    <SlidersHorizontal className="h-5 w-5 mr-2" />
                     Filters
                     {activeFiltersCount > 0 && (
-                      <Badge variant="secondary" className="ml-2">
+                      <Badge variant="secondary" className="ml-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">
                         {activeFiltersCount}
                       </Badge>
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md p-0">
-                  <SheetHeader className="p-4 border-b">
-                    <SheetTitle>Advanced Filters</SheetTitle>
+                <SheetContent side="right" className="w-full sm:max-w-md p-0 bg-white dark:bg-slate-900 theme-transition">
+                  <SheetHeader className="p-6 border-b border-neutral-200 dark:border-slate-700">
+                    <SheetTitle className="text-neutral-900 dark:text-neutral-100 font-display text-xl">Advanced Filters</SheetTitle>
                   </SheetHeader>
                   <div className="h-full overflow-y-auto">
                     <EnhancedFilterSidebar
@@ -218,9 +218,13 @@ export default function AdvancedSearch({
                 <Button 
                   variant="outline" 
                   onClick={onToggleMap}
-                  className={`h-12 px-4 ${showMap ? 'bg-blue-50 border-blue-200' : ''}`}
+                  className={`h-14 px-6 border-neutral-200 dark:border-slate-600 rounded-2xl font-semibold shadow-soft hover:shadow-medium transition-all duration-300 theme-transition ${
+                    showMap 
+                      ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-300' 
+                      : 'bg-white dark:bg-slate-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-slate-700'
+                  }`}
                 >
-                  <MapPin className="h-4 w-4 mr-2" />
+                  <MapPin className="h-5 w-5 mr-2" />
                   {showMap ? 'List' : 'Map'}
                 </Button>
               )}
@@ -228,9 +232,9 @@ export default function AdvancedSearch({
           </div>
 
           {/* Quick Filters */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="text-sm text-slate-600 mr-2 flex items-center">
-              <Zap className="h-3 w-3 mr-1" />
+          <div className="mt-6 flex flex-wrap gap-3">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400 mr-2 flex items-center font-semibold theme-transition">
+              <Zap className="h-4 w-4 mr-2 text-primary-500" />
               Quick filters:
             </span>
             {quickFilters.map((quickFilter) => (
@@ -239,7 +243,7 @@ export default function AdvancedSearch({
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickFilter(quickFilter)}
-                className="h-7 text-xs"
+                className="h-9 px-4 text-sm border-neutral-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-neutral-700 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-300 dark:hover:border-primary-600 hover:text-primary-700 dark:hover:text-primary-300 rounded-xl font-medium transition-all duration-300 theme-transition"
               >
                 {quickFilter.name}
               </Button>
@@ -248,21 +252,21 @@ export default function AdvancedSearch({
 
           {/* Active Filters Summary */}
           {(activeFiltersCount > 0 || filterSummary) && (
-            <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+            <div className="mt-6 p-4 bg-neutral-50 dark:bg-slate-800/50 rounded-2xl border border-neutral-200/50 dark:border-slate-700/50 theme-transition">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-slate-700">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 theme-transition">
                     Active filters ({activeFiltersCount}):
                   </span>
-                  <span className="text-sm text-slate-600">{filterSummary}</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 theme-transition">{filterSummary}</span>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={clearFilters}
-                  className="text-slate-500 hover:text-slate-700"
+                  className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-slate-700 rounded-xl theme-transition"
                 >
-                  <X className="h-3 w-3 mr-1" />
+                  <X className="h-4 w-4 mr-1" />
                   Clear all
                 </Button>
               </div>
@@ -273,26 +277,26 @@ export default function AdvancedSearch({
 
       {/* Saved Searches & History */}
       {(savedSearches.length > 0 || searchHistory.length > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Saved Searches */}
           {savedSearches.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Save className="h-4 w-4" />
+            <Card className="glass-card border-neutral-200/50 dark:border-slate-700/50 theme-transition">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-display flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
+                  <Save className="h-5 w-5 text-primary-500" />
                   Saved Searches
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 {savedSearches.slice(0, 3).map((savedSearch) => (
                   <div
                     key={savedSearch.id}
-                    className="flex items-center justify-between p-2 rounded hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-slate-800/50 cursor-pointer transition-all duration-300 theme-transition"
                     onClick={() => handleLoadSavedSearch(savedSearch)}
                   >
-                    <span className="text-sm font-medium">{savedSearch.name}</span>
-                    <Button variant="ghost" size="sm">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{savedSearch.name}</span>
+                    <Button variant="ghost" size="sm" className="text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30">
                       Load
                     </Button>
                   </div>
@@ -303,27 +307,27 @@ export default function AdvancedSearch({
 
           {/* Recent Searches */}
           {searchHistory.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <History className="h-4 w-4" />
+            <Card className="glass-card border-neutral-200/50 dark:border-slate-700/50 theme-transition">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-display flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
+                  <History className="h-5 w-5 text-accent-500" />
                   Recent Searches
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 {searchHistory.slice(0, 3).map((historyItem, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-2 rounded hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-slate-800/50 cursor-pointer transition-all duration-300 theme-transition"
                     onClick={() => {
                       setFilters(historyItem);
                       onSearch(historyItem);
                     }}
                   >
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-neutral-600 dark:text-neutral-400">
                       Search #{index + 1}
                     </span>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/30">
                       Load
                     </Button>
                   </div>
@@ -341,31 +345,32 @@ export default function AdvancedSearch({
             <Button 
               variant="outline" 
               size="sm"
-              className="fixed bottom-4 right-4 shadow-lg"
+              className="fixed bottom-6 right-6 shadow-strong hover:shadow-xl bg-white dark:bg-slate-800 border-neutral-200 dark:border-slate-600 text-neutral-700 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-300 dark:hover:border-primary-600 backdrop-blur-sm rounded-2xl transition-all duration-300 theme-transition"
             >
               <Save className="h-4 w-4 mr-2" />
               Save Search
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto">
-            <SheetHeader>
-              <SheetTitle>Save This Search</SheetTitle>
+          <SheetContent side="bottom" className="h-auto bg-white dark:bg-slate-900 theme-transition">
+            <SheetHeader className="border-b border-neutral-200 dark:border-slate-700 pb-4">
+              <SheetTitle className="text-neutral-900 dark:text-neutral-100 font-display text-xl">Save This Search</SheetTitle>
             </SheetHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-6 py-6">
               <div>
-                <Label htmlFor="search-name">Search Name</Label>
+                <Label htmlFor="search-name" className="text-neutral-700 dark:text-neutral-300 font-semibold">Search Name</Label>
                 <Input
                   id="search-name"
                   placeholder="e.g., 3BR Houses Under $500K"
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
+                  className="mt-2 h-12 bg-white dark:bg-slate-800 border-neutral-200 dark:border-slate-600 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 rounded-xl theme-transition"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button onClick={handleSaveSearch} disabled={!searchName.trim()}>
+              <div className="flex gap-3">
+                <Button onClick={handleSaveSearch} disabled={!searchName.trim()} className="bg-gradient-primary rounded-xl font-semibold">
                   Save Search
                 </Button>
-                <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setSaveDialogOpen(false)} className="border-neutral-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-slate-700 rounded-xl theme-transition">
                   Cancel
                 </Button>
               </div>

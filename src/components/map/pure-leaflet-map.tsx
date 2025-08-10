@@ -100,10 +100,10 @@ export default function PureLeafletMap({
               <div class="relative group cursor-pointer">
                 <div class="w-16 h-16 rounded-lg overflow-hidden border-2 border-white shadow-lg hover:scale-110 transition-transform duration-200">
                   <img 
-                    src="${property.images?.[0] || '/placeholder.svg'}" 
+                    src="${property.images?.[0] || property.main_image_url || '/luxury-modern-house-exterior.png'}" 
                     alt="${property.address || 'Property'}"
                     class="w-full h-full object-cover"
-                    onError="this.src='/placeholder.svg'"
+                    onError="this.src='/luxury-modern-house-exterior.png'"
                   />
                 </div>
                 <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded-full shadow-md border text-xs font-semibold whitespace-nowrap min-w-max">

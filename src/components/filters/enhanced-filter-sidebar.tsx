@@ -212,16 +212,16 @@ export default function EnhancedFilterSidebar({
     : ["propertyType", "price", "bedsBaths", "features"];
 
   return (
-    <div className={`bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden ${compact ? '' : 'sticky top-24'}`}>
-      <div className="p-4 border-b border-slate-200">
+    <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-neutral-200 dark:border-slate-700 shadow-soft overflow-hidden transition-all duration-300 theme-transition ${compact ? '' : 'sticky top-24'}`}>
+      <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-lg text-slate-900">Filter Properties</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="font-display font-bold text-xl text-neutral-900 dark:text-neutral-100 theme-transition">Filter Properties</h2>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 theme-transition">
               {getActiveFiltersCount() > 0 && `${getActiveFiltersCount()} filters active`}
             </p>
           </div>
-          <Search className="h-5 w-5 text-slate-400" />
+          <Search className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
         </div>
       </div>
 
@@ -250,8 +250,10 @@ export default function EnhancedFilterSidebar({
                   return (
                     <div 
                       key={type.value || type._id || type.type}
-                      className={`flex flex-col items-center gap-1 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors ${
-                        isSelected ? 'bg-blue-50 border-blue-200 text-blue-700' : 'border-slate-200'
+                      className={`flex flex-col items-center gap-1 p-3 border rounded-xl hover:bg-neutral-50 dark:hover:bg-slate-800/50 cursor-pointer transition-all duration-300 theme-transition ${
+                        isSelected 
+                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-700 dark:text-primary-300' 
+                          : 'border-neutral-200 dark:border-slate-600 text-neutral-700 dark:text-neutral-300'
                       }`}
                       onClick={() => handlePropertyTypeToggle(type.value || type.type)}
                     >
@@ -260,7 +262,7 @@ export default function EnhancedFilterSidebar({
                     </div>
                   );
                 })}
-                {isLoading && propertyTypes === PROPERTY_TYPES && <p className="text-sm text-slate-500">Loading property types...</p>}
+                {isLoading && propertyTypes === PROPERTY_TYPES && <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading property types...</p>}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -330,11 +332,11 @@ export default function EnhancedFilterSidebar({
                 />
                 <div className="flex items-center justify-between gap-4">
                   <div className="w-full">
-                    <Label htmlFor="price-min" className="text-xs text-slate-500">
+                    <Label htmlFor="price-min" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                       Min Price
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
                       <Input
                         id="price-min"
                         type="number"
@@ -353,11 +355,11 @@ export default function EnhancedFilterSidebar({
                     </div>
                   </div>
                   <div className="w-full">
-                    <Label htmlFor="price-max" className="text-xs text-slate-500">
+                    <Label htmlFor="price-max" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                       Max Price
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
                       <Input
                         id="price-max"
                         type="number"
@@ -457,7 +459,7 @@ export default function EnhancedFilterSidebar({
                 />
                 <div className="flex items-center justify-between gap-4">
                   <div className="w-full">
-                    <Label htmlFor="area-min" className="text-xs text-slate-500">
+                    <Label htmlFor="area-min" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                       Min Area (sq ft)
                     </Label>
                     <Input
@@ -468,7 +470,7 @@ export default function EnhancedFilterSidebar({
                     />
                   </div>
                   <div className="w-full">
-                    <Label htmlFor="area-max" className="text-xs text-slate-500">
+                    <Label htmlFor="area-max" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                       Max Area (sq ft)
                     </Label>
                     <Input
@@ -509,7 +511,7 @@ export default function EnhancedFilterSidebar({
                   />
                   <div className="flex items-center justify-between gap-4">
                     <div className="w-full">
-                      <Label htmlFor="lot-min" className="text-xs text-slate-500">
+                      <Label htmlFor="lot-min" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                         Min Lot Size (sq ft)
                       </Label>
                       <Input
@@ -520,7 +522,7 @@ export default function EnhancedFilterSidebar({
                       />
                     </div>
                     <div className="w-full">
-                      <Label htmlFor="lot-max" className="text-xs text-slate-500">
+                      <Label htmlFor="lot-max" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                         Max Lot Size (sq ft)
                       </Label>
                       <Input
@@ -562,7 +564,7 @@ export default function EnhancedFilterSidebar({
                   />
                   <div className="flex items-center justify-between gap-4">
                     <div className="w-full">
-                      <Label htmlFor="year-min" className="text-xs text-slate-500">
+                      <Label htmlFor="year-min" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                         From Year
                       </Label>
                       <Input
@@ -573,7 +575,7 @@ export default function EnhancedFilterSidebar({
                       />
                     </div>
                     <div className="w-full">
-                      <Label htmlFor="year-max" className="text-xs text-slate-500">
+                      <Label htmlFor="year-max" className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold">
                         To Year
                       </Label>
                       <Input
@@ -619,7 +621,7 @@ export default function EnhancedFilterSidebar({
                             onCheckedChange={() => handleFeatureToggle(feature.value)}
                           />
                           <Label htmlFor={`feature-${feature.value}`} className="text-sm flex items-center gap-2">
-                            <Icon className="h-3.5 w-3.5 text-slate-500" />
+                            <Icon className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
                             {feature.label}
                           </Label>
                         </div>
@@ -645,7 +647,7 @@ export default function EnhancedFilterSidebar({
                                 onCheckedChange={() => handleFeatureToggle(feature.value)}
                               />
                               <Label htmlFor={`feature-${feature.value}`} className="text-sm flex items-center gap-2">
-                                <Icon className="h-3.5 w-3.5 text-slate-500" />
+                                <Icon className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
                                 {feature.label}
                               </Label>
                             </div>
@@ -668,7 +670,7 @@ export default function EnhancedFilterSidebar({
                                 onCheckedChange={() => handleFeatureToggle(feature.value)}
                               />
                               <Label htmlFor={`feature-${feature.value}`} className="text-sm flex items-center gap-2">
-                                <Icon className="h-3.5 w-3.5 text-slate-500" />
+                                <Icon className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
                                 {feature.label}
                               </Label>
                             </div>
@@ -771,15 +773,15 @@ export default function EnhancedFilterSidebar({
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-slate-200 bg-slate-50">
-        <div className="flex gap-2">
+      <div className="p-6 border-t border-neutral-200 dark:border-slate-700 bg-neutral-50 dark:bg-slate-800/50 theme-transition">
+        <div className="flex gap-3">
           <Button 
-            className="flex-1 bg-slate-800 hover:bg-slate-900" 
+            className="flex-1 bg-gradient-primary hover:shadow-strong font-semibold rounded-2xl" 
             onClick={() => closeDrawer?.()}
           >
             Apply Filters
             {getActiveFiltersCount() > 0 && (
-              <Badge variant="secondary" className="ml-2 bg-white text-slate-800">
+              <Badge variant="secondary" className="ml-2 bg-white dark:bg-slate-800 text-primary-600 dark:text-primary-400">
                 {getActiveFiltersCount()}
               </Badge>
             )}

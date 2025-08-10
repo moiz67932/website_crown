@@ -197,7 +197,7 @@ async function runAllBearerTests() {
         console.log('Since the API is responding but rejecting all authentication methods,');
         console.log('you should contact CoreLogic/Trestle support with this information:');
         console.log('');
-        console.log('1. Your API ID: d63ef0f1cad54d3f9046bd8b33cc70e2');
+        console.log('1. Your API ID: ');
         console.log('2. Your password length: 32 characters (hexadecimal)');
         console.log('3. Base URL: https://api-prod.corelogic.com/trestle');
         console.log('4. Error: All authentication methods return 401 Unauthorized');

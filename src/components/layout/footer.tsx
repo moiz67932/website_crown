@@ -3,80 +3,98 @@ import Image from "next/image";
 
 const Footer: FC = () => {
   return (
-    <footer className="bg-gray-800 text-white pt-12 pb-6">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-primary-900 text-white pt-16 pb-8 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gold-400 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-accent-400 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Logo, Description, Social */}
           <div className="flex flex-col items-center md:items-start">
 
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-2 lg:gap-4 w-full mb-2">
-              <img
-                src="/logo.png"
-                alt="logo"
-                className="h-24 w-24 sm:h-24 sm:w-24 mb-2 bg-brand-white object-contain rounded"
-              />
-              <img
-                src="/crmls.webp"
-                alt="crmls logo"
-                className="h-24 w-24 sm:h-20 sm:w-20 md:h-24 md:w-24 mb-2 p-2 bg-brand-white object-contain rounded"
-              />
-              <img
-                src="/exp-realty-logo.webp"
-                alt="exp-realty-logo"
-                className="h-24 w-24 sm:h-20 sm:w-20 md:h-24 md:w-24 mb-2 p-2 bg-brand-white object-contain rounded"
-              />
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-4 w-full mb-6">
+              <div className="p-2 bg-white rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 hover:scale-105">
+                <img
+                  src="/logo.png"
+                  alt="Crown Coastal Homes"
+                  className="h-16 w-16 object-contain"
+                />
+              </div>
+              <div className="p-3 bg-white rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 hover:scale-105">
+                <img
+                  src="/crmls.webp"
+                  alt="CRMLS"
+                  className="h-14 w-14 object-contain"
+                />
+              </div>
+              <div className="p-3 bg-white rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 hover:scale-105">
+                <img
+                  src="/exp-realty-logo.webp"
+                  alt="EXP Realty"
+                  className="h-14 w-14 object-contain"
+                />
+              </div>
             </div>
              
-            <p className="mb-4 text-center md:text-left text-sm text-gray-200 max-w-xs md:max-w-none">
-              Your premier partner for luxury coastal real estate in California. Discover exceptional homes and unparalleled service.
+            <p className="mb-6 text-center md:text-left text-neutral-300 leading-relaxed max-w-sm">
+              Your premier partner for luxury coastal real estate in California. Discover exceptional homes and unparalleled service with Crown Coastal Homes.
             </p>
             <div className="flex justify-center md:justify-start space-x-4 w-full">
-              <a href="https://www.instagram.com/crown.coastal/" aria-label="Instagram" className="hover:text-gray-400"><Image src="/client/instagram.png" alt="instagram logo" width={24} height={24} /></a>
-              <a href="https://www.linkedin.com/in/reza-barghlameno-252b1ab0/" aria-label="LinkedIn" className="hover:text-gray-400"><Image src="/client/linkedin.ico" alt="linkedin logo" width={24} height={24} /></a>
-              <a href="https://www.homes.com/real-estate-agents/reza-barghlameno" aria-label="Homes.com" className="hover:text-gray-400">
-              <Image src="/client/homes.ico" alt="homes.com logo" width={24} height={24} />
-
+              <a href="https://www.instagram.com/crown.coastal/" aria-label="Instagram" className="p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all duration-300 hover:scale-110 group">
+                <Image src="/client/instagram.png" alt="Instagram" width={24} height={24} className="group-hover:scale-110 transition-transform duration-300" />
               </a>
-              <a href="https://www.zillow.com/profile/RezaSoCal" aria-label="Zillow" className="hover:text-gray-400">
-              <Image src="/client/zillow.png" alt="zillow logo" width={24} height={24} />
-
+              <a href="https://www.linkedin.com/in/reza-barghlameno-252b1ab0/" aria-label="LinkedIn" className="p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all duration-300 hover:scale-110 group">
+                <Image src="/client/linkedin.ico" alt="LinkedIn" width={24} height={24} className="group-hover:scale-110 transition-transform duration-300" />
+              </a>
+              <a href="https://www.homes.com/real-estate-agents/reza-barghlameno" aria-label="Homes.com" className="p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all duration-300 hover:scale-110 group">
+                <Image src="/client/homes.ico" alt="Homes.com" width={24} height={24} className="group-hover:scale-110 transition-transform duration-300" />
+              </a>
+              <a href="https://www.zillow.com/profile/RezaSoCal" aria-label="Zillow" className="p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all duration-300 hover:scale-110 group">
+                <Image src="/client/zillow.png" alt="Zillow" width={24} height={24} className="group-hover:scale-110 transition-transform duration-300" />
               </a>
             </div>
           </div>
           {/* EXPLORE */}
           <div>
-            <h3 className="mb-4 font-bold text-lg tracking-wider">EXPLORE</h3>
-            <ul className="space-y-2">
-              <li><a href="/" className="hover:text-gray-400 text-sm">Home</a></li>
-              <li><a href="/properties" className="hover:text-gray-400 text-sm">Listings</a></li>
-              <li><a href="/neighborhoods" className="hover:text-gray-400 text-sm">Neighborhoods</a></li>
+            <h3 className="mb-6 font-display text-xl font-bold text-gradient-luxury bg-clip-text text-transparent">Explore</h3>
+            <ul className="space-y-4">
+              <li><a href="/" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Home</a></li>
+              <li><a href="/properties" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Listings</a></li>
+              <li><a href="/neighborhoods" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Neighborhoods</a></li>
             </ul>
           </div>
           {/* COMPANY */}
           <div>
-            <h3 className="mb-4 font-bold text-lg tracking-wider">COMPANY</h3>
-            <ul className="space-y-2">
-              <li><a href="/about" className="hover:text-gray-400 text-sm">About Us</a></li>
-              {/* <li><a href="#" className="hover:text-gray-400 text-sm">Blog</a></li> */}
+            <h3 className="mb-6 font-display text-xl font-bold text-gradient-luxury bg-clip-text text-transparent">Company</h3>
+            <ul className="space-y-4">
+              <li><a href="/about" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">About Us</a></li>
+              <li><a href="/services" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Services</a></li>
+              {/* <li><a href="#" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Blog</a></li> */}
             </ul>
           </div>
           {/* SUPPORT */}
           <div>
-            <h3 className="mb-4 font-bold text-lg tracking-wider">SUPPORT</h3>
-            <ul className="space-y-2">
-              <li><a href="/contact" className="hover:text-gray-400 text-sm">Contact</a></li>
-              {/* <li><a href="/faq" className="hover:text-gray-400 text-sm">FAQ</a></li> */}
-              {/* <li><a href="#" className="hover:text-gray-400 text-sm">Help Center</a></li> */}
+            <h3 className="mb-6 font-display text-xl font-bold text-gradient-luxury bg-clip-text text-transparent">Support</h3>
+            <ul className="space-y-4">
+              <li><a href="/contact" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Contact</a></li>
+              <li><a href="/sell" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Sell Your Home</a></li>
+              {/* <li><a href="/faq" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">FAQ</a></li> */}
+              {/* <li><a href="#" className="text-neutral-300 hover:text-white text-sm font-medium transition-all duration-300 hover:translate-x-1 inline-block">Help Center</a></li> */}
             </ul>
           </div>
         </div>
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-700 mt-12 pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-gray-400">
-          <div>
+        {/* Enhanced Bottom Bar */}
+        <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row items-center justify-between">
+          <div className="text-neutral-400 text-sm font-medium">
             &copy; {new Date().getFullYear()} Crown Coastal Homes. All rights reserved.
           </div>
-          <div className="mt-2 md:mt-0">
-            Designed with <span className="text-pink-400">♥</span> in California
+          <div className="mt-4 md:mt-0 flex items-center gap-2 text-neutral-400 text-sm">
+            <span>Designed with</span>
+            <span className="text-gold-400 animate-pulse-soft text-lg">♥</span>
+            <span>in California</span>
           </div>
         </div>
       </div>

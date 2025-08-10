@@ -94,7 +94,7 @@ function CityMap({ bounds, properties }: { bounds: [number, number, number, numb
                 <div className="property-popup-content w-64">
                   <div className="relative h-32 w-full mb-2">
                     <img
-                      src={property.images[0] || "/placeholder.svg"}
+                      src={property.images?.[0] || property.main_image_url || "/luxury-modern-house-exterior.png"}
                       alt={property.address}
                       className="h-full w-full object-cover rounded-md"
                     />

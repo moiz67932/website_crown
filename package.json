@@ -25,6 +25,8 @@
     "@radix-ui/react-slot": "^1.2.2",
     "@radix-ui/react-tabs": "^1.1.11",
     "@radix-ui/react-toast": "^1.2.13",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-query": "^5.75.5",
     "@turf/turf": "latest",
     "@types/bcryptjs": "^2.4.6",

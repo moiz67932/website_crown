@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { navStyles } from "./navbar.styles"
 import { useAuth } from "@/hooks/use-auth"
+import ThemeToggle from "@/components/theme-toggle"
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -51,19 +52,19 @@ export default function Navbar() {
 
   // Mobile menu dropdowns for Buy and Rent
   const mobileBuyItems = [
-    { label: "Houses", href: "/properties?propertyType=house&status=for_sale" },
-    { label: "Townhouses", href: "/properties?propertyType=townhouse&status=for_sale" },
-    { label: "Condos", href: "/properties?propertyType=condo&status=for_sale" },
-    { label: "Manufactured", href: "/properties?propertyType=manufactured&status=for_sale" },
-    { label: "Lot/Land", href: "/properties?propertyType=land&status=for_sale" },
-    { label: "New Homes/New Construction", href: "/properties?propertyType=house&status=for_sale&year=new" },
-    { label: "All Homes", href: "/properties?status=for_sale" },
+    { label: "Houses", href: "/properties?propertyType=Residential" },
+    { label: "Townhouses", href: "/properties?propertyType=Residential" },
+    { label: "Condos", href: "/properties?propertyType=Residential" },
+    { label: "Manufactured", href: "/properties?propertyType=Residential" },
+    { label: "Lot/Land", href: "/properties?propertyType=Residential" },
+    { label: "New Homes/New Construction", href: "/properties?propertyType=Residential" },
+    { label: "All Homes", href: "/properties?propertyType=Residential" },
   ];
   const mobileRentItems = [
-    { label: "Houses for Rent", href: "/properties?propertyType=house&status=for_rent" },
-    { label: "Apartments for Rent", href: "/properties?propertyType=apartment&status=for_rent" },
-    { label: "Townhomes for Rent", href: "/properties?propertyType=townhouse&status=for_rent" },
-    { label: "All Rentals", href: "/properties?status=for_rent" },
+    { label: "Houses for Rent", href: "/properties?propertyType=ResidentialLease" },
+    { label: "Apartments for Rent", href: "/properties?propertyType=ResidentialLease" },
+    { label: "Townhomes for Rent", href: "/properties?propertyType=ResidentialLease" },
+    { label: "All Rentals", href: "/properties?propertyType=ResidentialLease" },
   ];
 
   // State for mobile dropdowns
@@ -102,13 +103,11 @@ export default function Navbar() {
               <DropdownMenuLabel className={navStyles.dropdownLabel}>For Sale</DropdownMenuLabel>
 
                 {mobileBuyItems.map((item) => (
-                                      <Link href={item.href} key={item.label}>
-
-                  <DropdownMenuItem className={navStyles.dropdownItem}>
-                    {item.label}
+                  <DropdownMenuItem key={item.label} className={navStyles.dropdownItem} asChild>
+                    <Link href={item.href}>
+                      {item.label}
+                    </Link>
                   </DropdownMenuItem>
-                  </Link>
-
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -127,13 +126,11 @@ export default function Navbar() {
               <DropdownMenuContent className={navStyles.dropdownContent} sideOffset={8}>
                 <DropdownMenuLabel className={navStyles.dropdownLabel}>For Rent</DropdownMenuLabel>
                 {mobileRentItems.map((item) => (
-                  <Link href={item.href} key={item.label}>
-
-                  <DropdownMenuItem className={navStyles.dropdownItem}>
-                    {item.label}
+                  <DropdownMenuItem key={item.label} className={navStyles.dropdownItem} asChild>
+                    <Link href={item.href}>
+                      {item.label}
+                    </Link>
                   </DropdownMenuItem>
-                  </Link>
-
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -164,6 +161,9 @@ export default function Navbar() {
           <nav className={navStyles.rightNav}>
             <Link href="/about" className={navStyles.rightNavLink}>About</Link>
             <Link href="/contact" className={navStyles.rightNavLink}>Contact</Link>
+            
+            {/* Theme Toggle */}
+            <ThemeToggle />
             
             {/* Authentication Section */}
             {!isLoading && (
@@ -330,6 +330,12 @@ export default function Navbar() {
                 ))}
             </nav>
             <div className={navStyles.mobileButtonsContainer}>
+              {/* Mobile Theme Toggle */}
+              <div className="flex items-center justify-between px-4 py-2">
+                <span className="text-neutral-700 dark:text-neutral-300 font-semibold">Theme</span>
+                <ThemeToggle />
+              </div>
+              
               <Link href="/properties/">
                 <Button className={navStyles.mobileListPropertyButton}>List Property</Button>
               </Link>
