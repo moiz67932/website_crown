@@ -46,6 +46,7 @@ export default function Navbar() {
   ];
   const rightNavItems = [
     { name: "Compare", href: "/compare" },
+    { name: "Dashboard", href: "/dashboard" },
     { name: "About", href: "/about" },
     // { name: "Contact", href: "/contact" },
     // { name: "Help", href: "/help" },
@@ -152,8 +153,13 @@ export default function Navbar() {
           <div className={navStyles.logoContainer}>
             <Link href="/" className={navStyles.logoLink}>
               <div className={navStyles.logoImageContainer}>
-                {/* Placeholder for logo icon */}
-                <Image src="/logo.png" alt="Logo" width={224} height={224} />
+                {/* Crown Coastal Logo with dark mode filter */}
+                <Image 
+                  src="/logo.png" 
+                  alt="Crown Coastal Logo" 
+                  width={224} 
+                  height={224}
+                />
               </div>
             </Link>
           </div>

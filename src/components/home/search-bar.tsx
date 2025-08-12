@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useState, useRef, useEffect } from "react"
-import { Search, MapPin, Home, DollarSign, Map } from "lucide-react"
+import { Search, MapPin, Home, DollarSign, Map, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
@@ -17,6 +17,22 @@ export default function SearchBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState('All')
+
+  // Funktion zum Highlighten von übereinstimmendem Text
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 font-semibold text-orange-800">
+          {part}
+        </span>
+      ) : part
+    );
+  }
 
   const searchTypeOptions = [
     { value: "buy", label: "For Sale" },
@@ -42,7 +58,7 @@ export default function SearchBar() {
   ]
 
   // Use the useAutoComplete hook
-  const { data: autoCompleteResults } = useAutoComplete(location)
+  const { data: autoCompleteResults, isLoading: isAutoCompleteLoading } = useAutoComplete(location)
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -246,56 +262,89 @@ export default function SearchBar() {
           className="bg-transparent border-0 focus:ring-0 focus:border-0 text-base md:text-lg w-full px-0"
           style={{ boxShadow: 'none' }}
         />
-        {autoCompleteResults && location && (
+        {(autoCompleteResults || isAutoCompleteLoading) && location && (
           <div className="absolute top-full mt-1 w-full bg-white border border-slate-200 rounded-2xl shadow-lg z-10 max-h-[300px] overflow-y-auto">
-            {/* Tabs */}
-            <div className="sticky top-0 bg-white flex border-b border-slate-100 z-20">
-              {tabOptions.map(tab => (
-                <button
-                  key={tab.value}
-                  className={`px-5 py-3 text-base font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === tab.value ? 'border-orange-400 text-black' : 'border-transparent text-slate-500 hover:text-black'}`}
-                  onClick={() => setActiveTab(tab.value)}
-                  style={{ background: 'none' }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {/* Loading State */}
+            {isAutoCompleteLoading && (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-orange-500 mr-2" />
+                <span className="text-slate-600">Suche nach Orten...</span>
+              </div>
+            )}
+            
+            {/* Results */}
+            {!isAutoCompleteLoading && autoCompleteResults && (
+              <>
+                {/* Tabs */}
+                <div className="sticky top-0 bg-white flex border-b border-slate-100 z-20">
+                  {tabOptions.map(tab => (
+                    <button
+                      key={tab.value}
+                      className={`px-5 py-3 text-base font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === tab.value ? 'border-orange-400 text-black' : 'border-transparent text-slate-500 hover:text-black'}`}
+                      onClick={() => setActiveTab(tab.value)}
+                      style={{ background: 'none' }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
             {/* Grouped Results */}
             <div className="py-2">
               {/* PLACES (city) */}
               {(activeTab === 'All' || activeTab === 'city') && (
                 <>
                   <div className="px-6 pt-4 pb-2 text-slate-500 font-bold text-lg tracking-wide">PLACES</div>
-                  {autoCompleteResults.filter(r => r.type === 'city').map((result, index) => (
-                    <div
-                      key={index}
-                      className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).city, 'city', typeof result.value === 'string' ? '' : (result.value as any).county)}
-                    >
-                      <div className="font-medium text-black">{typeof result.value === 'string' ? result.value : (result.value as any).city + (result.value && (result.value as any).county ? ', ' + (result.value as any).county : '')}</div>
-                      <div className="text-slate-400 text-base leading-tight">City</div>
-                    </div>
-                  ))}
+                  {autoCompleteResults.filter(r => r.type === 'city').map((result, index) => {
+                    const displayText = typeof result.value === 'string' 
+                      ? result.value 
+                      : (result.value as any).city + (result.value && (result.value as any).county ? ', ' + (result.value as any).county : '');
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                        onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).city, 'city', typeof result.value === 'string' ? '' : (result.value as any).county)}
+                      >
+                        <div className="font-medium text-black">{highlightText(displayText, location)}</div>
+                        <div className="text-slate-400 text-base leading-tight">Stadt</div>
+                      </div>
+                    );
+                  })}
                 </>
               )}
               {/* COUNTIES */}
               {(activeTab === 'All' || activeTab === 'county') && (
                 <>
                   <div className="px-6 pt-4 pb-2 text-slate-500 font-bold text-lg tracking-wide">COUNTIES</div>
-                  {autoCompleteResults.filter(r => r.type === 'county').map((result, index) => (
-                    <div
-                      key={index}
-                      className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).county, 'county')}
-                    >
-                      <div className="font-medium text-black">{typeof result.value === 'string' ? result.value : (result.value as any).county}</div>
-                      <div className="text-slate-400 text-base leading-tight">County</div>
-                    </div>
-                  ))}
+                  {autoCompleteResults.filter(r => r.type === 'county').map((result, index) => {
+                    const displayText = typeof result.value === 'string' ? result.value : (result.value as any).county;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                        onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).county, 'county')}
+                      >
+                        <div className="font-medium text-black">{highlightText(displayText, location)}</div>
+                        <div className="text-slate-400 text-base leading-tight">Landkreis</div>
+                      </div>
+                    );
+                  })}
                 </>
               )}
+              
+              {/* No Results */}
+              {!isAutoCompleteLoading && autoCompleteResults && autoCompleteResults.length === 0 && (
+                <div className="px-6 py-8 text-center">
+                  <div className="text-slate-500 text-lg mb-2">Keine Ergebnisse gefunden</div>
+                  <div className="text-slate-400 text-base">
+                    Versuchen Sie es mit einem anderen Suchbegriff wie "Los Angeles" oder "Orange County"
+                  </div>
+                </div>
+              )}
             </div>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -114,6 +114,22 @@ export default function LocationAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Funktion zum Highlighten von übereinstimmendem Text
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 font-semibold text-orange-800">
+          {part}
+        </span>
+      ) : part
+    );
+  };
+
   // Load recent searches from localStorage
   useEffect(() => {
     if (showRecentSearches && typeof window !== 'undefined') {
@@ -174,9 +190,11 @@ export default function LocationAutocomplete({
       }
     ];
 
-    // Filter popular locations that match the query
+    // Filter popular locations that match the query (case insensitive)
     const filteredPopular = POPULAR_LOCATIONS.filter(location =>
-      location.display.toLowerCase().includes(query.toLowerCase())
+      location.display.toLowerCase().includes(query.toLowerCase()) ||
+      (location.city && location.city.toLowerCase().includes(query.toLowerCase())) ||
+      (location.county && location.county.toLowerCase().includes(query.toLowerCase()))
     );
 
     return [...filteredPopular, ...mockResults].slice(0, maxSuggestions);
@@ -342,7 +360,7 @@ export default function LocationAutocomplete({
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4 text-slate-400" />
                       <div>
-                        <div className="font-medium text-sm">{location.display}</div>
+                        <div className="font-medium text-sm">{highlightText(location.display, inputValue)}</div>
                         <div className="text-xs text-slate-500">
                           {LOCATION_TYPE_LABELS[location.type]}
                         </div>
@@ -377,7 +395,7 @@ export default function LocationAutocomplete({
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4 text-slate-400" />
                       <div>
-                        <div className="font-medium text-sm">{location.display}</div>
+                        <div className="font-medium text-sm">{highlightText(location.display, inputValue)}</div>
                         <div className="text-xs text-slate-500">
                           {LOCATION_TYPE_LABELS[location.type]}
                         </div>
@@ -409,7 +427,7 @@ export default function LocationAutocomplete({
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4 text-slate-400" />
                       <div>
-                        <div className="font-medium text-sm">{location.display}</div>
+                        <div className="font-medium text-sm">{highlightText(location.display, inputValue)}</div>
                         <div className="text-xs text-slate-500">
                           {LOCATION_TYPE_LABELS[location.type]}
                         </div>

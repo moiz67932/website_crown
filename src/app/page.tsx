@@ -120,6 +120,7 @@ export default function HomePage() {
             src="/california-coastal-sunset.png"
             alt="Luxury California Coastal Property"
             fill
+            sizes="100vw"
             className="object-cover object-center scale-105 transition-transform duration-[20s] ease-out"
             priority
           />
@@ -478,12 +479,13 @@ export default function HomePage() {
                       src={city.image} 
                       alt={city.name} 
                       fill 
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-110" 
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
                       <span className="text-5xl text-neutral-400 dark:text-neutral-500">
-                        <Image src="/city-san-diego.jpg" alt="San Diego" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <Image src="/city-san-diego.jpg" alt="San Diego" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-110" />
                       </span>
                     </div>
                   )}

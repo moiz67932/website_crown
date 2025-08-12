@@ -260,6 +260,25 @@
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 
+  /* Logo dark mode utilities */
+  .logo-dark-mode {
+    transition: filter 0.3s ease;
+  }
+  
+  .dark .logo-dark-mode {
+    filter: brightness(0) invert(1);
+  }
+
+  /* Crown Coastal logo theme styling */
+  [src="/logo.png"] {
+    transition: filter 0.3s ease;
+    /* Original logo on light theme */
+  }
+  
+  .dark [src="/logo.png"] {
+    filter: brightness(0) invert(1); /* White logo on dark theme */
+  }
+
   /* Property page animations */
   .animate-fade-in-up {
     animation: fadeInUp 0.8s ease-out;
@@ -334,36 +353,107 @@
   animation: accordion-up 0.2s ease-out;
 }
 
+/* Brand colors with dark mode support */
 .bg-brand-white {
   background-color: hsl(0 0% 100%);
 }
+.dark .bg-brand-white {
+  background-color: hsl(220 13% 18%);
+}
+
 .text-brand-midnightCove {
   --tw-text-opacity: 1;
   color: hsl(220 35% 28% / var(--tw-text-opacity, 1));
 }
+.dark .text-brand-midnightCove {
+  --tw-text-opacity: 1;
+  color: hsl(0 0% 95% / var(--tw-text-opacity, 1));
+}
+
+.bg-brand-californiaSand {
+  background-color: hsl(35 40% 92%);
+}
+.dark .bg-brand-californiaSand {
+  background-color: hsl(220 13% 18%);
+}
+
 .bg-brand-californiaSand\/50 {
   background-color: hsl(35 40% 92% / 0.5);
 }
+.dark .bg-brand-californiaSand\/50 {
+  background-color: hsl(220 13% 18% / 0.5);
+}
+
 .shadow-subtle {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
+.dark .shadow-subtle {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .shadow-medium {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
+.dark .shadow-medium {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
 .shadow-strong {
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
+.dark .shadow-strong {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
 }
 
 .text-brand-pacificTeal {
   --tw-text-opacity: 1;
   color: hsl(180 40% 45% / var(--tw-text-opacity, 1));
 }
+.dark .text-brand-pacificTeal {
+  --tw-text-opacity: 1;
+  color: hsl(180 60% 70% / var(--tw-text-opacity, 1));
+}
+
+.bg-brand-pacificTeal\/10 {
+  background-color: hsl(180 40% 45% / 0.1);
+}
+.dark .bg-brand-pacificTeal\/10 {
+  background-color: hsl(180 60% 70% / 0.2);
+}
 
 .fill-brand-goldenHour {
   fill: hsl(40, 60%, 70%);
+}
+.dark .fill-brand-goldenHour {
+  fill: hsl(40, 80%, 80%);
 }
 
 .bg-brand-sunsetBlush {
   --tw-bg-opacity: 1;
   background-color: hsl(15 65% 65% / var(--tw-bg-opacity, 1));
+}
+.dark .bg-brand-sunsetBlush {
+  --tw-bg-opacity: 1;
+  background-color: hsl(15 65% 55% / var(--tw-bg-opacity, 1));
+}
+
+.text-brand-goldenHour {
+  color: hsl(40, 60%, 70%);
+}
+.dark .text-brand-goldenHour {
+  color: hsl(40, 80%, 80%);
+}
+
+.text-brand-graphitePeak {
+  color: hsl(220 20% 35%);
+}
+.dark .text-brand-graphitePeak {
+  color: hsl(0 0% 85%);
+}
+
+.border-brand-silverMist\/50 {
+  border-color: hsl(220 20% 80% / 0.5);
+}
+.dark .border-brand-silverMist\/50 {
+  border-color: hsl(220 20% 40% / 0.5);
 }

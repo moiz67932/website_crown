@@ -16,7 +16,7 @@ const Footer: FC = () => {
           <div className="flex flex-col items-center md:items-start">
 
             <div className="flex flex-wrap items-center justify-center gap-6 md:gap-4 w-full mb-6">
-              <div className="p-2 bg-white rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 hover:scale-105">
+              <div className="p-2 bg-white dark:bg-slate-800 rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 hover:scale-105">
                 <img
                   src="/logo.png"
                   alt="Crown Coastal Homes"
