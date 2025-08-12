@@ -36,23 +36,46 @@ export default function SocialMediaLinks() {
   ]
 
   return (
-    <div className="space-y-3">
-      <h3 className="font-medium text-lg">Connect With Us</h3>
-      <div className="flex flex-wrap gap-3">
-        {socialLinks.map((social) => (
+    <div className="space-y-6 theme-transition">
+      <div className="text-center">
+        <div className="inline-flex items-center gap-3 mb-4">
+          <div className="w-6 h-[2px] bg-gradient-primary rounded-full"></div>
+          <span className="text-primary-600 dark:text-primary-400 font-semibold text-sm uppercase tracking-wider">Social Media</span>
+          <div className="w-6 h-[2px] bg-gradient-primary rounded-full"></div>
+        </div>
+        <h3 className="font-display text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 theme-transition">
+          Connect <span className="text-gradient-primary bg-clip-text text-transparent">With Us</span>
+        </h3>
+        <p className="text-neutral-600 dark:text-neutral-300 text-base leading-relaxed theme-transition">
+          Follow us for the latest luxury property listings and California coastal real estate insights
+        </p>
+      </div>
+      
+      <div className="flex justify-center gap-4">
+        {socialLinks.map((social, index) => (
           <Link
             key={social.name}
             href={social.url}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Follow us on ${social.name}`}
-            className={`flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-slate-600 transition-colors ${social.color} hover:text-white`}
+            className={`group relative flex items-center justify-center h-14 w-14 rounded-2xl bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 text-neutral-600 dark:text-neutral-400 transition-all duration-300 hover:scale-110 hover:shadow-strong ${social.color} hover:text-white hover:border-transparent theme-transition animate-fade-in-up`}
+            style={{ animationDelay: `${index * 100}ms` }}
           >
-            {social.icon}
+            <div className="relative z-10">
+              {social.icon}
+            </div>
+            <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-current to-current"></div>
           </Link>
         ))}
       </div>
-      <p className="text-sm text-slate-500">Follow us for the latest property listings and real estate news</p>
+      
+      <div className="text-center p-4 glass-card rounded-2xl border border-neutral-200/50 dark:border-slate-700/50">
+        <div className="flex items-center justify-center gap-3 text-neutral-500 dark:text-neutral-400 text-sm theme-transition">
+          <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse-soft"></div>
+          <span className="font-medium">Stay updated with our latest listings</span>
+        </div>
+      </div>
     </div>
   )
 }

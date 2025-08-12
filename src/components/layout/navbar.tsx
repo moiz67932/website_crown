@@ -45,6 +45,7 @@ export default function Navbar() {
     // { name: "Find an Agent", href: "/agent" },
   ];
   const rightNavItems = [
+    { name: "Compare", href: "/compare" },
     { name: "About", href: "/about" },
     // { name: "Contact", href: "/contact" },
     // { name: "Help", href: "/help" },

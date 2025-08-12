@@ -2,12 +2,13 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Bed, Bath, Square, Heart, MapPin, HomeIcon as HomeModern, Maximize } from "lucide-react" // Added HomeModern
+import { Bed, Bath, Square, Heart, MapPin, HomeIcon as HomeModern, Maximize, Scale } from "lucide-react" // Added HomeModern
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Property } from "@/interfaces"
 import React, { useState } from "react"
+import { useComparison } from "@/contexts/comparison-context"
 
 // Function to get appropriate fallback image based on property type, price, and listing key for variety
 const getPropertyFallbackImage = (propertyType: string, price: number, listingKey?: string) => {
@@ -46,12 +47,15 @@ const getPropertyFallbackImage = (propertyType: string, price: number, listingKe
 
 interface PropertyCardProps {
   property: Property
+  showCompareButton?: boolean
+  onCompareClick?: (property: Property) => void
 }
 
-export function PropertyCard({ property }: PropertyCardProps) {
+export function PropertyCard({ property, showCompareButton = true, onCompareClick }: PropertyCardProps) {
   const [favoriteProperties, setFavoriteProperties] = useState<string[]>([])
   const [currentImageSrc, setCurrentImageSrc] = useState<string>('')
   const [imageError, setImageError] = useState(false)
+  const { addToComparison, isInComparison, getComparisonCount } = useComparison()
 
   const toggleFavorite = (e: React.MouseEvent, propertyId: string) => {
     e.preventDefault()
@@ -123,7 +127,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       </div>
 
       {/* Enhanced Heart icon */}
-      <div className="absolute top-20 right-6 z-20">
+      <div className="absolute top-20 right-6 z-20 flex flex-col gap-2">
         {/* Favorite Button */}
         <Button
           variant="ghost"
@@ -139,6 +143,32 @@ export function PropertyCard({ property }: PropertyCardProps) {
             }`}
           />
         </Button>
+        
+        {/* Compare Button */}
+        {showCompareButton && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-10 rounded-2xl bg-white/95 dark:bg-slate-800/95 hover:bg-white dark:hover:bg-slate-700 border border-neutral-200/50 dark:border-slate-600/50 backdrop-blur-sm shadow-medium transition-all duration-300 hover:scale-110 hover:shadow-strong theme-transition",
+              isInComparison(property.listing_key) 
+                ? "text-blue-600 border-blue-300 bg-blue-50" 
+                : "text-neutral-600 dark:text-neutral-400 hover:text-blue-500 dark:hover:text-blue-400"
+            )}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              addToComparison(property)
+              onCompareClick?.(property)
+            }}
+            title={isInComparison(property.listing_key) ? "Property in comparison" : "Add to comparison"}
+          >
+            <Scale className={cn(
+              "h-5 w-5 transition-all duration-300 group-hover:scale-110",
+              isInComparison(property.listing_key) && "text-blue-600"
+            )} />
+          </Button>
+        )}
       </div>
 
       {/* Enhanced Property image */}
