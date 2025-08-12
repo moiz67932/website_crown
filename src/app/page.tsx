@@ -2,6 +2,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import React, { useState, useEffect } from "react"
 
 import SearchBar from "@/components/home/search-bar"
 import useListProperties from "@/hooks/queries/useGetListProperties";
@@ -12,19 +13,29 @@ import CustomerReview from "@/components/customer-review"
 
 
 
-export default function HomePage() {
-  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 6 });
-
-
-  if (!featuredPropertiesRaw) {
-    return <Loading />;
+// Function to shuffle array randomly
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
+  return shuffled;
+};
 
-  // Map API data to UI-friendly format
-  const featuredProperties: Property[] = featuredPropertiesRaw.listings.map((item: any) => ({
+export default function HomePage() {
+  // Fetch more properties to have a larger pool for random selection
+  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 18 });
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+
+  // Update featured properties when data changes
+  useEffect(() => {
+    if (featuredPropertiesRaw?.listings) {
+      // Map API data to UI-friendly format
+      const allProperties: Property[] = featuredPropertiesRaw.listings.map((item: any) => ({
     id: item.listing_id,
     listing_key: item.listing_key,
-    image: item.images[0] || "/placeholder.svg",
+    image: item.images?.[0] || item.main_image_url || item.main_image || item.photo_url || item.listing_photos?.[0] || "/placeholder.svg",
     address: item.address,
     location: item.city,
     county: item.county,
@@ -39,11 +50,65 @@ export default function HomePage() {
     favorite: false,
     _id: item.listing_id,
     images: item.images,
+    main_image_url: item.main_image_url, // Add this field for PropertyCard to access
+    main_image: item.main_image, // Add this field for PropertyCard to access
+    photo_url: item.photo_url, // Add this field for PropertyCard to access
+    listing_photos: item.listing_photos, // Add this field for PropertyCard to access
     city: item.city,
     state: item.state,
     zip_code: item.zip_code,
-    latitude: item.latitude,
-  }));
+        latitude: item.latitude,
+      }));
+
+      // Shuffle all properties and select 6 random ones for featured display
+      const randomProperties = shuffleArray(allProperties).slice(0, 6);
+      setFeaturedProperties(randomProperties);
+      
+      console.log(`🎲 Randomly selected ${randomProperties.length} featured properties from ${allProperties.length} total properties`);
+    }
+  }, [featuredPropertiesRaw]);
+
+  // Function to shuffle and get new random properties
+  const shuffleProperties = () => {
+    if (featuredPropertiesRaw?.listings) {
+      const allProperties: Property[] = featuredPropertiesRaw.listings.map((item: any) => ({
+        id: item.listing_id,
+        listing_key: item.listing_key,
+        image: item.images?.[0] || item.main_image_url || item.main_image || item.photo_url || item.listing_photos?.[0] || "/placeholder.svg",
+        address: item.address,
+        location: item.city,
+        county: item.county,
+        list_price: item.list_price,
+        bedrooms: item.bedrooms ?? "-",
+        bathrooms: item.bathrooms ?? "-",
+        living_area_sqft: item.living_area_sqft ?? "-",
+        lot_size_sqft: item.lot_size_sqft ?? "-",
+        status: item.property_type !== "ResidentailLease" ? "FOR SALE" : "FOR RENT",
+        property_type: item.property_type,
+        statusColor: "bg-blue-100 text-blue-800",
+        favorite: false,
+        _id: item.listing_id,
+        images: item.images,
+        main_image_url: item.main_image_url,
+        main_image: item.main_image,
+        photo_url: item.photo_url,
+        listing_photos: item.listing_photos,
+        city: item.city,
+        state: item.state,
+        zip_code: item.zip_code,
+        latitude: item.latitude,
+      }));
+
+      const newRandomProperties = shuffleArray(allProperties).slice(0, 6);
+      setFeaturedProperties(newRandomProperties);
+      
+      console.log(`🎲 Shuffled to new random properties!`);
+    }
+  };
+
+  if (!featuredPropertiesRaw) {
+    return <Loading />;
+  }
 
   return (
     <main>
@@ -149,11 +214,11 @@ export default function HomePage() {
             </div>
             {/* Optional: Add left/right scroll buttons if desired */}
             
-            {/* Scroll Buttons for Featured Properties */}
+            {/* Enhanced Scroll Buttons for Featured Properties */}
             <button
               type="button"
               aria-label="Scroll right"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full shadow p-2 z-20"
+              className="absolute right-2 top-1/2 -translate-y-1/2 glass-card bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 rounded-full shadow-medium hover:shadow-strong p-3 z-20 transition-all duration-300 hover:scale-110 text-neutral-700 dark:text-neutral-300"
               onClick={() => {
                 const container = document.querySelector('.hide-scrollbar');
                 if (container) {
@@ -161,12 +226,12 @@ export default function HomePage() {
                 }
               }}
             >
-              <ChevronRightIcon />
+              <ChevronRightIcon className="h-5 w-5" />
             </button>
             <button
               type="button"
               aria-label="Scroll left"
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white rounded-full shadow p-2 z-20"
+              className="absolute left-2 top-1/2 -translate-y-1/2 glass-card bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-700 rounded-full shadow-medium hover:shadow-strong p-3 z-20 transition-all duration-300 hover:scale-110 text-neutral-700 dark:text-neutral-300"
               onClick={() => {
                 const container = document.querySelector('.hide-scrollbar');
                 if (container) {
@@ -174,11 +239,20 @@ export default function HomePage() {
                 }
               }}
             >
-              <ChevronLeftIcon />
+              <ChevronLeftIcon className="h-5 w-5" />
             </button>
            
           </div>
-          <div className="flex justify-center mt-12">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12">
+            <button 
+              onClick={shuffleProperties}
+              className="group px-6 py-3 bg-accent-500 hover:bg-accent-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong hover:scale-105 hover:shadow-accent-400/25 flex items-center gap-3"
+            >
+              <svg className="w-5 h-5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Show Different Properties</span>
+            </button>
             <Link href="/properties">
               <button className="group px-8 py-4 bg-gradient-primary hover:bg-gradient-to-r hover:from-primary-500 hover:to-primary-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong hover:scale-105 hover:shadow-primary-400/25 flex items-center gap-3">
                 <span>Explore All Properties</span>
@@ -193,32 +267,32 @@ export default function HomePage() {
 
 
       {/* Enhanced Premium Services Section */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-primary-900 py-20 md:py-28 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-neutral-50 via-white to-accent-50/30 dark:from-neutral-900 dark:via-neutral-800 dark:to-primary-900 py-20 md:py-28 relative overflow-hidden theme-transition">
         {/* Background elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-64 h-64 bg-gold-400 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-20 right-10 w-80 h-80 bg-accent-400 rounded-full blur-3xl animate-float animation-delay-4000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400 rounded-full blur-3xl opacity-30"></div>
+        <div className="absolute inset-0 opacity-5 dark:opacity-10">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-gold-400 dark:bg-gold-400 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-20 right-10 w-80 h-80 bg-accent-400 dark:bg-accent-400 rounded-full blur-3xl animate-float animation-delay-4000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400 dark:bg-primary-400 rounded-full blur-3xl opacity-30"></div>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16 animate-fade-in-up">
             <div className="inline-flex items-center gap-3 mb-6">
               <div className="w-8 h-[2px] bg-gradient-luxury rounded-full"></div>
-              <span className="text-gold-400 font-semibold text-sm uppercase tracking-wider">Premium Services</span>
+              <span className="text-primary-600 dark:text-gold-400 font-semibold text-sm uppercase tracking-wider theme-transition">Premium Services</span>
               <div className="w-8 h-[2px] bg-gradient-luxury rounded-full"></div>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-white mb-6 text-balance theme-transition">
               Concierge-Level
               <span className="block text-gradient-luxury bg-clip-text text-transparent">Real Estate Services</span>
             </h2>
-            <p className="text-neutral-300 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed text-balance">
+            <p className="text-neutral-600 dark:text-neutral-300 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed text-balance theme-transition">
               Experience unparalleled service with our exclusive concierge offerings, meticulously designed for discerning clients seeking extraordinary coastal properties.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Enhanced Card 1 */}
-            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-white/20 bg-white/10 backdrop-blur-xl">
+            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-neutral-200/50 dark:border-white/20 bg-white/80 dark:bg-white/10 backdrop-blur-xl theme-transition">
               <div className="relative overflow-hidden rounded-xl mb-6 h-40">
                 <img src="/service/Concierge-Home-Buying-1.png" alt="Concierge Home Buying" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -229,17 +303,17 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                 </div>
-                <h3 className="font-display text-xl font-bold text-white">Concierge Home Buying</h3>
+                <h3 className="font-display text-xl font-bold text-neutral-900 dark:text-white theme-transition">Concierge Home Buying</h3>
               </div>
-              <p className="text-neutral-300 mb-6 leading-relaxed flex-grow">White-glove service throughout your entire home buying journey, from property selection to closing.</p>
-              <ul className="text-neutral-400 text-sm mb-6 space-y-2">
+              <p className="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed flex-grow theme-transition">White-glove service throughout your entire home buying journey, from property selection to closing.</p>
+              <ul className="text-neutral-500 dark:text-neutral-400 text-sm mb-6 space-y-2 theme-transition">
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Personalized property selection</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Private viewings</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Negotiation expertise</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Transaction management</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Post-purchase support</li>
               </ul>
-              <Link href="/services/concierge-home-buying" className="inline-flex items-center gap-2 text-gold-400 font-semibold hover:text-gold-300 transition-colors group/link">
+              <Link href="/services/concierge-home-buying" className="inline-flex items-center gap-2 text-primary-600 dark:text-gold-400 font-semibold hover:text-primary-700 dark:hover:text-gold-300 transition-colors group/link theme-transition">
                 <span>Learn More</span>
                 <svg className="w-4 h-4 transition-transform group-hover/link:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -247,7 +321,7 @@ export default function HomePage() {
               </Link>
             </div>
             {/* Enhanced Card 2 */}
-            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-white/20 bg-white/10 backdrop-blur-xl">
+            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-neutral-200/50 dark:border-white/20 bg-white/80 dark:bg-white/10 backdrop-blur-xl theme-transition">
               <div className="relative overflow-hidden rounded-xl mb-6 h-40">
                 <img src="/service/World-Class-Affiliates-1.png" alt="World-Class Affiliates" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-accent-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -258,17 +332,17 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="font-display text-xl font-bold text-white">World-Class Affiliates</h3>
+                <h3 className="font-display text-xl font-bold text-neutral-900 dark:text-white theme-transition">World-Class Affiliates</h3>
               </div>
-              <p className="text-neutral-300 mb-6 leading-relaxed flex-grow">Access to our exclusive network of premium service providers, from interior designers to property managers.</p>
-              <ul className="text-neutral-400 text-sm mb-6 space-y-2">
+              <p className="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed flex-grow theme-transition">Access to our exclusive network of premium service providers, from interior designers to property managers.</p>
+              <ul className="text-neutral-500 dark:text-neutral-400 text-sm mb-6 space-y-2 theme-transition">
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Vetted interior designers</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Trusted property managers</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Premium home service providers</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Legal and financial advisors</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Luxury lifestyle concierge</li>
               </ul>
-              <Link href="/services/affiliates" className="inline-flex items-center gap-2 text-accent-400 font-semibold hover:text-accent-300 transition-colors group/link">
+              <Link href="/services/affiliates" className="inline-flex items-center gap-2 text-accent-600 dark:text-accent-400 font-semibold hover:text-accent-700 dark:hover:text-accent-300 transition-colors group/link theme-transition">
                 <span>Learn More</span>
                 <svg className="w-4 h-4 transition-transform group-hover/link:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -276,7 +350,7 @@ export default function HomePage() {
               </Link>
             </div>
             {/* Enhanced Card 3 */}
-            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-white/20 bg-white/10 backdrop-blur-xl">
+            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-neutral-200/50 dark:border-white/20 bg-white/80 dark:bg-white/10 backdrop-blur-xl theme-transition">
               <div className="relative overflow-hidden rounded-xl mb-6 h-40">
                 <img src="/service/Tailored-Landing-Solutions-1.png" alt="Tailored Landing Solutions" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -288,17 +362,17 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <h3 className="font-display text-xl font-bold text-white">Tailored Relocation</h3>
+                <h3 className="font-display text-xl font-bold text-neutral-900 dark:text-white theme-transition">Tailored Relocation</h3>
               </div>
-              <p className="text-neutral-300 mb-6 leading-relaxed flex-grow">Personalized relocation services designed to make your transition to coastal living seamless and stress-free.</p>
-              <ul className="text-neutral-400 text-sm mb-6 space-y-2">
+              <p className="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed flex-grow theme-transition">Personalized relocation services designed to make your transition to coastal living seamless and stress-free.</p>
+              <ul className="text-neutral-500 dark:text-neutral-400 text-sm mb-6 space-y-2 theme-transition">
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Personalized property search</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Area orientation tours</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>School and community info</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Temporary housing assistance</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gold-400 rounded-full"></div>Service provider connections</li>
               </ul>
-              <Link href="/services/relocation" className="inline-flex items-center gap-2 text-gold-400 font-semibold hover:text-gold-300 transition-colors group/link">
+              <Link href="/services/relocation" className="inline-flex items-center gap-2 text-primary-600 dark:text-gold-400 font-semibold hover:text-primary-700 dark:hover:text-gold-300 transition-colors group/link theme-transition">
                 <span>Learn More</span>
                 <svg className="w-4 h-4 transition-transform group-hover/link:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -306,7 +380,7 @@ export default function HomePage() {
               </Link>
             </div>
             {/* Enhanced Card 4 */}
-            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-white/20 bg-white/10 backdrop-blur-xl">
+            <div className="group glass-card rounded-2xl p-8 flex flex-col h-full hover-lift border border-neutral-200/50 dark:border-white/20 bg-white/80 dark:bg-white/10 backdrop-blur-xl theme-transition">
               <div className="relative overflow-hidden rounded-xl mb-6 h-40">
                 <img src="/service/Investment-Management-1.png" alt="Investment Management" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-accent-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -317,17 +391,17 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h3 className="font-display text-xl font-bold text-white">Investment Management</h3>
+                <h3 className="font-display text-xl font-bold text-neutral-900 dark:text-white theme-transition">Investment Management</h3>
               </div>
-              <p className="text-neutral-300 mb-6 leading-relaxed flex-grow">Expert guidance on property investments with comprehensive support for maximizing your real estate portfolio.</p>
-              <ul className="text-neutral-400 text-sm mb-6 space-y-2">
+              <p className="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed flex-grow theme-transition">Expert guidance on property investments with comprehensive support for maximizing your real estate portfolio.</p>
+              <ul className="text-neutral-500 dark:text-neutral-400 text-sm mb-6 space-y-2 theme-transition">
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Market analysis and trends</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>ROI projections</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Portfolio diversification</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Property management solutions</li>
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-accent-400 rounded-full"></div>Tax and legal considerations</li>
               </ul>
-              <Link href="/services/investment" className="inline-flex items-center gap-2 text-accent-400 font-semibold hover:text-accent-300 transition-colors group/link">
+              <Link href="/services/investment" className="inline-flex items-center gap-2 text-accent-600 dark:text-accent-400 font-semibold hover:text-accent-700 dark:hover:text-accent-300 transition-colors group/link theme-transition">
                 <span>Learn More</span>
                 <svg className="w-4 h-4 transition-transform group-hover/link:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -366,38 +440,74 @@ export default function HomePage() {
         </div>
       </section> */}
 
-      {/* Popular California Cities Section */}
-      <section className="py-16 bg-[#F6EEE7]">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#2D3A4A] mb-2">Explore Popular California Cities</h2>
-            <p className="text-base md:text-lg text-[#6B7280] max-w-2xl mx-auto">
-              Discover homes in California's most sought-after coastal and metropolitan areas.
+      {/* Enhanced Popular California Cities Section */}
+      <section className="py-20 md:py-24 bg-gradient-to-br from-neutral-100 via-neutral-50 to-primary-50/30 dark:from-slate-800 dark:via-slate-900 dark:to-orange-900/20 relative overflow-hidden theme-transition">
+        {/* Background decoration */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-5 dark:opacity-10">
+          <div className="absolute top-20 right-20 w-80 h-80 bg-primary-400 dark:bg-orange-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-20 w-64 h-64 bg-accent-400 dark:bg-cyan-400 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 animate-fade-in-up">
+            <div className="inline-flex items-center gap-3 mb-6">
+              <div className="w-8 h-[2px] bg-gradient-primary rounded-full"></div>
+              <span className="text-primary-600 dark:text-primary-400 font-semibold text-sm uppercase tracking-wider">Discover Cities</span>
+              <div className="w-8 h-[2px] bg-gradient-primary rounded-full"></div>
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 text-balance theme-transition">
+              Explore Popular
+              <span className="block text-gradient-luxury bg-clip-text text-transparent">California Cities</span>
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-300 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed text-balance theme-transition">
+              Discover homes in California's most sought-after coastal and metropolitan areas, where luxury meets lifestyle.
             </p>
           </div>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
-            {popularCities.map((city) => (
-              <div key={city.name} className="relative rounded-2xl shadow-lg overflow-hidden bg-white group h-96 flex flex-col justify-end">
+            {popularCities.map((city, index) => (
+              <div 
+                key={city.name} 
+                className="group glass-card rounded-3xl shadow-strong overflow-hidden h-96 flex flex-col justify-end hover-lift transition-all duration-500 animate-fade-in-up"
+                style={{ animationDelay: `${index * 200}ms` }}
+              >
                 {/* City image */}
                 <div className="absolute inset-0">
                   {city.image ? (
-                    <Image src={city.image} alt={city.name} fill className="object-cover" />
+                    <Image 
+                      src={city.image} 
+                      alt={city.name} 
+                      fill 
+                      className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                    />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <span className="text-5xl text-gray-400">
-                        <Image src="/city-san-diego.jpg" alt="San Diego" fill className="object-cover" />
+                    <div className="w-full h-full bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
+                      <span className="text-5xl text-neutral-400 dark:text-neutral-500">
+                        <Image src="/city-san-diego.jpg" alt="San Diego" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                       </span>
                     </div>
                   )}
-                  {/* Gradient overlay at bottom */}
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+                  {/* Enhanced gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-transparent to-accent-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
-                {/* City info */}
-                <div className="relative z-10 p-6 flex flex-col justify-end h-1/2 mt-auto">
-                  <h3 className="text-2xl font-bold text-white mb-1">{city.name}</h3>
-                  <p className="text-white text-sm mb-3 line-clamp-2">{city.description}</p>
-                  <a href={city.link} className="text-[#E2C275] font-semibold text-base hover:underline flex items-center gap-1">
-                    View Properties <span aria-hidden>→</span>
+                
+                {/* City info with enhanced styling */}
+                <div className="relative z-10 p-8 flex flex-col justify-end h-1/2 mt-auto">
+                  <h3 className="text-2xl lg:text-3xl font-display font-bold text-white mb-3 group-hover:text-gold-300 transition-colors duration-300">
+                    {city.name}
+                  </h3>
+                  <p className="text-white/90 text-sm md:text-base mb-4 line-clamp-2 leading-relaxed">
+                    {city.description}
+                  </p>
+                  <a 
+                    href={city.link} 
+                    className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-semibold text-base transition-all duration-300 group/link"
+                  >
+                    <span>View Properties</span>
+                    <svg className="w-4 h-4 transition-transform group-hover/link:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
                   </a>
                 </div>
               </div>
@@ -405,13 +515,21 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Testimonials Section */}
-      <section className="py-10 md:py-16 bg-white">
+      {/* Enhanced Testimonials Section */}
+      <section className="py-20 md:py-24 bg-white dark:bg-slate-900 theme-transition">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">What Our Clients Say</h2>
-            <p className="text-sm md:text-base text-slate-600 max-w-2xl mx-auto">
-              Hear from our satisfied clients about their experience with our services.
+          <div className="text-center mb-16 animate-fade-in-up">
+            <div className="inline-flex items-center gap-3 mb-6">
+              <div className="w-8 h-[2px] bg-gradient-primary rounded-full"></div>
+              <span className="text-primary-600 dark:text-primary-400 font-semibold text-sm uppercase tracking-wider">Client Reviews</span>
+              <div className="w-8 h-[2px] bg-gradient-primary rounded-full"></div>
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 text-balance theme-transition">
+              What Our
+              <span className="block text-gradient-luxury bg-clip-text text-transparent">Clients Say</span>
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-300 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed text-balance theme-transition">
+              Hear from our satisfied clients about their exceptional experience with our luxury real estate services.
             </p>
           </div>
 

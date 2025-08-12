@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Property } from "@/interfaces"
-import { useState } from "react"
+import React, { useState } from "react"
 
 // Function to get appropriate fallback image based on property type, price, and listing key for variety
 const getPropertyFallbackImage = (propertyType: string, price: number, listingKey?: string) => {
@@ -50,6 +50,8 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property }: PropertyCardProps) {
   const [favoriteProperties, setFavoriteProperties] = useState<string[]>([])
+  const [currentImageSrc, setCurrentImageSrc] = useState<string>('')
+  const [imageError, setImageError] = useState(false)
 
   const toggleFavorite = (e: React.MouseEvent, propertyId: string) => {
     e.preventDefault()
@@ -59,6 +61,44 @@ export function PropertyCard({ property }: PropertyCardProps) {
       prev.includes(propertyId) ? prev.filter((id) => id !== propertyId) : [...prev, propertyId],
     )
   }
+
+  // Determine the best image source with fallback logic
+  const getImageSrc = () => {
+    if (imageError) {
+      return getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key);
+    }
+    
+    return property.images?.[0] || 
+           property.image || 
+           property.main_image_url || 
+           property.main_image || 
+           property.photo_url || 
+           property.listing_photos?.[0] ||
+           getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key);
+  }
+
+  // Reset image error state when property changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [property.listing_key]);
+
+  // Debug log to understand available image sources
+  React.useEffect(() => {
+    const isTargetProperty = property.address?.includes("34130 Shasta Street") || property.address?.includes("Shasta Street");
+    if (isTargetProperty) {
+      console.log(`🎯 TARGET PROPERTY ${property.listing_key} (${property.address}) image sources:`, {
+        images: property.images,
+        image: property.image,
+        main_image_url: property.main_image_url,
+        main_image: property.main_image,
+        photo_url: property.photo_url,
+        listing_photos: property.listing_photos,
+        address: property.address,
+        final_src: getImageSrc(),
+        imageError: imageError
+      });
+    }
+  }, [property, imageError]);
 
   return (
     <Link
@@ -103,29 +143,21 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
       {/* Enhanced Property image */}
       <div className="relative h-64 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center rounded-t-3xl overflow-hidden theme-transition">
-        <img
-          src={
-            // Try multiple possible image field names from API, with better fallbacks
-            property.images?.[0] || 
-            property.image || 
-            (property as any).main_image_url || 
-            (property as any).main_image || 
-            (property as any).photo_url || 
-            (property as any).listing_photos?.[0] ||
-            // Better fallback images based on property type
-            getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key)
-          } 
+        <Image
+          src={getImageSrc()}
           alt={property.address || 'Property'}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          onError={(e) => {
-            // Fallback to property-specific image if main image fails to load
-            const target = e.currentTarget as HTMLImageElement;
-            if (!target.src.includes('luxury-') && !target.src.includes('modern-') && !target.src.includes('california-coastal')) {
-              target.src = getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key);
-            } else if (!target.src.includes('california-coastal')) {
-              target.src = "/california-coastal-sunset.png";
-            }
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          onError={() => {
+            console.log(`🚨 Image failed to load for ${property.address}, using fallback`);
+            setImageError(true);
           }}
+          onLoad={() => {
+            console.log(`✅ Image loaded successfully for ${property.address}`);
+          }}
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
         />
         {/* Image overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
