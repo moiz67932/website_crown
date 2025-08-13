@@ -106,8 +106,8 @@ export function PropertyCard({ property, showCompareButton = true, onCompareClic
 
   return (
     <Link
-      href={`/properties/${property?.address ? property?.address?.replace(/\s+/g, '-').replace('/', '-').toLowerCase() : 'address'}/${property.listing_key}`}
-      key={property.listing_key}
+      href={`/properties/${property?.address ? property?.address?.replace(/\s+/g, '-').replace(/[^\w-]/g, '').toLowerCase() : 'property'}/${property.listing_key || property.id || 'unknown'}`}
+      key={property.listing_key || property.id}
       className="group bg-white dark:bg-slate-900 rounded-3xl shadow-soft hover:shadow-strong p-0 w-full flex flex-col relative transition-all duration-500 hover-lift hover:scale-[1.02] border border-neutral-100 dark:border-slate-700 theme-transition"
     >
       {/* Enhanced Status badge */}

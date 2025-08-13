@@ -5,7 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import React, { useState, useEffect } from "react"
 
 import SearchBar from "@/components/home/search-bar"
-import useListProperties from "@/hooks/queries/useGetListProperties";
+import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated";
 import Loading from "@/components/shared/loading"
 import { Property } from "@/interfaces"
 import { PropertyCard } from "@/components/property-card"
@@ -24,89 +24,32 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 export default function HomePage() {
-  // Fetch more properties to have a larger pool for random selection
-  const { data: featuredPropertiesRaw } = useListProperties({ skip: 0, limit: 18 });
+  // Fetch properties from Trestle API
+  const { properties: allProperties, loading } = useTrestlePropertiesIntegrated({}, 18);
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
 
-  // Update featured properties when data changes
+  // Update featured properties when Trestle data changes
   useEffect(() => {
-    if (featuredPropertiesRaw?.listings) {
-      // Map API data to UI-friendly format
-      const allProperties: Property[] = featuredPropertiesRaw.listings.map((item: any) => ({
-    id: item.listing_id,
-    listing_key: item.listing_key,
-    image: item.images?.[0] || item.main_image_url || item.main_image || item.photo_url || item.listing_photos?.[0] || "/placeholder.svg",
-    address: item.address,
-    location: item.city,
-    county: item.county,
-    list_price: item.list_price,
-    bedrooms: item.bedrooms ?? "-",
-    bathrooms: item.bathrooms ?? "-",
-    living_area_sqft: item.living_area_sqft ?? "-",
-    lot_size_sqft: item.lot_size_sqft ?? "-",
-    status: item.property_type !== "ResidentailLease" ? "FOR SALE" : "FOR RENT",
-    property_type: item.property_type,
-    statusColor: "bg-blue-100 text-blue-800", // You can adjust color logic as needed
-    favorite: false,
-    _id: item.listing_id,
-    images: item.images,
-    main_image_url: item.main_image_url, // Add this field for PropertyCard to access
-    main_image: item.main_image, // Add this field for PropertyCard to access
-    photo_url: item.photo_url, // Add this field for PropertyCard to access
-    listing_photos: item.listing_photos, // Add this field for PropertyCard to access
-    city: item.city,
-    state: item.state,
-    zip_code: item.zip_code,
-        latitude: item.latitude,
-      }));
-
-      // Shuffle all properties and select 6 random ones for featured display
-      const randomProperties = shuffleArray(allProperties).slice(0, 6);
+    if (allProperties.length > 0) {
+      // Shuffle properties and select 6 random ones for featured display
+      const randomProperties = shuffleArray([...allProperties]).slice(0, 6);
       setFeaturedProperties(randomProperties);
       
-      console.log(`🎲 Randomly selected ${randomProperties.length} featured properties from ${allProperties.length} total properties`);
+      console.log(`🎲 Randomly selected ${randomProperties.length} featured properties from Trestle API`);
     }
-  }, [featuredPropertiesRaw]);
+  }, [allProperties]);
 
   // Function to shuffle and get new random properties
   const shuffleProperties = () => {
-    if (featuredPropertiesRaw?.listings) {
-      const allProperties: Property[] = featuredPropertiesRaw.listings.map((item: any) => ({
-        id: item.listing_id,
-        listing_key: item.listing_key,
-        image: item.images?.[0] || item.main_image_url || item.main_image || item.photo_url || item.listing_photos?.[0] || "/placeholder.svg",
-        address: item.address,
-        location: item.city,
-        county: item.county,
-        list_price: item.list_price,
-        bedrooms: item.bedrooms ?? "-",
-        bathrooms: item.bathrooms ?? "-",
-        living_area_sqft: item.living_area_sqft ?? "-",
-        lot_size_sqft: item.lot_size_sqft ?? "-",
-        status: item.property_type !== "ResidentailLease" ? "FOR SALE" : "FOR RENT",
-        property_type: item.property_type,
-        statusColor: "bg-blue-100 text-blue-800",
-        favorite: false,
-        _id: item.listing_id,
-        images: item.images,
-        main_image_url: item.main_image_url,
-        main_image: item.main_image,
-        photo_url: item.photo_url,
-        listing_photos: item.listing_photos,
-        city: item.city,
-        state: item.state,
-        zip_code: item.zip_code,
-        latitude: item.latitude,
-      }));
-
-      const newRandomProperties = shuffleArray(allProperties).slice(0, 6);
+    if (allProperties.length > 0) {
+      const newRandomProperties = shuffleArray([...allProperties]).slice(0, 6);
       setFeaturedProperties(newRandomProperties);
       
-      console.log(`🎲 Shuffled to new random properties!`);
+      console.log(`🎲 Shuffled to new random properties from Trestle API!`);
     }
   };
 
-  if (!featuredPropertiesRaw) {
+  if (loading) {
     return <Loading />;
   }
 
@@ -204,9 +147,9 @@ export default function HomePage() {
           {/* Horizontal Scroll for Featured Properties */}
           <div className="relative">
             <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
-              {featuredProperties.map((property) => (
+              {featuredProperties.map((property, index) => (
                 <div
-                  key={property.listing_key}
+                  key={property.listing_key || property.id || `featured-${index}`}
                   className="min-w-[320px] max-w-xs flex-shrink-0"
                 >
                   <PropertyCard property={property} />
@@ -247,7 +190,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12">
             <button 
               onClick={shuffleProperties}
-              className="group px-6 py-3 bg-accent-500 hover:bg-accent-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong hover:scale-105 hover:shadow-accent-400/25 flex items-center gap-3"
+              className="group px-6 py-3 bg-sky-500 hover:bg-sky-600 dark:bg-accent-600 dark:hover:bg-accent-700 text-white dark:text-white rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong hover:scale-105 hover:shadow-sky-400/25 dark:hover:shadow-accent-400/25 flex items-center gap-3 border border-sky-600 dark:border-accent-500"
             >
               <svg className="w-5 h-5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -255,7 +198,7 @@ export default function HomePage() {
               <span>Show Different Properties</span>
             </button>
             <Link href="/properties">
-              <button className="group px-8 py-4 bg-gradient-primary hover:bg-gradient-to-r hover:from-primary-500 hover:to-primary-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong hover:scale-105 hover:shadow-primary-400/25 flex items-center gap-3">
+              <button className="group px-8 py-4 bg-orange-500 hover:bg-orange-600 dark:bg-gradient-primary dark:hover:bg-gradient-to-r dark:hover:from-primary-500 dark:hover:to-primary-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong hover:scale-105 hover:shadow-orange-400/25 dark:hover:shadow-primary-400/25 flex items-center gap-3">
                 <span>Explore All Properties</span>
                 <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -414,7 +357,8 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      {/* <section className="py-10 md:py-16 bg-slate-50">
+      {/* Browse by Category Section - COMMENTED OUT
+      <section className="py-10 md:py-16 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-900">Browse by Category</h2>
@@ -439,7 +383,8 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section> */}
+      </section>
+      */}
 
       {/* Enhanced Popular California Cities Section */}
       <section className="py-20 md:py-24 bg-gradient-to-br from-neutral-100 via-neutral-50 to-primary-50/30 dark:from-slate-800 dark:via-slate-900 dark:to-orange-900/20 relative overflow-hidden theme-transition">

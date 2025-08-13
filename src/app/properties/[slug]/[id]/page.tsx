@@ -77,12 +77,12 @@ const generatePropertyJsonLd = (property: PropertyDetail | undefined) => {
       postalCode: property?.postal_code,
       addressCountry: "US",
     },
-    numberOfRooms: property?.bedrooms, // Approximation, schema has specific room types
-    floorSize: {
+    numberOfRooms: property?.bedrooms || undefined, // Approximation, schema has specific room types
+    floorSize: property?.living_area_sqft ? {
       "@type": "QuantitativeValue",
-      value: property?.living_area_sqft,
-      unitCode: property?.lot_size_sqft ? "FTK" : "MTK", // FTK for square foot, MTK for square meter
-    },
+      value: property.living_area_sqft,
+      unitCode: "FTK", // FTK for square foot
+    } : undefined,
     yearBuilt: property?.year_built,
     realEstateAgent: {
       "@type": "RealEstateAgent",
@@ -300,17 +300,23 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up">
                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
                   <Bed className="h-8 w-8 text-primary-500 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{propertyData.bedrooms}</div>
+                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {propertyData.bedrooms ? propertyData.bedrooms : 'N/A'}
+                  </div>
                   <div className="text-sm text-neutral-600 dark:text-neutral-400">Bedrooms</div>
                 </div>
                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
                   <Bath className="h-8 w-8 text-accent-500 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{propertyData.bathrooms}</div>
+                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {propertyData.bathrooms ? propertyData.bathrooms : 'N/A'}
+                  </div>
                   <div className="text-sm text-neutral-600 dark:text-neutral-400">Bathrooms</div>
                 </div>
                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
                   <Square className="h-8 w-8 text-gold-500 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{propertyData.living_area_sqft?.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                    {propertyData.living_area_sqft ? propertyData.living_area_sqft.toLocaleString() : 'N/A'}
+                  </div>
                   <div className="text-sm text-neutral-600 dark:text-neutral-400">Sq Ft</div>
                 </div>
                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
@@ -479,7 +485,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     Interior Spaces & Features
                     </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {propertyData.living_area_sqft && (
+                    {propertyData.living_area_sqft && propertyData.living_area_sqft > 0 && (
                       <div className="text-center p-4 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl">
                         <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{propertyData.living_area_sqft.toLocaleString()}</div>
                         <div className="text-sm text-neutral-600 dark:text-neutral-400">Sq Ft Living</div>
@@ -772,71 +778,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   Listing ID: CCH-{propertyData.id.toString().padStart(5, "0")}
                 </div>
               </div> */}
-                {/* Agent Contact Card */}
-                <div className="glass-card p-8 rounded-3xl space-y-6">
-                {/* Agent Info */}
-                <div className="text-center">
-                  <div className="relative w-20 h-20 mx-auto mb-4">
-                    <Avatar className="w-20 h-20 border-4 border-white/50 shadow-xl">
-                      <AvatarImage src="/professional-real-estate-agent.png" alt="Agent" />
-                      <AvatarFallback className="bg-gradient-primary text-white text-xl font-bold">
-                        {propertyData.list_agent_full_name?.charAt(0) || 'A'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success-500 rounded-full border-2 border-white"></div>
-                  </div>
-                  <h3 className="text-xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-1">
-                    {propertyData.list_agent_full_name || 'Crown Coastal Team'}
-                  </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-                    {propertyData.list_office_name || 'Licensed Real Estate Professional'}
-                  </p>
-                  <div className="flex items-center justify-center text-xs text-success-600 dark:text-success-400">
-                    <div className="w-2 h-2 bg-success-500 rounded-full mr-2"></div>
-                    Available Now
-                  </div>
-                </div>
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <Button size="lg" className="w-full bg-gradient-primary hover:shadow-strong font-semibold rounded-2xl">
-                    <Calendar className="h-5 w-5 mr-2" />
-                    Schedule a Tour
-                  </Button>
-                  <Button variant="outline" size="lg" className="w-full border-neutral-200 dark:border-slate-600 text-neutral-700 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-2xl font-semibold">
-                    Request Information
-                  </Button>
-                  <MortgageCalculatorModal propertyPrice={propertyData.list_price} />
-                  </div>
-
-                {/* Contact Info */}
-                <div className="text-sm space-y-3 pt-4 border-t border-neutral-200/50 dark:border-slate-700/50">
-                  <div className="flex items-center text-neutral-600 dark:text-neutral-400">
-                    <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center mr-3">
-                      📞
-                    </div>
-                    <a href={`tel:${propertyData.list_agent_phone}`} className="hover:text-primary-600 dark:hover:text-primary-400 font-medium">
-                      {propertyData.list_agent_phone || '(555) 123-4567'}
-                    </a>
-                  </div>
-                  <div className="flex items-center text-neutral-600 dark:text-neutral-400">
-                    <div className="w-8 h-8 bg-accent-100 dark:bg-accent-900/30 rounded-xl flex items-center justify-center mr-3">
-                      ✉️
-                    </div>
-                    <a href={`mailto:${propertyData.list_agent_email}`} className="hover:text-accent-600 dark:hover:text-accent-400 font-medium">
-                      {propertyData.list_agent_email || 'info@crowncoastal.com'}
-                    </a>
-                  </div>
-                </div>
-
-                {/* Listing Info */}
-                <div className="text-xs text-neutral-500 dark:text-neutral-400 text-center pt-4 border-t border-neutral-200/50 dark:border-slate-700/50">
-                  <div className="bg-neutral-100 dark:bg-slate-800 rounded-xl p-3">
-                    <div className="font-semibold mb-1">Listing ID</div>
-                    <div className="font-mono">{propertyData.listing_key}</div>
-                  </div>
-                </div>
-              </div>
 
                 {/* Contact Form */}
                 <div className="glass-card p-8 rounded-3xl">

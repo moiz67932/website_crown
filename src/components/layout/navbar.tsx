@@ -153,12 +153,13 @@ export default function Navbar() {
           <div className={navStyles.logoContainer}>
             <Link href="/" className={navStyles.logoLink}>
               <div className={navStyles.logoImageContainer}>
-                {/* Crown Coastal Logo with dark mode filter */}
+                {/* Crown Coastal Logo with theme-based color inversion */}
                 <Image 
-                  src="/logo.png" 
+                  src="/logo.png"
                   alt="Crown Coastal Logo" 
                   width={224} 
                   height={224}
+                  className="transition-all duration-300 dark:invert dark:brightness-0 dark:contrast-100 dark:filter"
                 />
               </div>
             </Link>

@@ -111,7 +111,7 @@ export default function ProfilePage() {
 
   if (authLoading || profileLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-4xl pt-20 lg:pt-24">
         <div className="space-y-6">
           <Skeleton className="h-8 w-48" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -150,7 +150,7 @@ export default function ProfilePage() {
   const userAge = calculateAge(profile.dateOfBirth)
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl pt-20 lg:pt-24">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

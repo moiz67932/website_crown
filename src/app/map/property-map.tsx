@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import PropertyStatistics from "./property-statistics"
 import { useRouter } from "next/navigation"
 import StreetViewModal from "@/components/shared/street-view-model"
-import useGetListProperties from "@/hooks/queries/useGetListProperties" // <-- Import the hook
+import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated" // <-- Import the hook
 
 // Import Leaflet CSS
 import "leaflet/dist/leaflet.css"
@@ -419,10 +419,10 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
       : { city: initialLocationQuery ?? undefined }
 
   const {
-    data: properties = { listings: [], total_items: 0 },
-    isLoading,
-    isError,
-  } = useGetListProperties({ limit: 100, ...locationParam })
+    properties = [],
+    loading: isLoading,
+    error,
+  } = useTrestlePropertiesIntegrated(locationParam, 100, 1)
 
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null)
   // California polygon is always drawn, so set as default
@@ -446,7 +446,7 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
   const displayedProperties = useMemo(() => {
     if (!properties || properties.length === 0) return []
     
-    let displayProps = properties.listings
+    let displayProps = properties
 
     // Apply filters if provided
     // if (filteredPropertyIds && filteredPropertyIds.length > 0) {
@@ -468,7 +468,7 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
     // }
 
     // Memoize the calculation to avoid unnecessary state updates
-    const filtered = properties.listings.reduce(
+    const filtered = properties.reduce(
       (acc: { ids: string[]; data: any[] }, property: any) => {
         if (!property.lat || !property.lng) return acc
         const point = turf.point([property.lng, property.lat])
@@ -502,7 +502,9 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
   }
 
   const navigateToProperty = (address: string, propertyId: string) => {
-    router.push(`/properties/${address.replaceAll(' ', '-')}/${propertyId}`)
+    const cleanAddress = address ? address.replaceAll(' ', '-').replace(/[^\w-]/g, '').toLowerCase() : 'property';
+    const cleanId = propertyId || 'unknown';
+    router.push(`/properties/${cleanAddress}/${cleanId}`)
   }
 
   const openStreetView = (property: any) => {
@@ -518,7 +520,7 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
     )
   }
 
-  if (isError) {
+      if (error) {
     return (
       <div className="flex items-center justify-center h-full w-full">
         <span>Failed to load properties.</span>

@@ -1,7 +1,7 @@
-import Image from "next/image"
 import Link from "next/link"
 import type { Metadata } from "next"
 import LoginForm from "./login-form"
+import LogoDisplay from "@/components/auth/logo-display"
 
 export const metadata: Metadata = {
   title: "Login | Real Estate",
@@ -17,19 +17,22 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-block">
               <div className="relative h-10 w-40 mx-auto">
-                <Image src="/real-estate-logo.png" alt="Real Estate Logo" fill className="object-contain" />
+                <LogoDisplay 
+                  fill 
+                  className="object-contain" 
+                />
               </div>
             </Link>
-            <h1 className="text-2xl md:text-3xl font-bold mt-6 text-slate-900">Welcome Back</h1>
-            <p className="text-slate-600 mt-2">Sign in to your account to continue</p>
+            <h1 className="text-2xl md:text-3xl font-bold mt-6 text-slate-900 dark:text-slate-100">Welcome Back</h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-2">Sign in to your account to continue</p>
           </div>
 
           <LoginForm />
 
           <div className="mt-8 text-center">
-            <p className="text-slate-600">
+            <p className="text-slate-600 dark:text-slate-400">
               Don&apos;t have an account?{" "}
-              <Link href="/auth/resgister" className="text-slate-900 font-medium hover:underline">
+              <Link href="/auth/resgister" className="text-slate-900 dark:text-slate-100 font-medium hover:underline">
                 Sign up
               </Link>
             </p>
@@ -37,16 +40,14 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right side - Image */}
-      <div className="hidden md:block w-1/2 bg-slate-100 relative">
-        <div className="absolute inset-0">
-          <Image
-            src="/luxury-modern-house-exterior.png"
-            alt="Luxury Real Estate"
-            fill
-            className="object-cover"
-            priority
-          />
+              {/* Right side - Image */}
+        <div className="hidden md:block w-1/2 bg-slate-100 relative">
+          <div className="absolute inset-0">
+            <img
+              src="/luxury-modern-house-exterior.png"
+              alt="Luxury Real Estate"
+              className="object-cover w-full h-full"
+            />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 to-slate-900/30"></div>
           <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-2">Find Your Dream Home</h2>

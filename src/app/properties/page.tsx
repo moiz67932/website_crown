@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation"
 import PropertiesGrid from "./properties-grid"
 import PropertyListingHeader from "./property-header"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Search, Loader2 } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -13,7 +16,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-import useListProperties from "@/hooks/queries/useGetListProperties"
+import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated"
 import { useSearchParams } from "next/navigation"
 import { PropertyCard } from "@/components/property-card"
 import { Property } from "@/interfaces"
@@ -27,7 +30,7 @@ import AdvancedSearch from "@/components/filters/advanced-search"
 const PropertyGridSkeleton = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
     {[...Array(18)].map((_, index) => (
-      <div key={index} className="space-y-4">
+      <div key={`skeleton-${index}`} className="space-y-4">
         <Skeleton className="h-64 w-full rounded-3xl" />
         <div className="space-y-3 px-2">
           <Skeleton className="h-5 w-3/4" />
@@ -50,6 +53,10 @@ function PropertiesPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
+  const [semanticQuery, setSemanticQuery] = useState('')
+  const [semanticResults, setSemanticResults] = useState<Property[]>([])
+  const [semanticLoading, setSemanticLoading] = useState(false)
+  const [showSemanticResults, setShowSemanticResults] = useState(false)
 
   // Updated to use the new PropertyFilters interface
   const [filters, setFilters] = useState<PropertyFilters>({
@@ -266,28 +273,58 @@ function PropertiesPageContent() {
     sortBy: legacyFilters.sortBy
   });
 
-  const { data, isLoading } = useListProperties({ 
-    skip, 
-    limit,
-    propertyType: legacyFilters.propertyType,
+  // Convert legacy filters to Trestle format
+  const trestleFilters = {
+    city: legacyFilters.city,
+    state: legacyFilters.county, // Using county as state for now
     minPrice: legacyFilters.minPrice,
     maxPrice: legacyFilters.maxPrice,
-    city: legacyFilters.city,
-    county: legacyFilters.county,
-    minBathroom: legacyFilters.minBathroom,
-    minBedroom: legacyFilters.minBedroom,
-    yearBuilt: legacyFilters.yearBuilt,
-    max_sqft: legacyFilters.max_sqft,
-    min_sqft: legacyFilters.min_sqft,
-    sortBy: legacyFilters.sortBy
-  })
+    minBedrooms: legacyFilters.minBedroom,
+    minBathrooms: legacyFilters.minBathroom,
+    propertyType: legacyFilters.propertyType,
+    keywords: [] // Can be extended with features
+  };
 
-  const properties = data?.listings || []
-  const totalPages = data?.total_pages || 1
-  const totalItems = data?.total_items || 0
+  // Get data using Trestle API with vector database integration
+  const { 
+    properties, 
+    loading: isLoading, 
+    error: trestleError,
+    total: totalItems,
+    hasMore,
+    loadMore,
+    refresh,
+    searchSemantic
+  } = useTrestlePropertiesIntegrated(trestleFilters, limit, currentPage)
+
+  const totalPages = Math.min(70, Math.ceil(totalItems / limit)) // Cap at 70 pages max
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+  }
+
+  // Semantic search handler
+  const handleSemanticSearch = async () => {
+    if (!semanticQuery.trim()) return;
+    
+    try {
+      setSemanticLoading(true);
+      const results = await searchSemantic(semanticQuery);
+      setSemanticResults(results);
+      setShowSemanticResults(true);
+      console.log(`🔍 Semantic search for "${semanticQuery}" returned ${results.length} results`);
+    } catch (error) {
+      console.error('❌ Semantic search error:', error);
+    } finally {
+      setSemanticLoading(false);
+    }
+  }
+
+  // Clear semantic search
+  const clearSemanticSearch = () => {
+    setSemanticQuery('');
+    setSemanticResults([]);
+    setShowSemanticResults(false);
   }
 
   // Enhanced filter change handler with SEO URLs
@@ -389,16 +426,126 @@ function PropertiesPageContent() {
         </div>
       </div>
 
+      {/* Semantic Search Section - HIDDEN 
+      <section className="container mx-auto px-4 md:px-6 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              🧠 AI-Powered Property Search
+            </h3>
+            <p className="text-gray-600 text-sm">
+              Search using natural language: "luxury waterfront home with pool" or "affordable family home near schools"
+            </p>
+          </div>
+          
+          <div className="flex gap-3 max-w-2xl mx-auto">
+            <div className="flex-1">
+              <Input
+                placeholder="luxury beachfront condo with pool and ocean view"
+                value={semanticQuery}
+                onChange={(e) => setSemanticQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSemanticSearch()}
+                className="h-12 text-base"
+              />
+            </div>
+            <Button 
+              onClick={handleSemanticSearch}
+              disabled={semanticLoading || !semanticQuery.trim()}
+              className="h-12 px-6"
+            >
+              {semanticLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Search className="h-4 w-4 mr-2" />
+              )}
+              Search
+            </Button>
+            {showSemanticResults && (
+              <Button 
+                onClick={clearSemanticSearch}
+                variant="outline"
+                className="h-12 px-4"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {trestleError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              ⚠️ {trestleError}
+            </div>
+          )}
+
+          {showSemanticResults && semanticResults.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-medium text-gray-900 mb-3">
+                🎯 Found {semanticResults.length} AI-matched properties
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {semanticResults.slice(0, 6).map((property: Property, index: number) => (
+                  <PropertyCard 
+                    key={property.listing_key || property.id || `semantic-${index}`} 
+                    property={property} 
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showSemanticResults && semanticResults.length === 0 && !semanticLoading && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-center">
+              🔍 No properties found matching "{semanticQuery}". Try a different search term.
+            </div>
+          )}
+        </div>
+      </section>
+      */}
+
       <section className="container mx-auto px-4 md:px-6 py-8">
+        {/* Properties Grid Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Properties
+            {totalItems > 0 && (
+              <span className="ml-2 text-lg font-normal text-gray-600">
+                ({totalItems.toLocaleString()} found)
+              </span>
+            )}
+          </h2>
+          <div className="flex gap-2">
+            <Button onClick={refresh} variant="outline" size="sm" disabled={isLoading}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              🔄 Refresh Data
+            </Button>
+          </div>
+        </div>
+
         {/* Properties Grid - Full Width */}
         <div className="w-full">
-          {isLoading ? <PropertyGridSkeleton /> :
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-10">
-          {properties.map((property: Property) => (
-            <PropertyCard key={property.listing_key} property={property} />
-          ))}
-        </div>
-          }
+          {isLoading ? <PropertyGridSkeleton /> : (
+            <>
+              {properties.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-10">
+                  {properties.map((property: Property, index: number) => (
+                    <PropertyCard 
+                      key={property.listing_key || property.id || `property-${index}`} 
+                      property={property} 
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-500 text-lg mb-4">
+                    🏠 No properties found with current filters
+                  </div>
+                  <Button onClick={refresh} variant="outline">
+                    Try refreshing or adjust your filters
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
             
           
           {/* Pagination */}
@@ -422,7 +569,7 @@ function PropertiesPageContent() {
                       (page >= currentPage - 1 && page <= currentPage + 1)
                     ) {
                       return (
-                        <PaginationItem key={page}>
+                        <PaginationItem key={`page-${page}`}>
                           <PaginationLink
                             onClick={() => handlePageChange(page)}
                             isActive={page === currentPage}
@@ -437,13 +584,13 @@ function PropertiesPageContent() {
                       page === currentPage + 2
                     ) {
                       return (
-                        <PaginationItem key={page}>
+                        <PaginationItem key={`ellipsis-${page}`}>
                           <span className="px-4">...</span>
                         </PaginationItem>
                       )
                     }
                     return null
-                  })}
+                  }).filter(Boolean)}
 
                   <PaginationItem>
                     <PaginationNext

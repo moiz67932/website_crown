@@ -269,15 +269,7 @@
     filter: brightness(0) invert(1);
   }
 
-  /* Crown Coastal logo theme styling */
-  [src="/logo.png"] {
-    transition: filter 0.3s ease;
-    /* Original logo on light theme */
-  }
-  
-  .dark [src="/logo.png"] {
-    filter: brightness(0) invert(1); /* White logo on dark theme */
-  }
+  /* Crown Coastal logo theme styling - now handled by Tailwind classes in components */
 
   /* Property page animations */
   .animate-fade-in-up {

@@ -20,6 +20,7 @@ export interface Property {
   main_image?: string;
   photo_url?: string;
   listing_photos?: string[];
+  photosCount?: number;
   city: string;
   state: string;
   zip_code: string;
