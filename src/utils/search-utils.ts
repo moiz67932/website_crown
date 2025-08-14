@@ -135,9 +135,7 @@ export function highlightMatches(
     
     return parts.map((part, index) => 
       regex.test(part) ? (
-        <span key={index} className={className}>
-          {part}
-        </span>
+        React.createElement('span', { key: index, className: className }, part)
       ) : part
     );
   } catch (error) {
