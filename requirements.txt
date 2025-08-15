@@ -1,0 +1,114 @@
+# Next.js and React Framework
+next
+react
+react-dom
+
+# UI Component Libraries
+@radix-ui/react-accordion
+@radix-ui/react-avatar
+@radix-ui/react-checkbox
+@radix-ui/react-dialog
+@radix-ui/react-dropdown-menu
+@radix-ui/react-label
+@radix-ui/react-progress
+@radix-ui/react-select
+@radix-ui/react-separator
+@radix-ui/react-slider
+@radix-ui/react-slot
+@radix-ui/react-switch
+@radix-ui/react-tabs
+@radix-ui/react-toast
+
+# Styling and CSS
+tailwindcss
+@tailwindcss/forms
+@tailwindcss/typography
+@tailwindcss/postcss
+tailwindcss-animate
+tailwind-merge
+tw-animate-css
+autoprefixer
+postcss
+class-variance-authority
+clsx
+
+# State Management and Data Fetching
+@tanstack/react-query
+zustand
+axios
+
+# Forms and Validation
+react-hook-form
+@hookform/resolvers
+zod
+
+# Maps and Geospatial
+leaflet
+react-leaflet
+leaflet-draw
+react-leaflet-draw
+@turf/turf
+
+# Drag and Drop
+@dnd-kit/core
+@dnd-kit/sortable
+@dnd-kit/utilities
+
+# Authentication and Security
+bcryptjs
+jsonwebtoken
+
+# Database
+better-sqlite3
+
+# Date Handling
+date-fns
+react-day-picker
+
+# UI Components and Charts
+lucide-react
+react-icons
+recharts
+embla-carousel-react
+vaul
+sonner
+react-resizable-panels
+
+# Content and Markdown
+react-markdown
+
+# Development and Build Tools
+typescript
+eslint
+eslint-config-next
+@eslint/eslintrc
+
+# API and OpenAPI
+@hey-api/openapi-ts
+
+# Themes and Theming
+next-themes
+
+# Email
+nodemailer
+
+# Environment Configuration
+dotenv
+
+# SEO and Sitemap
+next-sitemap
+
+# Command Menu
+cmdk
+
+# Type Definitions
+@types/node
+@types/react
+@types/react-dom
+@types/leaflet
+@types/lodash
+@types/bcryptjs
+@types/better-sqlite3
+@types/jsonwebtoken
+@types/nodemailer
+prop-types

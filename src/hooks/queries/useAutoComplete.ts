@@ -15,5 +15,8 @@ export const useAutoComplete = (query: string) => {
   return useQuery<AutoCompleteResult[]>({
     queryKey: ["autoComplete", query],
     queryFn: () => fetchAutoComplete(query),
+    enabled: query.trim().length >= 2, // Nur suchen wenn mindestens 2 Zeichen eingegeben wurden
+    staleTime: 5 * 60 * 1000, // 5 Minuten Cache
+    refetchOnWindowFocus: false,
   });
 };

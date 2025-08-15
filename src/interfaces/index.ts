@@ -16,6 +16,11 @@ export interface Property {
   favorite: boolean;
   _id: string;
   images: string[];
+  main_image_url?: string; // Add optional fields for different image sources
+  main_image?: string;
+  photo_url?: string;
+  listing_photos?: string[];
+  photosCount?: number;
   city: string;
   state: string;
   zip_code: string;

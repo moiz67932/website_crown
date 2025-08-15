@@ -193,7 +193,7 @@ export default function SellPageClient() {
   }
 
   return (
-    <div className="bg-brand-californiaSand pt-20 min-h-screen">
+    <div className="bg-brand-californiaSand dark:bg-slate-900 pt-20 min-h-screen transition-colors duration-300">
       {/* Hero Section */}
       <section className="relative h-[75vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden">
         <Image
@@ -236,23 +236,23 @@ export default function SellPageClient() {
       </section>
 
       {/* Market Performance Section */}
-      <section className="py-20 bg-brand-midnightCove text-brand-white">
+      <section className="py-20 bg-brand-midnightCove dark:bg-slate-800 text-brand-white dark:text-white transition-colors duration-300">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Market Performance & Results</h2>
-            <p className="text-xl text-brand-californiaSand/90 max-w-3xl mx-auto">
+            <p className="text-xl text-brand-californiaSand/90 dark:text-slate-300 max-w-3xl mx-auto">
               Our proven track record demonstrates consistent success in California's competitive coastal real estate
               markets.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {marketPerformance.map((metric, index) => (
-              <Card key={index} className="bg-brand-white/10 border-brand-white/20 text-center">
+                              <Card key={index} className="bg-brand-white/10 dark:bg-slate-700/50 border-brand-white/20 dark:border-slate-600/50 text-center transition-colors duration-300">
                 <CardContent className="pt-6">
                   <metric.icon className="h-12 w-12 text-brand-goldenHour mx-auto mb-4" />
                   <div className="text-4xl md:text-5xl font-bold text-brand-goldenHour mb-2">{metric.value}</div>
-                  <div className="text-brand-californiaSand/90 text-lg mb-2 font-semibold">{metric.label}</div>
-                  <div className="text-brand-californiaSand/70 text-sm">{metric.change}</div>
+                  <div className="text-brand-californiaSand/90 dark:text-slate-300 text-lg mb-2 font-semibold">{metric.label}</div>
+                  <div className="text-brand-californiaSand/70 dark:text-slate-400 text-sm">{metric.change}</div>
                 </CardContent>
               </Card>
             ))}
@@ -268,14 +268,14 @@ export default function SellPageClient() {
             <h2 className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-6">
               Why Choose Crown Coastal Homes
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
               We combine extensive market knowledge with innovative marketing strategies and personalized service to
               deliver exceptional results for our clients.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {serviceAdvantages.map((advantage, index) => (
-              <Card key={index} className="bg-brand-white shadow-medium hover:shadow-strong transition-shadow">
+              <Card key={index} className="bg-brand-white dark:bg-slate-800 shadow-medium hover:shadow-strong transition-all duration-300">
                 <CardHeader>
                   <div className="flex items-center mb-4">
                     <div className="bg-brand-pacificTeal/10 rounded-lg p-3 mr-4">
@@ -288,7 +288,7 @@ export default function SellPageClient() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-gray-600 text-base leading-relaxed">
+                  <CardDescription className="text-gray-600 dark:text-slate-400 text-base leading-relaxed">
                     {advantage.description}
                   </CardDescription>
                 </CardContent>
@@ -301,14 +301,14 @@ export default function SellPageClient() {
         <section className="mb-20">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-6">Our Professional Process</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-slate-400 max-w-3xl mx-auto">
               A systematic, four-phase approach designed to maximize your property's value and ensure a smooth
               transaction.
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {sellingProcess.map((step, index) => (
-              <Card key={index} className="bg-brand-white shadow-medium">
+              <Card key={index} className="bg-brand-white dark:bg-slate-800 shadow-medium transition-colors duration-300">
                 <CardHeader>
                   <div className="flex items-center mb-4">
                     <div className="relative mr-6">
@@ -323,10 +323,10 @@ export default function SellPageClient() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-gray-600 text-base mb-3 leading-relaxed">
+                  <CardDescription className="text-gray-600 dark:text-slate-400 text-base mb-3 leading-relaxed">
                     {step.description}
                   </CardDescription>
-                  <p className="text-sm text-gray-500 italic">{step.details}</p>
+                  <p className="text-sm text-gray-500 dark:text-slate-500 italic">{step.details}</p>
                 </CardContent>
               </Card>
             ))}
@@ -335,12 +335,12 @@ export default function SellPageClient() {
 
         {/* Property Valuation Form Section */}
         <section id="valuation-form" className="mb-20">
-          <Card className="bg-brand-white shadow-strong">
+          <Card className="bg-brand-white dark:bg-slate-800 shadow-strong transition-colors duration-300">
             <CardHeader className="text-center pb-8">
               <CardTitle className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-4">
                 Request Your Complimentary Property Valuation
               </CardTitle>
-              <CardDescription className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              <CardDescription className="text-lg text-gray-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
                 Receive a comprehensive market analysis of your property's current value, including comparable sales
                 data, market trends, and strategic pricing recommendations.
               </CardDescription>
@@ -353,8 +353,8 @@ export default function SellPageClient() {
                     <div className="flex items-start">
                       <CheckCircle className="h-6 w-6 text-brand-pacificTeal mr-3 mt-1 flex-shrink-0" />
                       <div>
-                        <span className="font-semibold text-gray-800">Detailed Market Analysis</span>
-                        <p className="text-gray-600 text-sm">
+                        <span className="font-semibold text-gray-800 dark:text-slate-200">Detailed Market Analysis</span>
+                        <p className="text-gray-600 dark:text-slate-400 text-sm">
                           Comprehensive evaluation based on recent comparable sales
                         </p>
                       </div>
@@ -362,33 +362,33 @@ export default function SellPageClient() {
                     <div className="flex items-start">
                       <CheckCircle className="h-6 w-6 text-brand-pacificTeal mr-3 mt-1 flex-shrink-0" />
                       <div>
-                        <span className="font-semibold text-gray-800">Strategic Pricing Recommendations</span>
-                        <p className="text-gray-600 text-sm">Optimal pricing strategy for current market conditions</p>
+                        <span className="font-semibold text-gray-800 dark:text-slate-200">Strategic Pricing Recommendations</span>
+                        <p className="text-gray-600 dark:text-slate-400 text-sm">Optimal pricing strategy for current market conditions</p>
                       </div>
                     </div>
                     <div className="flex items-start">
                       <CheckCircle className="h-6 w-6 text-brand-pacificTeal mr-3 mt-1 flex-shrink-0" />
                       <div>
-                        <span className="font-semibold text-gray-800">No-Obligation Consultation</span>
-                        <p className="text-gray-600 text-sm">Professional advice with no commitment required</p>
+                        <span className="font-semibold text-gray-800 dark:text-slate-200">No-Obligation Consultation</span>
+                        <p className="text-gray-600 dark:text-slate-400 text-sm">Professional advice with no commitment required</p>
                       </div>
                     </div>
                     <div className="flex items-start">
                       <CheckCircle className="h-6 w-6 text-brand-pacificTeal mr-3 mt-1 flex-shrink-0" />
                       <div>
-                        <span className="font-semibold text-gray-800">Personalized Marketing Strategy</span>
-                        <p className="text-gray-600 text-sm">Customized approach for your specific property</p>
+                        <span className="font-semibold text-gray-800 dark:text-slate-200">Personalized Marketing Strategy</span>
+                        <p className="text-gray-600 dark:text-slate-400 text-sm">Customized approach for your specific property</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-8 rounded-xl">
+                <div className="bg-gray-50 dark:bg-slate-700 p-8 rounded-xl transition-colors duration-300">
                   {!formSubmitted ? (
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="name" className="text-sm font-semibold text-gray-700">
+                          <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                             Full Name *
                           </Label>
                           <Input
@@ -400,7 +400,7 @@ export default function SellPageClient() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
+                          <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                             Email Address *
                           </Label>
                           <Input
@@ -416,7 +416,7 @@ export default function SellPageClient() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">
+                          <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                             Phone Number
                           </Label>
                           <Input
@@ -427,7 +427,7 @@ export default function SellPageClient() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="propertyType" className="text-sm font-semibold text-gray-700">
+                          <Label htmlFor="propertyType" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                             Property Type
                           </Label>
                           <Select onValueChange={(value) => handleChange("propertyType", value)}>
@@ -446,7 +446,7 @@ export default function SellPageClient() {
                       </div>
 
                       <div>
-                        <Label htmlFor="address" className="text-sm font-semibold text-gray-700">
+                        <Label htmlFor="address" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                           Property Address *
                         </Label>
                         <Input
@@ -461,7 +461,7 @@ export default function SellPageClient() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="timeframe" className="text-sm font-semibold text-gray-700">
+                          <Label htmlFor="timeframe" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                             Preferred Timeline
                           </Label>
                           <Select onValueChange={(value) => handleChange("timeframe", value)}>
@@ -478,7 +478,7 @@ export default function SellPageClient() {
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="currentValue" className="text-sm font-semibold text-gray-700">
+                          <Label htmlFor="currentValue" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                             Estimated Property Value
                           </Label>
                           <Select onValueChange={(value) => handleChange("currentValue", value)}>
@@ -497,7 +497,7 @@ export default function SellPageClient() {
                       </div>
 
                       <div>
-                        <Label htmlFor="message" className="text-sm font-semibold text-gray-700">
+                        <Label htmlFor="message" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                           Additional Information
                         </Label>
                         <Textarea
@@ -516,7 +516,7 @@ export default function SellPageClient() {
                       >
                         Request Complimentary Valuation
                       </Button>
-                      <p className="text-xs text-gray-500 text-center">
+                      <p className="text-xs text-gray-500 dark:text-slate-400 text-center">
                         By submitting this form, you agree to be contacted by our team regarding your property.
                       </p>
                     </form>
@@ -547,13 +547,13 @@ export default function SellPageClient() {
         <section className="mb-20">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-6">Client Success Stories</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-slate-400 max-w-3xl mx-auto">
               Read testimonials from satisfied clients who achieved exceptional results with our professional services.
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {clientTestimonials.map((testimonial, index) => (
-              <Card key={index} className="bg-brand-white shadow-medium">
+              <Card key={index} className="bg-brand-white dark:bg-slate-800 shadow-medium transition-colors duration-300">
                 <CardHeader>
                   <div className="flex mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
@@ -563,13 +563,13 @@ export default function SellPageClient() {
                   <MessageSquare className="h-8 w-8 text-brand-pacificTeal/30 mb-3" />
                 </CardHeader>
                 <CardContent>
-                  <blockquote className="text-gray-600 italic mb-6 leading-relaxed">"{testimonial.quote.substring(0, 300)}..."</blockquote>
+                  <blockquote className="text-gray-600 dark:text-slate-400 italic mb-6 leading-relaxed">"{testimonial.quote.substring(0, 300)}..."</blockquote>
                   <div className="border-t border-brand-silverMist/50 pt-4">
                     <p className="font-semibold text-brand-graphitePeak">{testimonial.author}</p>
-                    <p className="text-sm text-gray-500 mb-2">{testimonial.location}</p>
+                    <p className="text-sm text-gray-500 dark:text-slate-500 mb-2">{testimonial.location}</p>
                     <div className="flex justify-between items-center text-sm">
                       <span className="font-semibold text-brand-pacificTeal">{testimonial.salePrice}</span>
-                      <span className="text-gray-500">{testimonial.timeframe}</span>
+                      <span className="text-gray-500 dark:text-slate-500">{testimonial.timeframe}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -580,12 +580,12 @@ export default function SellPageClient() {
 
         {/* Contact Section */}
         <section id="contact-section" className="mb-20">
-          <Card className="bg-brand-white shadow-strong">
+          <Card className="bg-brand-white dark:bg-slate-800 shadow-strong transition-colors duration-300">
             <CardHeader className="text-center pb-8">
               <CardTitle className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-4">
                 Ready to Begin Your Property Sale?
               </CardTitle>
-              <CardDescription className="text-lg text-gray-600 max-w-3xl mx-auto">
+              <CardDescription className="text-lg text-gray-600 dark:text-slate-400 max-w-3xl mx-auto">
                 Contact our experienced team to discuss your real estate goals and learn how we can help you achieve
                 optimal results.
               </CardDescription>
@@ -595,7 +595,7 @@ export default function SellPageClient() {
                 <div className="p-6">
                   <Phone className="h-12 w-12 text-brand-pacificTeal mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-brand-midnightCove mb-2">Phone Consultation</h3>
-                  <p className="text-gray-600 mb-3 text-sm">Speak directly with a licensed agent</p>
+                  <p className="text-gray-600 dark:text-slate-400 mb-3 text-sm">Speak directly with a licensed agent</p>
                   <a href="tel:+15551234567" className="text-brand-pacificTeal hover:underline font-semibold text-lg">
                   1 858-305-4362
 
@@ -605,7 +605,7 @@ export default function SellPageClient() {
                 <div className="p-6">
                   <Mail className="h-12 w-12 text-brand-pacificTeal mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-brand-midnightCove mb-2">Email Inquiry</h3>
-                  <p className="text-gray-600 mb-3 text-sm">Receive detailed information via email</p>
+                  <p className="text-gray-600 dark:text-slate-400 mb-3 text-sm">Receive detailed information via email</p>
                   <a
                     href="mailto:sell@crowncoastalhomes.com"
                     className="text-brand-pacificTeal hover:underline font-semibold"
@@ -616,7 +616,7 @@ export default function SellPageClient() {
                 <div className="p-6">
                   <MapPin className="h-12 w-12 text-brand-pacificTeal mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-brand-midnightCove mb-2">Office Visit</h3>
-                  <p className="text-gray-600 mb-3 text-sm">Schedule an in-person consultation</p>
+                  <p className="text-gray-600 dark:text-slate-400 mb-3 text-sm">Schedule an in-person consultation</p>
                   <p className="text-brand-pacificTeal font-semibold">CA DRE #02211952</p>
                 </div>
                 {/* <div className="p-6">
@@ -634,12 +634,12 @@ export default function SellPageClient() {
 
         {/* FAQ Section */}
         <section>
-          <Card className="bg-brand-white shadow-medium">
+          <Card className="bg-brand-white dark:bg-slate-800 shadow-medium transition-colors duration-300">
             <CardHeader className="text-center">
               <CardTitle className="text-3xl md:text-4xl font-bold text-brand-midnightCove mb-4">
                 Frequently Asked Questions
               </CardTitle>
-              <CardDescription className="text-lg text-gray-600">
+              <CardDescription className="text-lg text-gray-600 dark:text-slate-400">
                 Find answers to common questions about our property selling services.
               </CardDescription>
             </CardHeader>
@@ -650,7 +650,7 @@ export default function SellPageClient() {
                     <AccordionTrigger className="text-lg text-left hover:text-brand-pacificTeal text-brand-graphitePeak font-semibold">
                       {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-gray-700 leading-relaxed pt-2 text-base">
+                    <AccordionContent className="text-gray-700 dark:text-slate-400 leading-relaxed pt-2 text-base">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>

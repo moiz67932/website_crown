@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useState, useRef, useEffect } from "react"
-import { Search, MapPin, Home, DollarSign, Map } from "lucide-react"
+import { Search, MapPin, Home, DollarSign, Map, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
@@ -13,10 +13,26 @@ export default function SearchBar() {
   const [isSearching, setIsSearching] = useState(false)
   const [searchLocationType, setSearchLocationType] = useState("city") // New state for search location type
   const router = useRouter()
-  const [searchMethod, setSearchMethod] = useState("properties")
+  const [searchMethod, setSearchMethod] = useState("properties") // Default to List view
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState('All')
+
+  // Funktion zum Highlighten von übereinstimmendem Text
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 font-semibold text-orange-800">
+          {part}
+        </span>
+      ) : part
+    );
+  }
 
   const searchTypeOptions = [
     { value: "buy", label: "For Sale" },
@@ -42,7 +58,7 @@ export default function SearchBar() {
   ]
 
   // Use the useAutoComplete hook
-  const { data: autoCompleteResults } = useAutoComplete(location)
+  const { data: autoCompleteResults, isLoading: isAutoCompleteLoading } = useAutoComplete(location)
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -59,51 +75,100 @@ export default function SearchBar() {
     e.preventDefault()
     setIsSearching(true)
 
-    // Build query parameters
-    const params = new URLSearchParams()
+    try {
+      // Build query parameters
+      const params = new URLSearchParams()
 
-    if (location) {
-      params.append("location", location)
-    }
-    if (searchType) {
-      params.append("searchType", searchType)
-    }
-    if (searchLocationType) {
-      params.append("searchLocationType", searchLocationType)
-    }
-    
-    // Simulate a network request
-    setTimeout(() => {
-      setIsSearching(false)
-      if (searchMethod === "properties") {
-        // Redirect to properties page with search parameters
-        router.push(`/properties?${params.toString()}`)
-      } else {
-        // Redirect to map page with search parameters
-        router.push(`/map?${params.toString()}`)
+      if (location) {
+        params.append("location", location)
+        params.append("search", location) // Add search parameter for the new filter system
       }
-    }, 1000)
+      if (searchType && searchType !== "all") {
+        params.append("searchType", searchType)
+        // Map searchType to status for new filter system
+        if (searchType === "buy") {
+          params.append("status", "for_sale")
+        } else if (searchType === "rent") {
+          params.append("status", "for_rent")
+        }
+      }
+      if (searchLocationType) {
+        params.append("searchLocationType", searchLocationType)
+        // Map location type to appropriate filter
+        if (searchLocationType === "city") {
+          params.append("city", location)
+        } else if (searchLocationType === "county") {
+          params.append("county", location)
+        }
+      }
+      
+      console.log('Homepage search method:', searchMethod);
+      console.log('Homepage search params:', params.toString());
+      
+      // Navigate immediately without timeout
+      if (searchMethod === "properties") {
+        const url = `/properties?${params.toString()}`;
+        console.log('Navigating to properties:', url);
+        router.push(url);
+      } else if (searchMethod === "map") {
+        const url = `/map?${params.toString()}`;
+        console.log('Navigating to map:', url);
+        router.push(url);
+      } else {
+        console.error('Unknown search method:', searchMethod);
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+    } finally {
+      setIsSearching(false)
+    }
   }
 
 
   const handleAutoCompleteClick = (value: string, type: string, county?: string) => {
     setLocation(value)
     setSearchLocationType(type) // Set the search location type
+    
     const params = new URLSearchParams()
     params.append("location", value)
-    if (searchType) {
+    params.append("search", value) // Add search parameter for new filter system
+    
+    if (searchType && searchType !== "all") {
       params.append("searchType", searchType)
+      // Map searchType to status for new filter system
+      if (searchType === "buy") {
+        params.append("status", "for_sale")
+      } else if (searchType === "rent") {
+        params.append("status", "for_rent")
+      }
     }
+    
     params.append("searchLocationType", type)
-    if (county) {
-      params.append("county", county)
-    } else {
-      params.append("county", value)
+    
+    // Map location type to appropriate filter
+    if (type === "city") {
+      params.append("city", value)
+    } else if (type === "county") {
+      if (county) {
+        params.append("county", county)
+      } else {
+        params.append("county", value)
+      }
     }
+    
+    console.log('Autocomplete search method:', searchMethod);
+    console.log('Autocomplete search params:', params.toString());
+    
     if (searchMethod === "properties") {
-      router.push(`/properties?${params.toString()}`)
+      const url = `/properties?${params.toString()}`;
+      console.log('Autocomplete navigating to properties:', url);
+      router.push(url);
+    } else if (searchMethod === "map") {
+      const url = `/map?${params.toString()}`;
+      console.log('Autocomplete navigating to map:', url);
+      router.push(url);
     } else {
-      router.push(`/map?${params.toString()}`)
+      console.error('Unknown autocomplete search method:', searchMethod);
     }
   }
 
@@ -114,19 +179,33 @@ export default function SearchBar() {
           <button
             key={option.value}
             type="button"
-            className={`cursor-pointer flex items-center px-3 py-1 rounded-full text-base font-semibold transition-colors focus:outline-none
+            className={`cursor-pointer flex items-center px-4 py-2 rounded-full text-base font-semibold transition-all duration-200 focus:outline-none border-2
               ${searchMethod === option.value
-                ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-md"
-                : "bg-transparent text-slate-700 hover:bg-orange-50 hover:text-orange-600"
+                ? "bg-gradient-to-r from-orange-400 to-yellow-400 text-white shadow-lg border-orange-300 transform scale-105"
+                : "bg-white text-slate-700 hover:bg-orange-50 hover:text-orange-600 border-orange-200 hover:border-orange-300 hover:shadow-md"
               }`}
-            onClick={() => setSearchMethod(option.value)}
+            onClick={() => {
+              console.log('Clicked on:', option.label, 'with value:', option.value);
+              console.log('Previous search method:', searchMethod);
+              setSearchMethod(option.value);
+              console.log('New search method set to:', option.value);
+              
+              // Navigate immediately based on the button clicked
+              if (option.value === "properties") {
+                console.log('Navigating to properties page immediately');
+                router.push('/properties');
+              } else if (option.value === "map") {
+                console.log('Navigating to map page immediately');
+                router.push('/map');
+              }
+            }}
             aria-pressed={searchMethod === option.value}
-            style={{ marginRight: 4, marginLeft: 0, letterSpacing: 0.5 }}
+            style={{ marginRight: 8, marginLeft: 0, letterSpacing: 0.5 }}
           >
-            <span className={`${searchMethod === option.value ? "text-white" : "text-orange-500"} mr-1`}>
+            <span className={`${searchMethod === option.value ? "text-white" : "text-orange-500"} mr-1 transition-colors`}>
               {option.icon}
             </span>
-            <span className={`${searchMethod === option.value ? "font-bold text-white drop-shadow" : "font-semibold text-orange-600"}`}>
+            <span className={`${searchMethod === option.value ? "font-bold text-white drop-shadow" : "font-semibold text-orange-600"} transition-colors`}>
               {option.label}
             </span>
           </button>
@@ -183,56 +262,89 @@ export default function SearchBar() {
           className="bg-transparent border-0 focus:ring-0 focus:border-0 text-base md:text-lg w-full px-0"
           style={{ boxShadow: 'none' }}
         />
-        {autoCompleteResults && location && (
+        {(autoCompleteResults || isAutoCompleteLoading) && location && (
           <div className="absolute top-full mt-1 w-full bg-white border border-slate-200 rounded-2xl shadow-lg z-10 max-h-[300px] overflow-y-auto">
-            {/* Tabs */}
-            <div className="sticky top-0 bg-white flex border-b border-slate-100 z-20">
-              {tabOptions.map(tab => (
-                <button
-                  key={tab.value}
-                  className={`px-5 py-3 text-base font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === tab.value ? 'border-orange-400 text-black' : 'border-transparent text-slate-500 hover:text-black'}`}
-                  onClick={() => setActiveTab(tab.value)}
-                  style={{ background: 'none' }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {/* Loading State */}
+            {isAutoCompleteLoading && (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-orange-500 mr-2" />
+                <span className="text-slate-600">Suche nach Orten...</span>
+              </div>
+            )}
+            
+            {/* Results */}
+            {!isAutoCompleteLoading && autoCompleteResults && (
+              <>
+                {/* Tabs */}
+                <div className="sticky top-0 bg-white flex border-b border-slate-100 z-20">
+                  {tabOptions.map(tab => (
+                    <button
+                      key={tab.value}
+                      className={`px-5 py-3 text-base font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === tab.value ? 'border-orange-400 text-black' : 'border-transparent text-slate-500 hover:text-black'}`}
+                      onClick={() => setActiveTab(tab.value)}
+                      style={{ background: 'none' }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
             {/* Grouped Results */}
             <div className="py-2">
               {/* PLACES (city) */}
               {(activeTab === 'All' || activeTab === 'city') && (
                 <>
                   <div className="px-6 pt-4 pb-2 text-slate-500 font-bold text-lg tracking-wide">PLACES</div>
-                  {autoCompleteResults.filter(r => r.type === 'city').map((result, index) => (
-                    <div
-                      key={index}
-                      className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).city, 'city', typeof result.value === 'string' ? '' : (result.value as any).county)}
-                    >
-                      <div className="font-medium text-black">{typeof result.value === 'string' ? result.value : (result.value as any).city + (result.value && (result.value as any).county ? ', ' + (result.value as any).county : '')}</div>
-                      <div className="text-slate-400 text-base leading-tight">City</div>
-                    </div>
-                  ))}
+                  {autoCompleteResults.filter(r => r.type === 'city').map((result, index) => {
+                    const displayText = typeof result.value === 'string' 
+                      ? result.value 
+                      : (result.value as any).city + (result.value && (result.value as any).county ? ', ' + (result.value as any).county : '');
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                        onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).city, 'city', typeof result.value === 'string' ? '' : (result.value as any).county)}
+                      >
+                        <div className="font-medium text-black">{highlightText(displayText, location)}</div>
+                        <div className="text-slate-400 text-base leading-tight">Stadt</div>
+                      </div>
+                    );
+                  })}
                 </>
               )}
               {/* COUNTIES */}
               {(activeTab === 'All' || activeTab === 'county') && (
                 <>
                   <div className="px-6 pt-4 pb-2 text-slate-500 font-bold text-lg tracking-wide">COUNTIES</div>
-                  {autoCompleteResults.filter(r => r.type === 'county').map((result, index) => (
-                    <div
-                      key={index}
-                      className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                      onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).county, 'county')}
-                    >
-                      <div className="font-medium text-black">{typeof result.value === 'string' ? result.value : (result.value as any).county}</div>
-                      <div className="text-slate-400 text-base leading-tight">County</div>
-                    </div>
-                  ))}
+                  {autoCompleteResults.filter(r => r.type === 'county').map((result, index) => {
+                    const displayText = typeof result.value === 'string' ? result.value : (result.value as any).county;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="px-6 py-3 text-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                        onClick={() => handleAutoCompleteClick(typeof result.value === 'string' ? result.value : (result.value as any).county, 'county')}
+                      >
+                        <div className="font-medium text-black">{highlightText(displayText, location)}</div>
+                        <div className="text-slate-400 text-base leading-tight">Landkreis</div>
+                      </div>
+                    );
+                  })}
                 </>
               )}
+              
+              {/* No Results */}
+              {!isAutoCompleteLoading && autoCompleteResults && autoCompleteResults.length === 0 && (
+                <div className="px-6 py-8 text-center">
+                  <div className="text-slate-500 text-lg mb-2">Keine Ergebnisse gefunden</div>
+                  <div className="text-slate-400 text-base">
+                    Versuchen Sie es mit einem anderen Suchbegriff wie "Los Angeles" oder "Orange County"
+                  </div>
+                </div>
+              )}
             </div>
+              </>
+            )}
           </div>
         )}
       </div>

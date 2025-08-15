@@ -10,7 +10,7 @@ import PropertyListPanel from "./property-list-panel"
 import MapLoadingSkeleton from "./map-loading-skeleton"
 import MapFAQ from "./map-faq"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import useListProperties from "@/hooks/queries/useGetListProperties"
+import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated"
 import "@/styles/map-styles.css"
 import { useSearchParams } from "next/navigation"
 import { NodeNextRequest } from "next/dist/server/base-http/node"
@@ -20,6 +20,12 @@ const PropertyMap = dynamic(() => import("./property-map"), {
   ssr: false,
   loading: () => <MapLoadingSkeleton />,
 })
+
+// Prevent multiple map instances by using a global flag
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  window.mapInstanceCount = (window.mapInstanceCount || 0);
+}
 
 function MapViewPage() {
   const [activeFilters, setActiveFilters] = useState<FilterValues>({})
@@ -91,8 +97,17 @@ function MapViewPage() {
   }, [activeFilters, searchLocationType])
 
 
-  const { data, isLoading } = useListProperties(apiParams)
-  const properties = data?.listings || []
+  const { properties: rawProperties, loading: isLoading } = useTrestlePropertiesIntegrated(apiParams, 100, 1)
+  
+  // Adapt properties to match PropertyListPanel interface
+  const properties = useMemo(() => {
+    return rawProperties.map(prop => ({
+      ...prop,
+      title: prop.address || 'Property',
+      square_feet: typeof prop.living_area_sqft === 'number' ? prop.living_area_sqft : parseInt(prop.living_area_sqft as string) || 0,
+      _id: prop.id,
+    }))
+  }, [rawProperties])
   
 
   // Filter by features and status on the client side if needed
@@ -154,13 +169,13 @@ function MapViewPage() {
 
           {/* Map/List Toggle - Only visible on mobile */}
           <div className="md:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000]">
-            <MapListToggle filteredPropertyIds={filteredPropertyIds} properties={properties} data={data?.seo_content}/>
+            <MapListToggle filteredPropertyIds={filteredPropertyIds} properties={properties} data={null}/>
           </div>
         </div>
 
         {/* Property List Panel - Hidden on mobile when map is shown */}
         <div className="hidden md:block w-full md:w-[400px] lg:w-[450px] border-l border-slate-200 bg-white overflow-y-auto">
-          <PropertyListPanel filteredPropertyIds={filteredPropertyIds} properties={properties} data={data?.seo_content} isLoading={isLoading} />
+          <PropertyListPanel filteredPropertyIds={filteredPropertyIds} properties={properties} data={null} isLoading={isLoading} />
         </div>
       </div>
 

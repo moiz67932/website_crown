@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { registerSchema, validatePassword } from "@/lib/validation"
 
 export default function SignupForm() {
   const router = useRouter()
@@ -20,21 +20,28 @@ export default function SignupForm() {
     lastName: "",
     email: "",
     password: "",
-    userType: "buyer",
+    dateOfBirth: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setFieldErrors({})
 
     // Validate form
     if (!agreeTerms) {
@@ -42,23 +49,50 @@ export default function SignupForm() {
       return
     }
 
+    // Validate with Zod schema
+    const validationResult = registerSchema.safeParse(formData)
+    
+    if (!validationResult.success) {
+      const errors: Record<string, string> = {}
+      validationResult.error.errors.forEach((err) => {
+        const field = err.path[0] as string
+        errors[field] = err.message
+      })
+      setFieldErrors(errors)
+      setError("Please fix the errors above")
+      return
+    }
+
     setIsLoading(true)
 
-    // Simulate API call
     try {
-      // Basic validation
-      if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
-        throw new Error("Please fill in all required fields")
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        if (data.errors) {
+          // Handle field-specific errors
+          const errors: Record<string, string> = {}
+          data.errors.forEach((err: { field: string; message: string }) => {
+            errors[err.field] = err.message
+          })
+          setFieldErrors(errors)
+        }
+        setError(data.message || "Registration failed")
+        return
       }
 
-      // Simulate network request
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // For demo purposes, let's simulate a successful registration
-      // In a real app, you would send the data to your backend
-      router.push("/login?registered=true")
+      // Registration successful - refresh page to update auth state
+      window.location.href = "/"
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -79,22 +113,32 @@ export default function SignupForm() {
             <Input
               id="firstName"
               name="firstName"
+              placeholder="First name"
               value={formData.firstName}
               onChange={handleChange}
               required
               disabled={isLoading}
+              className={fieldErrors.firstName ? "border-red-500" : ""}
             />
+            {fieldErrors.firstName && (
+              <p className="text-sm text-red-600">{fieldErrors.firstName}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="lastName">Last Name</Label>
             <Input
               id="lastName"
               name="lastName"
+              placeholder="Last name"
               value={formData.lastName}
               onChange={handleChange}
               required
               disabled={isLoading}
+              className={fieldErrors.lastName ? "border-red-500" : ""}
             />
+            {fieldErrors.lastName && (
+              <p className="text-sm text-red-600">{fieldErrors.lastName}</p>
+            )}
           </div>
         </div>
 
@@ -109,7 +153,11 @@ export default function SignupForm() {
             onChange={handleChange}
             required
             disabled={isLoading}
+            className={fieldErrors.email ? "border-red-500" : ""}
           />
+          {fieldErrors.email && (
+            <p className="text-sm text-red-600">{fieldErrors.email}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -124,7 +172,7 @@ export default function SignupForm() {
               onChange={handleChange}
               required
               disabled={isLoading}
-              className="pr-10"
+              className={`pr-10 ${fieldErrors.password ? "border-red-500" : ""}`}
             />
             <button
               type="button"
@@ -135,29 +183,34 @@ export default function SignupForm() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Password must be at least 8 characters long and include a mix of letters, numbers, and symbols.
-          </p>
+          {fieldErrors.password ? (
+            <p className="text-sm text-red-600">{fieldErrors.password}</p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">
+              Password must be at least 8 characters long with 1 uppercase letter and 1 special character.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="userType">I am a</Label>
-          <Select
-            value={formData.userType}
-            onValueChange={(value) => setFormData((prev) => ({ ...prev, userType: value }))}
+          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+          <Input
+            id="dateOfBirth"
+            name="dateOfBirth"
+            type="date"
+            value={formData.dateOfBirth}
+            onChange={handleChange}
+            required
             disabled={isLoading}
-          >
-            <SelectTrigger id="userType">
-              <SelectValue placeholder="Select user type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="buyer">Home Buyer</SelectItem>
-              <SelectItem value="seller">Home Seller</SelectItem>
-              <SelectItem value="agent">Real Estate Agent</SelectItem>
-              <SelectItem value="investor">Property Investor</SelectItem>
-            </SelectContent>
-          </Select>
+            className={fieldErrors.dateOfBirth ? "border-red-500" : ""}
+            max={new Date().toISOString().split('T')[0]}
+          />
+          {fieldErrors.dateOfBirth && (
+            <p className="text-sm text-red-600">{fieldErrors.dateOfBirth}</p>
+          )}
         </div>
+
+
 
         <div className="flex items-start space-x-2 pt-2">
           <Checkbox

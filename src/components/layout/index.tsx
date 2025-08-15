@@ -1,6 +1,7 @@
 import { FC } from "react";
 import Navbar from "./navbar";
 import Footer from "./footer";
+import ComparisonBar from "@/components/comparison/comparison-bar";
 
 const Layout: FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -8,6 +9,7 @@ const Layout: FC<{ children: React.ReactNode }> = ({ children }) => {
       <Navbar />
       <main className="flex-grow">{children}</main>
       <Footer />
+      <ComparisonBar />
     </div>
   );
 };

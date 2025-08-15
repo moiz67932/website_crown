@@ -1,6 +1,15 @@
 "use client"
-import axiosInstance from '@/lib/axios'
+import axios from 'axios'
 import { useQuery } from '@tanstack/react-query'
+
+// Create a local axios instance for this specific hook
+const apiClient = axios.create({
+  baseURL: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export interface PropertyDetail {
   parking_total: string
@@ -25,9 +34,9 @@ export interface PropertyDetail {
   longitude: number
   property_type: string
   property_sub_type: string
-  bedrooms: number
-  bathrooms: number
-  living_area_sqft: number
+  bedrooms: number | null
+  bathrooms: number | null
+  living_area_sqft: number | null
   lot_size_sqft: number
   year_built: number
   zoning: string | null
@@ -75,8 +84,20 @@ export interface PropertyDetail {
 }
 
 const fetchPropertyDetail = async (id: string): Promise<PropertyDetail> => {
-  const response = await axiosInstance.get(`/api/listings/${id}`)
-  return response.data
+  console.log('🏠 Fetching property detail for ID:', id);
+  
+  if (!id || id === 'undefined') {
+    throw new Error('Valid property ID is required');
+  }
+  
+  // Use our local API client that points to the correct base URL
+  const response = await apiClient.get(`/api/properties/${id}`);
+  
+  if (!response.data.success) {
+    throw new Error(response.data.error || 'Failed to fetch property');
+  }
+  
+  return response.data.data;
 }
 
 export const usePropertyDetail = (id: string) => {

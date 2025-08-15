@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
 import "@/styles/globals.css";
 import Layout from "@/components/layout";
 import Providers from "@/components/providers";
@@ -14,10 +14,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   title: "Crown Coastal Homes - Premium California Real Estate",
   description:
-    "Discover luxury coastal properties and homes throughout California. Buy, rent, and invest in premium real estate with Crown Coastal Homes.",}
+    "Discover luxury coastal properties and homes throughout California. Buy, rent, and invest in premium real estate with Crown Coastal Homes.",
+  icons: {
+    icon: [
+      { url: "/logo.svg", sizes: "16x16" },
+      { url: "/logo.svg", sizes: "32x32" },
+    ],
+    apple: { url: "/logo.svg", sizes: "180x180" },
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,13 +46,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-      <link rel="apple-touch-icon" sizes="180x180" href="/logo.svg" />
-        <link rel="icon" sizes="32x32" href="/logo.svg" />
-        <link rel="icon" sizes="16x16" href="/logo.svg" />
-      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfairDisplay.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
         <Providers>
           <Layout>

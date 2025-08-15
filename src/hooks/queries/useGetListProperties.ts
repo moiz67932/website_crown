@@ -36,14 +36,21 @@ const fetchListProperties = async ({ skip = 0, limit = 10, county, propertyType,
     ...(sortBy && { sort_by: sortBy }),
   });
 
+  const fullUrl = `/api/listings?${queryParams.toString()}`;
+  console.log('🔥 Making API call to:', fullUrl);
+  console.log('🔥 Sort parameter being sent:', sortBy);
+  console.log('🔥 Full query parameters:', Object.fromEntries(queryParams));
+
   try {
-    const res = await axiosInstance.get(`/api/listings?${queryParams.toString()}`, {
+    const res = await axiosInstance.get(fullUrl, {
       headers: {
         accept: "application/json",
       },
     });
+    console.log('🔥 API Response received, total items:', res.data?.total_items);
     return res.data;
   } catch (error) {
+    console.error('🔥 API Error:', error);
     throw new Error("Failed to fetch list properties");
   }
 };
