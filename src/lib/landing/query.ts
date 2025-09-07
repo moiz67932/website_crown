@@ -5,6 +5,8 @@ import { LandingKind, LandingData, LandingStats, LandingPropertyCard } from '@/t
 import { searchProperties } from '@/lib/db'
 import { getPgPool } from '@/lib/db'
 import { getAIDescription } from './ai'
+import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
+import type { LandingDef } from './defs'
 
 // Map landing kind to additional filter predicates for SQL aggregates
 function buildKindFilter(kind: LandingKind): { sql: string; params: any[]; searchParams: Record<string, any> } {
@@ -13,9 +15,13 @@ function buildKindFilter(kind: LandingKind): { sql: string; params: any[]; searc
       return { sql: "AND (pool_features IS NOT NULL AND pool_features <> '')", params: [], searchParams: { hasPool: true } }
     case 'homes-under-500k':
       return { sql: 'AND list_price <= $EXTRA1', params: [500000], searchParams: { maxPrice: 500000 } }
+    case 'homes-over-1m':
+      return { sql: 'AND list_price >= $EXTRA1', params: [1000000], searchParams: { minPrice: 1000000 } }
+    case 'luxury-homes':
+      return { sql: 'AND list_price >= $EXTRA1', params: [1000000], searchParams: { minPrice: 1000000 } }
     case 'condos-for-sale':
       return { sql: "AND LOWER(property_type) LIKE LOWER('%condo%')", params: [], searchParams: { propertyType: 'condo' } }
-    case 'two-bedroom-apartments':
+  case '2-bedroom-apartments':
       // Treat as property_type containing apartment & exactly two beds
       return { sql: "AND LOWER(property_type) LIKE LOWER('%apartment%') AND bedrooms = 2", params: [], searchParams: { propertyType: 'apartment', minBedrooms: 2, maxBedrooms: 2 } }
     case 'homes-for-sale':
@@ -45,6 +51,13 @@ function detectStateToken(tokenRaw: string): { isState: boolean; abbr?: string; 
     return { isState: true, abbr: FULL_TO_ABBR[token], canonical: token }
   }
   return { isState: false }
+}
+
+// Temporary location metadata derivation (California-only launch).
+// Later: integrate real county / region / nearby city intelligence.
+function deriveLocationMeta(city: string): { county: string; region: string; nearby: string[] } {
+  // Placeholder: treat region as 'California'; leave county blank until data source available.
+  return { county: '', region: 'California', nearby: [] }
 }
 
 // Cache whether days_on_market column exists to build safe aggregate query
@@ -132,7 +145,7 @@ export async function getLandingStats(cityOrState: string, kind: LandingKind): P
   }
 }
 
-export async function getFeaturedProperties(cityOrState: string, kind: LandingKind, limit = 12): Promise<LandingPropertyCard[]> {
+export async function getFeaturedProperties(cityOrState: string, kind: LandingKind, limit = 12, extraFilters?: Record<string, any>): Promise<LandingPropertyCard[]> {
   const kindFilter = buildKindFilter(kind)
   const stateInfo = detectStateToken(cityOrState)
   try {
@@ -141,6 +154,8 @@ export async function getFeaturedProperties(cityOrState: string, kind: LandingKi
       sort: 'updated',
       ...kindFilter.searchParams
     }
+  // Merge any additional filters (e.g., from LandingDef presets already mapped to searchProperties schema)
+  if (extraFilters) Object.assign(baseParams, extraFilters)
     if (stateInfo.isState) {
       baseParams.state = stateInfo.abbr
     } else {
@@ -178,21 +193,117 @@ export async function getFeaturedProperties(cityOrState: string, kind: LandingKi
 }
 
 // High-level orchestrator for landing page data
-export async function getLandingData(cityOrState: string, kind: LandingKind): Promise<LandingData> {
+export async function getLandingData(cityOrState: string, kind: LandingKind, opts?: { landingDef?: LandingDef }): Promise<LandingData> {
+  const landingDef = opts?.landingDef
+  // Derive additional filters from config (must be mapped to searchProperties accepted params)
+  let extraFilters: Record<string, any> | undefined
+  if (landingDef) {
+    try {
+      const preset = landingDef.filters(cityOrState)
+      // Map generic filters to backend param names (basic mapping kept inline for now)
+      const mapped: Record<string, any> = {}
+      if (preset.city) mapped.city = preset.city
+      if ((preset as any).status) mapped.status = (preset as any).status
+      if ((preset as any).propertyType) {
+        const pt = (preset as any).propertyType
+        mapped.propertyType = Array.isArray(pt) ? pt[0] : pt
+      }
+      if ((preset as any).hasPool) mapped.hasPool = true
+      if ((preset as any).priceRange) {
+        const [min, max] = (preset as any).priceRange
+        if (min != null) mapped.minPrice = min
+        if (max != null && max !== Number.MAX_SAFE_INTEGER) mapped.maxPrice = max
+      }
+      if ((preset as any).beds) {
+        const bedsVal = (preset as any).beds
+        if (typeof bedsVal === 'string' && bedsVal.endsWith('+')) mapped.minBedrooms = Number(bedsVal.replace(/\+/,'') || '0')
+        else mapped.bedrooms = bedsVal
+      }
+      extraFilters = mapped
+    } catch (e) {
+      console.warn('[landingData] preset filter mapping failed', e)
+    }
+  }
+
+  // AI description selection override via landingDef.aiPromptKey
+  let aiDescriptionPromise: Promise<string | undefined>
+  if (landingDef) {
+    const promptFn = LANDING_PROMPTS[landingDef.aiPromptKey]
+    if (promptFn) {
+      const cityTitleCase = cityOrState.replace(/\b\w/g, c => c.toUpperCase())
+      const { county, region, nearby } = deriveLocationMeta(cityTitleCase)
+      const generatedPrompt = promptFn(cityTitleCase, county, region, nearby)
+      if (process.env.LANDING_TRACE) {
+        console.log('[landing.ai.prompt.preview]', generatedPrompt.slice(0, 140) + '...')
+      }
+      // Reuse existing OpenAI logic by calling getAIDescription with a synthetic kind (still uses caching per city+kind)
+      // If we want unique cache per landing variant, that's already handled by passing the landing slug as kind.
+      aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+      // NOTE: For now we let backend use its internal prompt; to fully customize we'd extend getAIDescription to accept raw prompt.
+      // Future: pass customPrompt down when getAIDescription supports it.
+    } else {
+      aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+    }
+  } else {
+    aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+  }
+
   const [stats, featured, aiDescriptionHtml] = await Promise.all([
     getLandingStats(cityOrState, kind),
-    getFeaturedProperties(cityOrState, kind, 12),
-    getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+    getFeaturedProperties(cityOrState, kind, 12, extraFilters),
+    aiDescriptionPromise
   ])
 
   // Basic placeholder / TODO sections (external data integrations later)
   const neighborhoods: NonNullable<LandingData['neighborhoods']> = [] // TODO integrate neighborhoods API
   const schools: NonNullable<LandingData['schools']> = [] // TODO integrate schools API
   const trends: NonNullable<LandingData['trends']> = [] // TODO market trends source
-  const faq: NonNullable<LandingData['faq']> = [
+  // FAQ switching by landingDef.faqKey (placeholder logic)
+  const buildDefaultFaq = (): NonNullable<LandingData['faq']> => ([
     { q: 'How competitive is the market?', a: 'Market competitiveness data integration pending. Currently derived from active inventory levels.' },
     { q: 'What is the average days on market?', a: stats.daysOnMarket ? `${stats.daysOnMarket} days (rolling average).` : 'Days on market data loading.' }
-  ]
+  ])
+  let faq: NonNullable<LandingData['faq']>
+  switch (landingDef?.faqKey) {
+    case 'faq_condos_for_sale':
+      faq = [
+        { q: 'What HOA fees should I expect?', a: 'Typical condo HOA fees vary by building amenities; detailed integration coming soon.' },
+        { q: 'Are there newer vs older buildings differences?', a: 'Newer builds often feature modern amenities and energy efficiency; older buildings may have larger floor plans.' }
+      ]
+      break
+    case 'faq_homes_with_pool':
+      faq = [
+        { q: 'How much does pool maintenance cost?', a: 'Monthly professional service can range widely; integration of cost estimates forthcoming.' },
+        { q: 'Do pool homes sell faster?', a: 'Seasonally dependent; days on market data will refine this answer soon.' }
+      ]
+      break
+    case 'faq_luxury_homes':
+      faq = [
+        { q: 'What defines a luxury home locally?', a: 'Generally $1M+ price points with premium finishes, views, or prestige neighborhoods.' },
+        { q: 'Are luxury inventories tight?', a: 'Inventory dynamics vary; deeper luxury market analytics planned.' }
+      ]
+      break
+    case 'faq_homes_under_500k':
+      faq = [
+        { q: 'Is under $500k realistic here?', a: 'Entry-level inventory is competitive; expect tradeoffs in size, age, or location.' },
+        { q: 'Can I use FHA or VA loans?', a: 'Yes—financing scenario guidance coming soon.' }
+      ]
+      break
+    case 'faq_homes_over_1m':
+      faq = [
+        { q: 'What features are common over $1M?', a: 'Often larger lots, upgraded kitchens, outdoor living, or prime locations.' },
+        { q: 'Do high-end homes take longer to sell?', a: 'Absorption varies; enhanced metrics are on the roadmap.' }
+      ]
+      break
+    case 'faq_2_bed_apartments':
+      faq = [
+        { q: 'Are 2-bedroom units good for investment?', a: 'They can balance rentability and cost; rental yield data pending.' },
+        { q: 'Do most include parking?', a: 'Varies by building age and location; amenity data integration forthcoming.' }
+      ]
+      break
+    default:
+      faq = buildDefaultFaq()
+  }
   const related: NonNullable<LandingData['related']> = [
     { label: `${titleCase(cityOrState)} Condos`, href: `/${cityOrState}/condos-for-sale` },
     { label: `${titleCase(cityOrState)} Homes with Pool`, href: `/${cityOrState}/homes-with-pool` },
@@ -200,7 +311,11 @@ export async function getLandingData(cityOrState: string, kind: LandingKind): Pr
   ]
 
   const seoTitleBase = kind.replace(/-/g, ' ')
-  const seo: LandingData['seo'] = {
+  const seo: LandingData['seo'] = landingDef ? {
+    title: landingDef.title(cityOrState),
+    description: landingDef.description(cityOrState),
+    canonical: landingDef.canonicalPath(cityOrState.toLowerCase().replace(/\s+/g,'-'))
+  } : {
     title: `${titleCase(cityOrState)} ${titleCase(seoTitleBase)}`,
     description: `Explore ${titleCase(cityOrState)} ${seoTitleBase} listings, real-time stats, and local housing insights.`,
     canonical: `/${cityOrState}/${kind}`

@@ -2,16 +2,19 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { getLandingHeroImage } from '@/lib/landing/image';
 
-interface Props {
-  city: string;
-  kind: string;
-  image?: string;
-}
+interface Props { city: string; kind: string; image?: string }
 
 const kindLabel: Record<string, string> = {};
 
+function kindToHeading(kind: string, city: string) {
+  const pretty = kind.replace(/-/g, ' ')
+  // Capitalize each word
+  const cap = pretty.replace(/\b\w/g, c => c.toUpperCase())
+  return `${cap} in ${city}`
+}
+
 export default async function Hero({ city, kind, image }: Props) {
-  const title = `Homes for Sale in ${city}`; // For now only homes-for-sale route implemented
+  const title = kindToHeading(kind, city)
   // If no image prop provided, attempt dynamic fetch / cache lookup.
   let heroImage = image
   if (!heroImage) {

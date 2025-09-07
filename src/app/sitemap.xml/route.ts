@@ -1,4 +1,5 @@
 import { CA_CITIES } from '@/lib/seo/cities'
+import { LANDINGS } from '@/lib/landing/defs'
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.example.com'
@@ -11,11 +12,13 @@ export async function GET() {
     { url: '/sitemap', priority: '0.4', changefreq: 'monthly' }
   ]
 
-  const cityRoutes = CA_CITIES.map(c => ({
-    url: `/california/${c}/homes-for-sale`,
-    priority: '0.8',
-    changefreq: 'daily'
-  }))
+  const cityRoutes = CA_CITIES.flatMap(c => (
+    LANDINGS.map(l => ({
+      url: `/california/${c}/${l.slug}`,
+      priority: l.slug === 'homes-for-sale' ? '0.8' : '0.7',
+      changefreq: 'daily'
+    }))
+  ))
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`
 

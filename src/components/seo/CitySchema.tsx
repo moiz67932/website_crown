@@ -3,9 +3,10 @@ interface Props {
   city: string
   canonical: string // path beginning with '/'
   featured: Array<{ id: string; url?: string }>
+  variant?: string // landing slug (e.g. condos-for-sale)
 }
 
-export default function CitySchema({ city, canonical, featured }: Props) {
+export default function CitySchema({ city, canonical, featured, variant }: Props) {
   const baseEnv = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.example.com'
   const origin = baseEnv.replace(/\/+$/, '')
   const absCanonical = `${origin}${canonical}`
@@ -16,6 +17,8 @@ export default function CitySchema({ city, canonical, featured }: Props) {
     url: p.url || `${origin}/homes/${p.id}`
   }))
 
+  const nameSuffix = variant ? ` — ${variant.replace(/-/g, ' ')}` : ''
+
   const data = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -23,7 +26,7 @@ export default function CitySchema({ city, canonical, featured }: Props) {
         '@type': 'WebPage',
         '@id': `${absCanonical}#webpage`,
         url: absCanonical,
-        name: `${city}, CA Homes For Sale`
+        name: `${city}, CA Homes${nameSuffix}`.trim()
       },
       {
         '@type': 'BreadcrumbList',

@@ -21,6 +21,7 @@ import BusinessDirectorySection from './sections/BusinessDirectory'
 import RelatedCitiesSection from './sections/RelatedCities'
 // SEO additions
 import CitySchema from '@/components/seo/CitySchema'
+import RelatedVariants from './sections/RelatedVariants'
 import Link from 'next/link'
 import { CA_CITIES, cityToTitle } from '@/lib/seo/cities'
 
@@ -42,14 +43,16 @@ interface Props { data: LandingData }
 export default function LandingTemplate({ data }: Props) {
   const { city, kind } = data
   const featured = data.featured || []
+  const citySlug = city.toLowerCase().replace(/\s+/g, '-')
   return (
     <div className="flex flex-col pb-20 pt-20">
       {/* JSON-LD for city landing (only render when we have a city) */}
       {city && (
         <CitySchema
           city={city}
-          canonical={`/california/${city.toLowerCase().replace(/\s+/g, '-')}/homes-for-sale`}
+          canonical={`/california/${citySlug}/${kind}`}
           featured={(featured || []).map(f => ({ id: f.listingKey, url: (f as any).url || undefined }))}
+          variant={kind}
         />
       )}
       {/* Hero + Intro inside constrained container */}
@@ -124,7 +127,8 @@ export default function LandingTemplate({ data }: Props) {
         <BusinessDirectorySection businesses={data.businessDirectory} /> */}
         <FAQSection items={data.faq} />
         <RelatedLinksSection links={data.related} />
-        <RelatedCitiesSection cities={data.relatedCities} />
+  <RelatedCitiesSection cities={data.relatedCities} />
+  <RelatedVariants citySlug={citySlug} currentSlug={kind} />
         {/* Simple related cities block (only CA launch) */}
         <section className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Related California Cities</h3>

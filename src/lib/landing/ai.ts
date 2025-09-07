@@ -158,7 +158,7 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
 }
 
 async function callOpenAI(prompt: string): Promise<string | undefined> {
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+  const model = process.env.OPENAI_MODEL || 'gpt-5-mini'
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), Number(process.env.OPENAI_TIMEOUT_MS || 25000))
   try {

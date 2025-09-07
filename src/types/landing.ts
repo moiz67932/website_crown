@@ -6,8 +6,10 @@ export type LandingKind =
   | 'homes-for-sale'
   | 'condos-for-sale'
   | 'homes-with-pool'
+  | 'luxury-homes'
   | 'homes-under-500k'
-  | 'two-bedroom-apartments'
+  | 'homes-over-1m'
+  | '2-bedroom-apartments'
 
 export interface LandingSEO {
   title: string
