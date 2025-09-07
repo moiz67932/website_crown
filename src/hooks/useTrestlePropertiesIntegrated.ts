@@ -117,7 +117,7 @@ export function useTrestlePropertiesIntegrated(
         const convertedProperties = apiProperties.map(convertTrestleToProperty);
         
         // Trigger vector database indexing in the background
-        if (apiProperties.length > 0) {
+        if (apiProperties.length > 0 && newOffset === 0) {
           triggerVectorIndexing(apiProperties);
         }
 
@@ -146,14 +146,17 @@ export function useTrestlePropertiesIntegrated(
   // Trigger vector database indexing (fire and forget)
   const triggerVectorIndexing = async (apiProperties: any[]) => {
     try {
+      // Check current status first to avoid redundant POSTs
+      const statusResp = await axios.get('/api/admin/vector-index');
+      const stats = statusResp.data?.data?.stats;
+      if (stats && stats.totalProperties > 0 && stats.totalProperties === apiProperties.length) {
+        return; // assume already indexed same page-size set
+      }
       console.log('🔍 Triggering vector database indexing...');
-      await axios.post('/api/admin/vector-index', {
-        properties: apiProperties
-      });
-      console.log('✅ Vector indexing triggered successfully');
+      await axios.post('/api/admin/vector-index', { properties: apiProperties });
+      console.log('✅ Vector indexing triggered (or skipped server-side)');
     } catch (error) {
       console.warn('⚠️ Vector indexing failed (non-critical):', error);
-      // Don't throw error as this is background operation
     }
   };
 

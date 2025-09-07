@@ -1,56 +1,34 @@
+import { CA_CITIES } from '@/lib/seo/cities'
 
 export async function GET() {
-  // Base URL - replace with your actual domain in production
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://crowncoastalhomes.com"
-
-  // Current date for lastmod
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.example.com'
   const date = new Date().toISOString()
 
-  // Start XML content
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`
-
-  // Add static routes
   const staticRoutes = [
-    { url: "/", priority: "1.0", changefreq: "daily" },
-    { url: "/properties", priority: "0.9", changefreq: "daily" },
-    { url: "/map", priority: "0.8", changefreq: "daily" },
-    { url: "/about", priority: "0.7", changefreq: "monthly" },
-    { url: "/contact", priority: "0.7", changefreq: "monthly" },
-    { url: "/sitemap", priority: "0.5", changefreq: "monthly" },
+    { url: '/', priority: '1.0', changefreq: 'weekly' },
+    { url: '/about', priority: '0.6', changefreq: 'monthly' },
+    { url: '/contact', priority: '0.5', changefreq: 'monthly' },
+    { url: '/sitemap', priority: '0.4', changefreq: 'monthly' }
   ]
 
-  // Add static routes to XML
-  staticRoutes.forEach((route) => {
-    xml += `  <url>
-    <loc>${baseUrl}${route.url}</loc>
-    <lastmod>${date}</lastmod>
-    <changefreq>${route.changefreq}</changefreq>
-    <priority>${route.priority}</priority>
-  </url>
-`
-  })
+  const cityRoutes = CA_CITIES.map(c => ({
+    url: `/california/${c}/homes-for-sale`,
+    priority: '0.8',
+    changefreq: 'daily'
+  }))
 
-//   // Add dynamic property routes
-//   properties.forEach((property) => {
-//     xml += `  <url>
-//     <loc>${baseUrl}/properties/${property.id}</loc>
-//     <lastmod>${date}</lastmod>
-//     <changefreq>weekly</changefreq>
-//     <priority>0.8</priority>
-//   </url>
-// `
-//   })
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`
 
-  // Close XML
-  xml += `</urlset>`
+  for (const route of [...staticRoutes, ...cityRoutes]) {
+    xml += `  <url>\n    <loc>${baseUrl}${route.url}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>\n`
+  }
 
-  // Return XML with proper content type
+  xml += '</urlset>'
+
   return new Response(xml, {
     headers: {
-      "Content-Type": "application/xml",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
-    },
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600'
+    }
   })
 }

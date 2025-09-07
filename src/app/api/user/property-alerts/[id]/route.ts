@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
 import { PropertyAlertsService } from '@/lib/database';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+// Loosen param typing for Next.js route handler validation compatibility
+interface RouteParams { params: any }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {

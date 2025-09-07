@@ -18,9 +18,12 @@ export function useAuth() {
     try {
       const currentUser = await ClientAuthService.getCurrentUser()
       setUser(currentUser)
-      setIsAuthenticated(currentUser !== null)
-    } catch (error) {
-      console.error('Error checking auth status:', error)
+      setIsAuthenticated(!!currentUser)
+    } catch (error: any) {
+      // Silently handle 401 style errors; only log unexpected ones
+      if (error?.status && error.status !== 401) {
+        console.error('Error checking auth status:', error)
+      }
       setUser(null)
       setIsAuthenticated(false)
     } finally {

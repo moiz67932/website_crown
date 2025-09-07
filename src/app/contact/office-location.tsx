@@ -4,11 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, Clock, Phone, Mail, ExternalLink, AlertCircle } from "lucide-react"
 
-declare global {
-  interface Window {
-    google?: any;
-  }
-}
+// Removed duplicate global declaration for window.google to avoid TS conflict
 
 export default function OfficeLocation() {
   const mapRef = useRef<HTMLDivElement>(null)

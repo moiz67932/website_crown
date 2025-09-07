@@ -1,36 +1,52 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Bed, Bath, Square, Heart, MapPin, HomeIcon as HomeModern, Maximize, Scale } from "lucide-react" // Added HomeModern
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { Property } from "@/interfaces"
-import React, { useState } from "react"
-import { useComparison } from "@/contexts/comparison-context"
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Bed,
+  Bath,
+  Square,
+  Heart,
+  MapPin,
+  HomeIcon as HomeModern,
+  Maximize,
+  Scale,
+} from "lucide-react"; // Added HomeModern
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Property } from "@/interfaces";
+import React, { useState } from "react";
+import { useComparison } from "@/contexts/comparison-context";
 
 // Function to get appropriate fallback image based on property type, price, and listing key for variety
-const getPropertyFallbackImage = (propertyType: string, price: number, listingKey?: string) => {
+const getPropertyFallbackImage = (
+  propertyType: string,
+  price: number,
+  listingKey?: string
+) => {
   // Available property images for variety
   const propertyImages = [
     "/luxury-modern-house-exterior.png",
-    "/modern-beach-house.png", 
+    "/modern-beach-house.png",
     "/modern-ocean-living.png",
     "/luxury-master-bedroom.png",
     "/california-coastal-sunset.png",
     "/san-diego-bay-sunset.png",
     "/los.jpg",
-    "/san-fan.jpg"
+    "/san-fan.jpg",
   ];
 
   // Select image based on property characteristics with some randomness for variety
   let imageIndex = 0;
-  
+
   // Add variety based on listing key (use last digit for variation)
   const varietyFactor = listingKey ? parseInt(listingKey.slice(-1)) || 0 : 0;
-  
-  if (propertyType?.toLowerCase().includes('lease') || propertyType?.toLowerCase().includes('rent')) {
+
+  if (
+    propertyType?.toLowerCase().includes("lease") ||
+    propertyType?.toLowerCase().includes("rent")
+  ) {
     imageIndex = (1 + varietyFactor) % 4; // Cycle between beach house, ocean living, bedroom, and bay for rentals
   } else if (price > 800000) {
     imageIndex = varietyFactor % 2 === 0 ? 0 : 2; // Alternate between luxury exterior and ocean living for high-end
@@ -46,40 +62,90 @@ const getPropertyFallbackImage = (propertyType: string, price: number, listingKe
 };
 
 interface PropertyCardProps {
-  property: Property
-  showCompareButton?: boolean
-  onCompareClick?: (property: Property) => void
+  property: Property;
+  showCompareButton?: boolean;
+  onCompareClick?: (property: Property) => void;
 }
 
-export function PropertyCard({ property, showCompareButton = true, onCompareClick }: PropertyCardProps) {
-  const [favoriteProperties, setFavoriteProperties] = useState<string[]>([])
-  const [currentImageSrc, setCurrentImageSrc] = useState<string>('')
-  const [imageError, setImageError] = useState(false)
-  const { addToComparison, isInComparison, getComparisonCount } = useComparison()
+export function PropertyCard({
+  property,
+  showCompareButton = true,
+  onCompareClick,
+}: PropertyCardProps) {
+  const [favoriteProperties, setFavoriteProperties] = useState<string[]>([]);
+  // currentImageSrc not needed; compute on render
+  const [imageError, setImageError] = useState(false);
+  const { addToComparison, isInComparison, getComparisonCount } =
+    useComparison();
 
   const toggleFavorite = (e: React.MouseEvent, propertyId: string) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
 
     setFavoriteProperties((prev) =>
-      prev.includes(propertyId) ? prev.filter((id) => id !== propertyId) : [...prev, propertyId],
-    )
-  }
+      prev.includes(propertyId)
+        ? prev.filter((id) => id !== propertyId)
+        : [...prev, propertyId]
+    );
+  };
 
   // Determine the best image source with fallback logic
+  const proxify = (url?: string | null) => {
+    if (!url) return undefined;
+    if (url.startsWith("/")) return url; // local asset
+    // Already proxied?
+    if (url.includes("/api/media?")) return url;
+    try {
+      // Basic heuristic: only proxy if looks like http(s)
+      if (/^https?:/i.test(url)) {
+        return `/api/media?url=${encodeURIComponent(url)}`;
+      }
+    } catch {}
+    return url;
+  };
+
+  // const getImageSrc = () => {
+  //   const fallback = getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key);
+  //   if (imageError) return fallback;
+  //   const candidate = property.images?.[0] ||
+  //     property.image ||
+  //     (property as any).main_photo_url ||
+  //     property.main_image_url ||
+  //     (property as any).main_photo ||
+  //     property.main_image ||
+  //     property.photo_url ||
+  //     property.listing_photos?.[0] ||
+  //     fallback;
+  //   return proxify(candidate) || fallback;
+  // };
+
   const getImageSrc = () => {
-    if (imageError) {
-      return getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key);
+    const fallback = getPropertyFallbackImage(
+      property.property_type,
+      property.list_price,
+      property.listing_key
+    );
+
+    if (imageError) return fallback;
+
+    // NEW: Prefer dynamic media resolution via listingKey so we always fetch a fresh, valid MediaURL.
+    if (property.listing_key) {
+      // Use object=1 (primary photo). Could make this smarter later.
+      return `/api/media?listingKey=${encodeURIComponent(property.listing_key)}&object=1`;
     }
-    
-    return property.images?.[0] || 
-           property.image || 
-           property.main_image_url || 
-           property.main_image || 
-           property.photo_url || 
-           property.listing_photos?.[0] ||
-           getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key);
-  }
+
+    const candidate =
+      property.images?.[0] ||
+      property.image ||
+      (property as any).main_photo_url ||
+      property.main_image_url ||
+      (property as any).main_photo ||
+      property.main_image ||
+      property.photo_url ||
+      property.listing_photos?.[0];
+
+    return candidate || fallback;
+  };
 
   // Reset image error state when property changes
   React.useEffect(() => {
@@ -88,37 +154,54 @@ export function PropertyCard({ property, showCompareButton = true, onCompareClic
 
   // Debug log to understand available image sources
   React.useEffect(() => {
-    const isTargetProperty = property.address?.includes("34130 Shasta Street") || property.address?.includes("Shasta Street");
+    const isTargetProperty =
+      property.address?.includes("34130 Shasta Street") ||
+      property.address?.includes("Shasta Street");
     if (isTargetProperty) {
-      console.log(`🎯 TARGET PROPERTY ${property.listing_key} (${property.address}) image sources:`, {
-        images: property.images,
-        image: property.image,
-        main_image_url: property.main_image_url,
-        main_image: property.main_image,
-        photo_url: property.photo_url,
-        listing_photos: property.listing_photos,
-        address: property.address,
-        final_src: getImageSrc(),
-        imageError: imageError
-      });
+      console.log(
+        `🎯 TARGET PROPERTY ${property.listing_key} (${property.address}) image sources:`,
+        {
+          images: property.images,
+          image: property.image,
+          main_image_url: property.main_image_url,
+          main_image: property.main_image,
+          photo_url: property.photo_url,
+          listing_photos: property.listing_photos,
+          address: property.address,
+          final_src: getImageSrc(),
+          imageError: imageError,
+        }
+      );
     }
   }, [property, imageError]);
 
+  const raw = getImageSrc();
+  // If raw already starts with /api/media we do NOT proxify; it's already our internal dynamic endpoint.
+  const proxied = raw.startsWith('/api/media') ? raw : (proxify(raw) || raw || '');
+  // console.log("Image src going into <Image>:", proxied); // /api/media?listingKey=... path expected now
+
   return (
     <Link
-      href={`/properties/${property?.address ? property?.address?.replace(/\s+/g, '-').replace(/[^\w-]/g, '').toLowerCase() : 'property'}/${property.listing_key || property.id || 'unknown'}`}
+      href={`/properties/${
+        property?.address
+          ? property?.address
+              ?.replace(/\s+/g, "-")
+              .replace(/[^\w-]/g, "")
+              .toLowerCase()
+          : "property"
+      }/${property.listing_key || property.id || "unknown"}`}
       key={property.listing_key || property.id}
       className="group bg-white dark:bg-slate-900 rounded-3xl shadow-soft hover:shadow-strong p-0 w-full flex flex-col relative transition-all duration-500 hover-lift hover:scale-[1.02] border border-neutral-100 dark:border-slate-700 theme-transition"
     >
       {/* Enhanced Status badge */}
       <div
         className={`absolute top-6 left-6 z-20 px-4 py-2 rounded-2xl text-xs font-bold backdrop-blur-sm border transition-all duration-300 group-hover:scale-105 ${
-          property.property_type == 'ResidentialLease' 
-            ? 'bg-error-500/90 border-error-400/50 text-white shadow-lg' 
-            : 'bg-success-500/90 border-success-400/50 text-white shadow-lg'
+          property.property_type == "ResidentialLease"
+            ? "bg-error-500/90 border-error-400/50 text-white shadow-lg"
+            : "bg-success-500/90 border-success-400/50 text-white shadow-lg"
         }`}
       >
-        {property.property_type == 'ResidentialLease' ? 'FOR RENT' : 'FOR SALE'}
+        {property.property_type == "ResidentialLease" ? "FOR RENT" : "FOR SALE"}
       </div>
 
       {/* Enhanced Type badge */}
@@ -137,13 +220,13 @@ export function PropertyCard({ property, showCompareButton = true, onCompareClic
         >
           <Heart
             className={`h-5 w-5 transition-all duration-300 ${
-              favoriteProperties.includes(property._id) 
-                ? "fill-rose-500 text-rose-500 scale-110" 
+              favoriteProperties.includes(property._id)
+                ? "fill-rose-500 text-rose-500 scale-110"
                 : "group-hover:scale-110"
             }`}
           />
         </Button>
-        
+
         {/* Compare Button */}
         {showCompareButton && (
           <Button
@@ -151,40 +234,53 @@ export function PropertyCard({ property, showCompareButton = true, onCompareClic
             size="icon"
             className={cn(
               "h-10 w-10 rounded-2xl bg-white/95 dark:bg-slate-800/95 hover:bg-white dark:hover:bg-slate-700 border border-neutral-200/50 dark:border-slate-600/50 backdrop-blur-sm shadow-medium transition-all duration-300 hover:scale-110 hover:shadow-strong theme-transition",
-              isInComparison(property.listing_key) 
-                ? "text-blue-600 border-blue-300 bg-blue-50" 
+              isInComparison(property.listing_key)
+                ? "text-blue-600 border-blue-300 bg-blue-50"
                 : "text-neutral-600 dark:text-neutral-400 hover:text-blue-500 dark:hover:text-blue-400"
             )}
             onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              addToComparison(property)
-              onCompareClick?.(property)
+              e.preventDefault();
+              e.stopPropagation();
+              addToComparison(property);
+              onCompareClick?.(property);
             }}
-            title={isInComparison(property.listing_key) ? "Property in comparison" : "Add to comparison"}
+            title={
+              isInComparison(property.listing_key)
+                ? "Property in comparison"
+                : "Add to comparison"
+            }
           >
-            <Scale className={cn(
-              "h-5 w-5 transition-all duration-300 group-hover:scale-110",
-              isInComparison(property.listing_key) && "text-blue-600"
-            )} />
+            <Scale
+              className={cn(
+                "h-5 w-5 transition-all duration-300 group-hover:scale-110",
+                isInComparison(property.listing_key) && "text-blue-600"
+              )}
+            />
           </Button>
         )}
       </div>
 
-      {/* Enhanced Property image */}
+      {/* Enhanced Property image (Next/Image with unoptimized to avoid /_next/image) */}
       <div className="relative h-64 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center rounded-t-3xl overflow-hidden theme-transition">
         <Image
-          src={getImageSrc()}
-          alt={property.address || 'Property'}
+          src={proxied} // ALWAYS /api/media?url=...
+          alt={property.address || "Property"}
           fill
+          unoptimized
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
           onError={() => {
-            console.log(`🚨 Image failed to load for ${property.address}, using fallback`);
+            // console.log(`🚨 Image failed for ${property.address}, using fallback`);
             setImageError(true);
           }}
-          onLoad={() => {
-            console.log(`✅ Image loaded successfully for ${property.address}`);
+          onLoad={(e) => {
+            const imgEl = e.currentTarget as HTMLImageElement;
+            if (imgEl.naturalWidth <= 2 && imgEl.naturalHeight <= 2) {
+              // console.log(`⚠️ Got tiny 1x1 image for ${property.address}, switching to fallback`);
+              setImageError(true);
+            } else {
+              // console.log(`✅ Loaded image for ${property.address}`);
+            }
           }}
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
@@ -195,10 +291,14 @@ export function PropertyCard({ property, showCompareButton = true, onCompareClic
 
       <div className="p-6 flex flex-col flex-1">
         <div className="mb-4">
-          <h3 className="text-xl font-bold text-gradient-primary bg-clip-text text-transparent mb-2 line-clamp-2 leading-tight group-hover:text-primary-600 transition-colors duration-300">{property.address}</h3>
+          <h3 className="text-xl font-bold text-gradient-primary bg-clip-text text-transparent mb-2 line-clamp-2 leading-tight group-hover:text-primary-600 transition-colors duration-300">
+            {property.address}
+          </h3>
           <div className="flex items-center text-neutral-500 dark:text-neutral-400 text-sm theme-transition">
             <MapPin className="h-4 w-4 mr-2 text-primary-400 dark:text-primary-300" />
-            <span className="font-medium">{property.city}, {property.county}</span>
+            <span className="font-medium">
+              {property.city}, {property.county}
+            </span>
           </div>
         </div>
 
@@ -207,7 +307,9 @@ export function PropertyCard({ property, showCompareButton = true, onCompareClic
             ${property.list_price?.toLocaleString?.() ?? property.list_price}
           </div>
           <div className="text-sm text-neutral-500 dark:text-neutral-400 font-medium theme-transition">
-            {property.property_type == 'ResidentialLease' ? 'per month' : 'listing price'}
+            {property.property_type == "ResidentialLease"
+              ? "per month"
+              : "listing price"}
           </div>
         </div>
 
@@ -224,19 +326,25 @@ export function PropertyCard({ property, showCompareButton = true, onCompareClic
               <Bath className="h-4 w-4 text-accent-600 dark:text-cyan-400" />
             </div>
             <span className="font-semibold">{property.bathrooms}</span>
-            <span className="text-neutral-400 dark:text-neutral-500">baths</span>
+            <span className="text-neutral-400 dark:text-neutral-500">
+              baths
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="p-1.5 rounded-lg bg-gold-50 dark:bg-amber-900/30">
               <Maximize className="h-4 w-4 text-gold-600 dark:text-amber-400" />
             </div>
             <span className="font-semibold text-xs">
-              {property.lot_size_sqft ? `${property?.lot_size_sqft.toLocaleString?.() ?? '-'}` : '-'}
+              {property.lot_size_sqft
+                ? `${property?.lot_size_sqft.toLocaleString?.() ?? "-"}`
+                : "-"}
             </span>
-            <span className="text-neutral-400 dark:text-neutral-500 text-xs">sqft</span>
+            <span className="text-neutral-400 dark:text-neutral-500 text-xs">
+              sqft
+            </span>
           </div>
         </div>
       </div>
     </Link>
-  )
+  );
 }

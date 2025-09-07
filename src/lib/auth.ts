@@ -76,12 +76,14 @@ export class ClientAuthService {
         credentials: 'include',
       });
 
-      if (!response.ok) {
-        return null;
+      if (response.status === 401) {
+        return null; // unauthenticated, not an error
       }
-
+      if (!response.ok) {
+        throw new Error(`Auth fetch failed: ${response.status}`);
+      }
       const data = await response.json();
-      return data.user;
+      return data.user ?? null;
     } catch (error) {
       console.error('Error getting current user:', error);
       return null;

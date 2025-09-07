@@ -30,7 +30,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   X, 
   Plus, 
-  DragDrop, 
   Home, 
   MapPin, 
   DollarSign, 

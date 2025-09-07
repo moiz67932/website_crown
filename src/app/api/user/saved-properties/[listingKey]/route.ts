@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
 import { SavedPropertiesService } from '@/lib/database';
 
-interface RouteParams {
-  params: {
-    listingKey: string;
-  };
-}
+interface RouteParams { params: any }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {

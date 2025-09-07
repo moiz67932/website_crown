@@ -17,6 +17,7 @@ export interface TrestleProperty {
   BathroomsTotalInteger?: number;
   LivingArea?: number;
   LotSizeAcres?: number;
+  LotSizeSquareFeet?: number;
   YearBuilt?: number;
   ListingContractDate?: string;
   OnMarketDate?: string;
@@ -25,6 +26,7 @@ export interface TrestleProperty {
   StateOrProvince?: string;
   PostalCode?: string;
   CountyOrParish?: string;
+  ModificationTimestamp?: string;
   Latitude?: number;
   Longitude?: number;
   ListAgentName?: string;
@@ -48,8 +50,11 @@ export interface TrestleProperty {
   Pool?: string;
   Spa?: string;
   Fireplace?: string;
+  FireplacesTotal?: number;
   View?: string;
   WaterfrontYN?: boolean;
+  PoolPrivateYN?: boolean;
+  ViewYN?: boolean;
   PetsAllowed?: string;
   AssociationFee?: number;
   TaxAnnualAmount?: number;

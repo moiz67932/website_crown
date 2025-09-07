@@ -1,228 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createTrestleApiService } from '@/lib/trestle-service';
-import { TrestleProperty } from '@/lib/trestle-api';
+import { getPropertyByListingKey } from '@/lib/db/property-repo';
 
-// Create Trestle API service instance
-const trestleApi = createTrestleApiService();
+// Now sourcing from Postgres rather than external Trestle API
 
-// Function to geocode address if coordinates are missing
-async function geocodeAddress(address: string, city: string, state: string, postalCode: string): Promise<{lat: number, lng: number} | null> {
-  try {
-    // Build full address string
-    const fullAddress = [address, city, state, postalCode].filter(Boolean).join(', ');
-    
-    if (!fullAddress.trim()) {
-      return null;
-    }
-
-    // Use a free geocoding service (OpenStreetMap Nominatim)
-    const encodedAddress = encodeURIComponent(fullAddress);
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`;
-    
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Real Estate App'
-      }
-    });
-    
-    if (!response.ok) {
-      return null;
-    }
-    
-    const data = await response.json();
-    
-    if (data && data.length > 0) {
-      const result = data[0];
-      return {
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon)
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('❌ Geocoding error:', error);
-    return null;
-  }
-}
-
-// Function to extract property details from description text
-function extractPropertyDetailsFromDescription(description: string) {
-  const bedRegex = /(\d+)[\s-]*(bed|bedroom|br)/i;
-  const bathRegex = /(\d+)[\s-]*(bath|bathroom|ba)/i;
-  const sqftRegex = /(\d+,?\d*)\s*(sq\s*ft|sqft|square\s*feet)/i;
-  
-  // For multi-unit properties, try to find combined info
-  const multiUnitBedRegex = /(\d+)\s*bedroom.*?(\d+)\s*bedroom/i;
-  const multiUnitSqftRegex = /(\d+)\s*sq\s*ft.*?(\d+)\s*sq\s*ft/i;
-  
-  const bedMatch = description.match(bedRegex);
-  const bathMatch = description.match(bathRegex);
-  const sqftMatch = description.match(sqftRegex);
-  const multiUnitBedMatch = description.match(multiUnitBedRegex);
-  const multiUnitSqftMatch = description.match(multiUnitSqftRegex);
-  
-  // For multi-unit properties, sum up the units
-  let totalBedrooms = null;
-  let totalSqft = null;
-  
-  if (multiUnitBedMatch) {
-    // Sum bedrooms from multiple units
-    totalBedrooms = parseInt(multiUnitBedMatch[1]) + parseInt(multiUnitBedMatch[2]);
-  } else if (bedMatch) {
-    totalBedrooms = parseInt(bedMatch[1]);
-  }
-  
-  if (multiUnitSqftMatch) {
-    // Sum square footage from multiple units  
-    totalSqft = parseInt(multiUnitSqftMatch[1]) + parseInt(multiUnitSqftMatch[2]);
-  } else if (sqftMatch) {
-    totalSqft = parseInt(sqftMatch[1].replace(',', ''));
-  }
-  
-  // Estimate bathrooms based on bedrooms if not found (conservative estimate)
-  let totalBathrooms = null;
-  if (bathMatch) {
-    totalBathrooms = parseInt(bathMatch[1]);
-  } else if (totalBedrooms) {
-    // Conservative estimate: assume at least 1 bathroom per 2 bedrooms, minimum 1
-    totalBathrooms = Math.max(1, Math.floor(totalBedrooms / 2));
-  }
-  
-  return {
-    bedrooms: totalBedrooms,
-    bathrooms: totalBathrooms,
-    sqft: totalSqft
-  };
-}
-
-// Function to convert Trestle property to app format for detail page
-async function convertTrestleToDetailFormat(trestleProperty: TrestleProperty) {
-  // Handle property images - use Photos array if available, otherwise generate sample image URLs
-  let photos: string[];
-  let mainImage: string;
-  
-  if (trestleProperty.Photos && trestleProperty.Photos.length > 0) {
-    // Use real photos if available
-    photos = trestleProperty.Photos;
-    mainImage = photos[0];
-  } else {
-    // Generate sample property images using a free service for demonstration
-    const imageId = parseInt(trestleProperty.ListingKey.slice(-3)) % 20 + 1;
-    const sampleImages = [
-      `https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop&crop=house`,
-      `https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop&crop=house`,
-      `https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=800&h=600&fit=crop&crop=house`
-    ];
-    photos = [sampleImages[imageId % sampleImages.length]];
-    mainImage = photos[0];
-  }
-
-  // Handle coordinates - try to geocode if missing
-  let latitude = trestleProperty.Latitude ?? 0;
-  let longitude = trestleProperty.Longitude ?? 0;
-  
-  if ((!latitude || !longitude) && (trestleProperty.UnparsedAddress || trestleProperty.City)) {
-    console.log(`🌍 Geocoding address for property ${trestleProperty.ListingKey}...`);
-    const geocoded = await geocodeAddress(
-      trestleProperty.UnparsedAddress || '',
-      trestleProperty.City || '',
-      trestleProperty.StateOrProvince || '',
-      trestleProperty.PostalCode || ''
-    );
-    
-    if (geocoded) {
-      latitude = geocoded.lat;
-      longitude = geocoded.lng;
-      console.log(`✅ Geocoded coordinates: ${latitude}, ${longitude}`);
-    } else {
-      console.log(`⚠️ Failed to geocode address for property ${trestleProperty.ListingKey}`);
-    }
-  }
-
-  // Try to extract property details from description if main fields are missing
-  const extractedDetails = extractPropertyDetailsFromDescription(trestleProperty.PublicRemarks || '');
-  
-  // Use extracted details as fallback when Trestle data is missing or 0
-  const finalBedrooms = trestleProperty.BedroomsTotal || extractedDetails.bedrooms;
-  const finalBathrooms = trestleProperty.BathroomsTotalInteger || extractedDetails.bathrooms;
-  const finalLivingArea = trestleProperty.LivingArea || extractedDetails.sqft;
-
-  return {
-    _id: trestleProperty.ListingKey,
-    listing_key: trestleProperty.ListingKey,
-    listing_id: trestleProperty.ListingKey,
-    list_price: trestleProperty.ListPrice || 0,
-    previous_list_price: null,
-    lease_amount: null,
-    address: trestleProperty.UnparsedAddress || "Address not available",
-    city: trestleProperty.City || "",
-    county: trestleProperty.StateOrProvince || "",
-    postal_code: trestleProperty.PostalCode || "",
-    latitude: latitude,
-    longitude: longitude,
-    property_type: trestleProperty.PropertyType || "Residential",
-    property_sub_type: trestleProperty.PropertySubType || "",
-    bedrooms: finalBedrooms,
-    bathrooms: finalBathrooms,
-    living_area_sqft: finalLivingArea,
-    lot_size_sqft: trestleProperty.LotSizeAcres ? trestleProperty.LotSizeAcres * 43560 : 0,
-    year_built: trestleProperty.YearBuilt || 0,
-    zoning: null,
-    standard_status: trestleProperty.StandardStatus || "",
-    mls_status: trestleProperty.StandardStatus || "",
-    days_on_market: trestleProperty.DaysOnMarket || 0,
-    listing_contract_date: trestleProperty.ListingContractDate || "",
-    public_remarks: trestleProperty.PublicRemarks || "",
-    subdivision_name: "",
-    main_image_url: mainImage,
-    images: photos,
-    photosCount: trestleProperty.PhotosCount || 0,
-    list_agent_full_name: trestleProperty.ListAgentName || "",
-    list_office_name: trestleProperty.ListOfficeName || "",
-    list_agent_email: "",
-    list_agent_phone: "",
-    lease_considered: false,
-    lease_amount_frequency: null,
-    modification_timestamp: trestleProperty.OnMarketDate || "",
-    on_market_timestamp: trestleProperty.OnMarketDate || "",
-    agent_phone: "",
-    agent_email: "",
-    agent_office_email: "",
-    agent_office_phone: "",
-    ListAgentLastName: "",
-    ListAgentURL: null,
-    possible_use: null,
-    price_change_timestamp: null,
-    VirtualTourURLUnbranded: trestleProperty.VirtualTourURLUnbranded || null,
-    view: trestleProperty.View || "",
-    Utilities: trestleProperty.Utilities || null,
-    LotFeatures: null,
-    ShowingContactName: null,
-    current_price: trestleProperty.ListPrice || 0,
-    seo_title: null,
-    faq_content: null,
-    h1_heading: null,
-    amenities_content: null,
-    page_content: null,
-    meta_description: null,
-    title: null,
-    other_info: {},
-    interior_features: trestleProperty.InteriorFeatures || "",
-    stories: 1,
-    pool_features: trestleProperty.Pool || "",
-    parking_total: trestleProperty.ParkingTotal?.toString() || "0",
-    garage_size: trestleProperty.GarageSpaces?.toString() || "0",
-    heating: trestleProperty.Heating || "",
-    cooling: trestleProperty.Cooling || "",
-    security_features: "",
-    parking_features: "",
-    laundry_features: trestleProperty.LaundryFeatures || "",
-  };
-}
+// Removed Trestle transformation helpers – now direct DB mapping
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ listingKey: string }> }
 ) {
   try {
@@ -237,23 +21,106 @@ export async function GET(
       );
     }
 
-    // Fetch property from Trestle API
-    const trestleProperty = await trestleApi.getPropertyByKey(listingKey);
-
-    if (!trestleProperty) {
-      return NextResponse.json(
-        { success: false, error: 'Property not found' },
-        { status: 404 }
-      );
+    // Fetch property from Postgres
+    const row = await getPropertyByListingKey(listingKey);
+    if (!row) {
+      return NextResponse.json({ success: false, error: 'Property not found' }, { status: 404 });
     }
+    // Images: prefer media_urls array, then raw_json.Media/Photos, finally main_photo_url
+    const images: string[] = (() => {
+      const out: string[] = [];
+      const media = (row as any).media_urls;
+      if (Array.isArray(media) && media.length) return media.filter(Boolean);
+      const raw = (row as any).raw_json;
+      try {
+        if (raw) {
+          if (Array.isArray(raw.Media)) {
+            const urls = raw.Media.map((m: any) => m.MediaURL).filter(Boolean);
+            if (urls.length) return urls;
+          }
+          if (Array.isArray(raw.Photos)) {
+            const urls = raw.Photos.map((p: any) => p.Url || p.url).filter(Boolean);
+            if (urls.length) return urls;
+          }
+        }
+      } catch {}
+      if ((row as any).main_photo_url) out.push((row as any).main_photo_url);
+      return out;
+    })();
 
-    // Convert to detail format
-    const propertyDetail = await convertTrestleToDetailFormat(trestleProperty);
+    const detail = {
+      _id: row.listing_key,
+      listing_key: row.listing_key,
+      listing_id: row.listing_key,
+      list_price: row.list_price || 0,
+      previous_list_price: (row as any).previous_list_price || null,
+      lease_amount: null,
+      address: (row as any).unparsed_address || '',
+      city: (row as any).city || '',
+      county: (row as any).county || '',
+      postal_code: (row as any).postal_code || '',
+      latitude: (row as any).latitude || 0,
+      longitude: (row as any).longitude || 0,
+      property_type: (row as any).property_type || 'Residential',
+      property_sub_type: (row as any).property_sub_type || '',
+      bedrooms: (row as any).bedrooms || (row as any).bedrooms_total || 0,
+      bathrooms: (row as any).bathrooms_total || 0,
+      living_area_sqft: (row as any).living_area || 0,
+      lot_size_sqft: (row as any).lot_size_sqft || (row as any).lot_size_sq_ft || 0,
+      year_built: (row as any).year_built || 0,
+      zoning: null,
+      status: (row as any).status || '',
+      mls_status: (row as any).status || '',
+      days_on_market: (row as any).days_on_market || 0,
+      listing_contract_date: (row as any).listing_contract_date || '',
+      public_remarks: (row as any).public_remarks || ((row as any).raw_json?.PublicRemarks) || '',
+      subdivision_name: '',
+      main_photo_url: images[0] || null,
+      images,
+      photosCount: (row as any).photos_count || images.length,
+      list_agent_full_name: (row as any).list_agent_full_name || '',
+      list_office_name: (row as any).list_office_name || '',
+      list_agent_email: '',
+      list_agent_phone: '',
+      lease_considered: false,
+      lease_amount_frequency: null,
+      modification_timestamp: (row as any).modification_ts || '',
+      on_market_timestamp: (row as any).first_seen_ts || '',
+      agent_phone: '',
+      agent_email: '',
+      agent_office_email: '',
+      agent_office_phone: '',
+      ListAgentLastName: '',
+      ListAgentURL: null,
+      possible_use: null,
+      price_change_timestamp: (row as any).price_change_ts || null,
+      VirtualTourURLUnbranded: null,
+      view: (row as any).view || '',
+      Utilities: null,
+      LotFeatures: null,
+      ShowingContactName: null,
+      current_price: row.list_price || 0,
+      seo_title: null,
+      faq_content: null,
+      h1_heading: null,
+      amenities_content: null,
+      page_content: null,
+      meta_description: null,
+      title: null,
+      other_info: {},
+      interior_features: (row as any).interior_features || '',
+      stories: (row as any).stories || 1,
+      pool_features: (row as any).pool_features || '',
+      parking_total: (row as any).parking_total?.toString() || '0',
+      garage_size: (row as any).garage_spaces?.toString() || '0',
+      heating: (row as any).heating || '',
+      cooling: (row as any).cooling || '',
+      security_features: (row as any).security_features || '',
+      parking_features: (row as any).parking_features || '',
+      laundry_features: (row as any).laundry_features || '',
+    };
 
-    return NextResponse.json({
-      success: true,
-      data: propertyDetail
-    });
+    return NextResponse.json({ success: true, data: detail });
 
   } catch (error: any) {
     console.error('❌ Error fetching property detail:', error);

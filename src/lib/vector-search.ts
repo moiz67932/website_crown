@@ -1,4 +1,5 @@
 import { CleanedProperty } from './data-validation';
+import crypto from 'crypto';
 
 interface VectorEmbedding {
   listingKey: string;
@@ -19,6 +20,9 @@ export class PropertyVectorSearch {
   private embeddings: Map<string, VectorEmbedding> = new Map();
   private vocabulary: Map<string, number> = new Map();
   private idf: Map<string, number> = new Map();
+  private lastSignature: string | null = null; // hash of current indexed listing keys
+  private lastIndexedAt: number | null = null;
+  private inProgressSignature: string | null = null;
 
   /**
    * Create text embedding for a property
@@ -33,9 +37,10 @@ export class PropertyVectorSearch {
     if (property.StateOrProvince) parts.push(property.StateOrProvince);
 
     // Features
-    if (property.PoolPrivateYN) parts.push('pool swimming');
-    if (property.WaterfrontYN) parts.push('waterfront water view');
-    if (property.ViewYN) parts.push('view scenic mountain ocean');
+  // Feature flags (the cleaner sets PoolPrivateYN/WaterfrontYN/ViewYN booleans even if original schema differs)
+  if ((property as any).PoolPrivateYN) parts.push('pool swimming');
+  if ((property as any).WaterfrontYN) parts.push('waterfront water view');
+  if ((property as any).ViewYN || property.View) parts.push('view scenic mountain ocean');
     if (property.isLuxury) parts.push('luxury premium high-end exclusive');
 
     // Size descriptions
@@ -70,9 +75,9 @@ export class PropertyVectorSearch {
     }
 
     // Amenities
-    if (property.GarageSpaces && property.GarageSpaces > 0) parts.push('garage parking');
-    if (property.FireplacesTotal && property.FireplacesTotal > 0) parts.push('fireplace cozy');
-    if (property.SpaYN) parts.push('spa hot tub relaxation');
+  if ((property as any).GarageSpaces && (property as any).GarageSpaces > 0) parts.push('garage parking');
+  if ((property as any).FireplacesTotal && (property as any).FireplacesTotal > 0) parts.push('fireplace cozy');
+  if ((property as any).SpaYN || (property as any).Spa) parts.push('spa hot tub relaxation');
 
     // Extract from remarks
     if (property.PublicRemarks) {
@@ -167,8 +172,20 @@ export class PropertyVectorSearch {
   /**
    * Index properties for vector search
    */
-  indexProperties(properties: CleanedProperty[]): void {
-    console.log(`🔍 Indexing ${properties.length} properties for vector search...`);
+  /**
+   * Build index (caller should ensure idempotence & logging). Accepts optional precomputed signature.
+   */
+  indexProperties(
+    properties: CleanedProperty[], 
+    precomputedSignature?: string,
+    options?: { suppressLog?: boolean }
+  ): void {
+    if (precomputedSignature) {
+      this.inProgressSignature = precomputedSignature;
+    }
+    if (!options?.suppressLog) {
+      console.log(`🔍 Indexing ${properties.length} properties for vector search...`);
+    }
 
     // Reset
     this.embeddings.clear();
@@ -216,7 +233,17 @@ export class PropertyVectorSearch {
       });
     });
 
-    console.log(`✅ Vector search index created with ${this.vocabulary.size} terms`);
+    // Record signature (use precomputed if supplied)
+    const listingKeys = properties.map(p => p.ListingKey).sort();
+    this.lastSignature = precomputedSignature || this.computeListingSignature(listingKeys);
+    this.lastIndexedAt = Date.now();
+    this.inProgressSignature = null;
+
+    if (!options?.suppressLog) {
+      const stats = this.getIndexStats();
+      console.log(`✅ Vector search index created with ${stats.vocabularySize} terms`);
+      console.log('✅ Vector indexing completed. Stats:', stats);
+    }
   }
 
   /**
@@ -324,6 +351,8 @@ export class PropertyVectorSearch {
     totalProperties: number;
     vocabularySize: number;
     averageVectorLength: number;
+    lastIndexedAt: number | null;
+    signature: string | null;
   } {
     const vectors = Array.from(this.embeddings.values());
     const averageLength = vectors.length > 0 
@@ -333,8 +362,35 @@ export class PropertyVectorSearch {
     return {
       totalProperties: this.embeddings.size,
       vocabularySize: this.vocabulary.size,
-      averageVectorLength: averageLength
+      averageVectorLength: averageLength,
+      lastIndexedAt: this.lastIndexedAt,
+      signature: this.lastSignature
     };
+  }
+
+  /** Compute a stable signature for a sorted list of listing keys */
+  private computeListingSignature(sortedListingKeys: string[]): string {
+    return crypto.createHash('sha256').update(sortedListingKeys.join('|')).digest('hex');
+  }
+
+  /** Public helper: determine if provided listing keys (any order) already indexed */
+  hasSignatureForListingKeys(listingKeys: string[]): boolean {
+    if (!this.lastSignature) return false;
+    const sig = this.computeListingSignature([...listingKeys].sort());
+    return sig === this.lastSignature;
+  }
+
+  /** Decide if reindex is needed based on current keys */
+  shouldReindex(listingKeys: string[]): boolean {
+    if (!this.lastSignature) return true; // never indexed
+    return !this.hasSignatureForListingKeys(listingKeys);
+  }
+
+  /** Whether an index build for this signature is currently underway */
+  isIndexingSignature(listingKeys: string[]): boolean {
+    if (!this.inProgressSignature) return false;
+    const sig = this.computeListingSignature([...listingKeys].sort());
+    return sig === this.inProgressSignature;
   }
 }
 
