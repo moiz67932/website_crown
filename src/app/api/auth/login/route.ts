@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserService } from '@/lib/database';
+import { SupabaseAuthService } from '@/lib/supabase-auth';
 import { loginSchema } from '@/lib/validation';
 import { AuthService } from '@/lib/auth';
 
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validationResult.data;
 
-    // Attempt login
-    const result = await UserService.loginUser({ email, password });
+    // Attempt login with Supabase
+    const result = await SupabaseAuthService.loginUser({ email, password });
 
     if (!result.success) {
       return NextResponse.json(
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT token
+    // Generate JWT token for session management
     const token = AuthService.generateToken({
       userId: result.user!.id,
       email: result.user!.email,

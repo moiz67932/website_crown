@@ -21,20 +21,30 @@ export default function ForgotPasswordForm() {
     setSuccess(false)
     setIsLoading(true)
 
-    // Simulate API call
     try {
       // Basic validation
       if (!email) {
         throw new Error("Please enter your email address")
       }
 
-      // Simulate network request
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
 
-      // For demo purposes, let's simulate a successful password reset request
+      const data = await response.json()
+
+      if (!data.success) {
+        setError(data.message || "Failed to send reset email")
+        return
+      }
+
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }
