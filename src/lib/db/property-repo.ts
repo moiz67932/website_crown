@@ -131,10 +131,35 @@ export async function searchProperties(params: PropertySearchParams) {
 
   const countSql = `SELECT COUNT(*) FROM properties ${whereSql}`;
 
-  const [listResult, countResult] = await Promise.all([
-    pool.query(sql, values),
-    pool.query(countSql, values.slice(0, values.length - 2))
-  ]);
+  async function run(): Promise<[any, any]> {
+    return Promise.all([
+      pool.query(sql, values),
+      pool.query(countSql, values.slice(0, values.length - 2))
+    ]);
+  }
+
+  let listResult: any, countResult: any;
+  try {
+    [listResult, countResult] = await run();
+  } catch (err: any) {
+    const msg = String(err?.message || '');
+    if (msg.includes('Connection terminated unexpectedly') || msg.includes('ECONNRESET')) {
+      // Lazy import to avoid circular
+      const { resetPgPool } = await import('./connection');
+      await resetPgPool('retry-after-termination');
+      const retryPool = await getPgPool();
+      try {
+        [listResult, countResult] = await Promise.all([
+          retryPool.query(sql, values),
+          retryPool.query(countSql, values.slice(0, values.length - 2))
+        ]);
+      } catch (e2) {
+        throw e2; // bubble after retry
+      }
+    } else {
+      throw err;
+    }
+  }
 
   const total = parseInt(countResult.rows[0].count, 10);
   return {

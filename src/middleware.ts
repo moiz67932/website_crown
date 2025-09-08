@@ -22,5 +22,16 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
-  return NextResponse.next()
+  // UTM & click id persistence (90d)
+  const known = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid']
+  const res = NextResponse.next()
+  let wrote = false
+  for (const k of known) {
+    const v = req.nextUrl.searchParams.get(k)
+    if (v) {
+      res.cookies.set(k, v, { path: '/', maxAge: 60*60*24*90 })
+      wrote = true
+    }
+  }
+  return wrote ? res : res
 }
