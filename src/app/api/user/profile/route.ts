@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
-import { UserService } from '@/lib/database';
+import { SupabaseAuthService } from '@/lib/supabase-auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = UserService.getUserById(currentUser.userId);
+    const user = await SupabaseAuthService.getUserById(currentUser.userId);
 
     if (!user) {
       return NextResponse.json(
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest) {
       notificationSettings
     } = body;
 
-    const result = await UserService.updateUserProfile(currentUser.userId, {
+    const result = await SupabaseAuthService.updateUserProfile(currentUser.userId, {
       firstName,
       lastName,
       phone,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserService } from '@/lib/database';
+import { SupabaseAuthService } from '@/lib/supabase-auth';
 import { registerSchema } from '@/lib/validation';
 import { AuthService } from '@/lib/auth';
 
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
 
     const { firstName, lastName, email, password, dateOfBirth } = validationResult.data;
 
-    // Create user
-    const result = await UserService.createUser({
+    // Create user with Supabase
+    const result = await SupabaseAuthService.createUser({
       firstName,
       lastName,
       email,
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT token
+    // Generate JWT token for session management
     const token = AuthService.generateToken({
       userId: result.userId!,
       email,
