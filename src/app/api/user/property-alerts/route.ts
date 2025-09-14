@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unread') === 'true';
 
-    const propertyAlerts = PropertyAlertsService.getUserPropertyAlerts(currentUser.userId);
+  const uid = typeof currentUser.userId === 'string' ? parseInt(currentUser.userId, 10) : currentUser.userId;
+  const propertyAlerts = PropertyAlertsService.getUserPropertyAlerts(uid);
     
     // Filter for unread only if requested
     const filteredAlerts = unreadOnly 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get unread count
-    const unreadCount = PropertyAlertsService.getUnreadAlertsCount(currentUser.userId);
+  const unreadCount = PropertyAlertsService.getUnreadAlertsCount(uid);
 
     return NextResponse.json({
       success: true,
@@ -75,8 +76,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const uid = typeof currentUser.userId === 'string' ? parseInt(currentUser.userId, 10) : currentUser.userId;
     const result = PropertyAlertsService.createPropertyAlert(
-      currentUser.userId,
+      uid,
       savedSearchId,
       property,
       alertType

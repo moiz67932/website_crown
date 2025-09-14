@@ -1,9 +1,3 @@
-// Master landing page generation prompt templates.
-// Each function returns an instruction prompt requesting a FULL landing page output with
-// structured sections (meta, headings, rich content, FAQs, CTA, JSON-LD).
-// NOTE: Downstream generation code must ensure model is instructed not to hallucinate.
-// Signature required by spec: (city, county, region, nearbyCities) => string
-
 export const LANDING_PROMPTS: Record<string, (city: string, county: string, region: string, nearbyCities: string[]) => string> = {
   ai_city_homes_for_sale: (city, county, region, nearby) => `Create a unique, highly SEO-, GEO- and AI-optimized real estate landing page text for the website "Crown Coastal Homes".
 

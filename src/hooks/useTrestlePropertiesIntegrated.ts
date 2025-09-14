@@ -35,12 +35,13 @@ export interface UseTrestlePropertiesResult {
 // Convert API response property to your app's Property interface
 // Note: This function now expects properties that come from the /api/properties endpoint
 function convertTrestleToProperty(apiProperty: any): Property {
-  return {
+  const base: any = {
     id: apiProperty.id || apiProperty.listing_key,
     listing_key: apiProperty.listing_key || apiProperty.id,
     image: apiProperty.image || "/placeholder.svg",
     property_type: apiProperty.property_type || "Unknown",
-    address: apiProperty.address || "Property Address",
+  // Avoid forcing generic placeholder; allow downstream UI logic to build a better display name.
+  address: apiProperty.address || apiProperty.cleaned_address || "",
     location: apiProperty.location || apiProperty.city || "Unknown",
     county: apiProperty.county || apiProperty.state || "",
     list_price: apiProperty.list_price || 0,
@@ -63,6 +64,8 @@ function convertTrestleToProperty(apiProperty: any): Property {
     createdAt: apiProperty.createdAt || new Date().toISOString(),
     updatedAt: apiProperty.updatedAt || new Date().toISOString()
   };
+  if (apiProperty.display_name) base.display_name = apiProperty.display_name;
+  return base as Property;
 }
 
 export function useTrestlePropertiesIntegrated(

@@ -54,10 +54,11 @@ async function createPool(): Promise<Pool> {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       max: 5,
-      idleTimeoutMillis: 30_000,
+      idleTimeoutMillis: 20_000,
       statement_timeout: 60_000,
       query_timeout: 60_000,
       keepAlive: true,
+      keepAliveInitialDelayMillis: 5_000,
     } as any);
     attachPoolEvents(p, 'cloud-sql-connector');
     return p;
@@ -68,10 +69,11 @@ async function createPool(): Promise<Pool> {
     const p = new Pool({
       connectionString: process.env.DATABASE_URL,
       max: 10,
-      idleTimeoutMillis: 30_000,
+      idleTimeoutMillis: 20_000,
       statement_timeout: 60_000,
       query_timeout: 60_000,
       keepAlive: true,
+      keepAliveInitialDelayMillis: 5_000,
     } as any);
     attachPoolEvents(p, 'connection-string');
     return p;
@@ -85,8 +87,8 @@ async function createPool(): Promise<Pool> {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      max: 10,
-      idleTimeoutMillis: 30_000,
+  max: 10,
+  idleTimeoutMillis: 20_000,
     };
     if (process.env.DB_SSL === 'true') {
       (cfg as any).ssl = { rejectUnauthorized: false };
@@ -94,6 +96,7 @@ async function createPool(): Promise<Pool> {
     const p = new Pool({
       ...cfg,
       keepAlive: true,
+      keepAliveInitialDelayMillis: 5_000,
       statement_timeout: 60_000,
       query_timeout: 60_000,
     } as any);
@@ -127,10 +130,11 @@ async function createPool(): Promise<Pool> {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     max: 5, // smaller in serverless environments
-    idleTimeoutMillis: 30_000,
+    idleTimeoutMillis: 20_000,
     statement_timeout: 60_000,
     query_timeout: 60_000,
     keepAlive: true,
+    keepAliveInitialDelayMillis: 5_000,
   } as any);
   attachPoolEvents(p, 'cloud-sql-connector');
   return p;
@@ -159,9 +163,18 @@ export async function getPgPool(): Promise<Pool> {
       // Attach global error handler for auto reset on certain fatal errors
       p.on('error', (err: any) => {
         const msg = String(err?.message || '');
-        if (msg.includes('Connection terminated unexpectedly') || msg.includes('ECONNRESET')) {
-          // schedule a reset; avoid immediate thrash by setTimeout
-          setTimeout(() => resetPgPool('fatal-error:' + msg.slice(0, 40)), 50);
+        const code = (err && (err as any).code) || '';
+        const low = msg.toLowerCase();
+        const transient = [
+          'connection terminated unexpectedly',
+          'econnreset',
+          'server closed the connection unexpectedly',
+          'terminating connection due to administrator command',
+          'could not receive data from server',
+          'reset by peer'
+        ].some(t => low.includes(t)) || ['57P01','57P02','57P03','53300','53400','08006','08000'].includes(code);
+        if (transient) {
+          setTimeout(() => resetPgPool('fatal-error:' + (code || low.slice(0, 40))), 50);
         }
       });
       pool = p;

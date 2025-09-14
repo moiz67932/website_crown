@@ -48,6 +48,34 @@ export async function GET(
       return out;
     })();
 
+    // Derive a reliable address (previously could be blank, causing UI to fallback to listing_key)
+    let derivedAddress: string = (row as any).unparsed_address || (row as any).address || '';
+    let raw: any = (row as any).raw_json;
+    if (raw && typeof raw === 'string') {
+      try { raw = JSON.parse(raw); } catch { /* ignore parse error */ }
+    }
+    if (!derivedAddress && raw) {
+      derivedAddress = raw.UnparsedAddress || raw.unparsed_address || '';
+    }
+    if (!derivedAddress && raw) {
+      const num = raw.StreetNumber || raw.street_number || raw.StreetNumberNumeric || '';
+      const name = raw.StreetName || raw.street_name || '';
+      const suffix = raw.StreetSuffix || raw.street_suffix || '';
+      const unit = raw.UnitNumber || raw.unit_number || '';
+      const pieces = [num, name, suffix].filter(Boolean).join(' ').trim();
+      if (pieces) {
+        derivedAddress = pieces + (unit ? ` #${unit}` : '');
+      }
+    }
+    // Fallback: city + state if still nothing
+    if (!derivedAddress) {
+      const city = (row as any).city || raw?.City || '';
+      const state = (row as any).state || raw?.StateOrProvince || '';
+      if (city || state) derivedAddress = [city, state].filter(Boolean).join(', ');
+    }
+    // Final guard
+    if (!derivedAddress) derivedAddress = (row as any).listing_key;
+
     const detail = {
       _id: row.listing_key,
       listing_key: row.listing_key,
@@ -55,7 +83,7 @@ export async function GET(
       list_price: row.list_price || 0,
       previous_list_price: (row as any).previous_list_price || null,
       lease_amount: null,
-      address: (row as any).unparsed_address || '',
+  address: derivedAddress,
       city: (row as any).city || '',
       county: (row as any).county || '',
       postal_code: (row as any).postal_code || '',

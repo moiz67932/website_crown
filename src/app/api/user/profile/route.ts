@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await SupabaseAuthService.getUserById(currentUser.userId);
+  const user = await SupabaseAuthService.getUserById(String(currentUser.userId));
 
     if (!user) {
       return NextResponse.json(
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest) {
       notificationSettings
     } = body;
 
-    const result = await SupabaseAuthService.updateUserProfile(currentUser.userId, {
+  const result = await SupabaseAuthService.updateUserProfile(String(currentUser.userId), {
       firstName,
       lastName,
       phone,

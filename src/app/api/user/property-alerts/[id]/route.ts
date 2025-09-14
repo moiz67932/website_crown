@@ -28,7 +28,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     if (action === 'mark_read') {
-      const result = PropertyAlertsService.markAlertAsRead(currentUser.userId, alertId);
+      const uid = typeof currentUser.userId === 'string' ? parseInt(currentUser.userId, 10) : currentUser.userId;
+      const result = PropertyAlertsService.markAlertAsRead(uid, alertId);
 
       if (!result.success) {
         return NextResponse.json(
@@ -77,7 +78,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const result = PropertyAlertsService.deletePropertyAlert(currentUser.userId, alertId);
+  const uid = typeof currentUser.userId === 'string' ? parseInt(currentUser.userId, 10) : currentUser.userId;
+  const result = PropertyAlertsService.deletePropertyAlert(uid, alertId);
 
     if (!result.success) {
       return NextResponse.json(

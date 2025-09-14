@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchProperties, PropertySearchParams } from '@/lib/db/property-repo';
+import { deriveDisplayName } from '@/lib/display-name';
 
 // Using Postgres backend now
 
@@ -49,35 +50,67 @@ export async function GET(request: NextRequest) {
       sort: 'updated'
     });
 
-  const data = result.properties.map((p: any) => ({
-      id: p.listing_key,
-      listing_key: p.listing_key,
-  image: p.main_photo_url,
-      property_type: p.property_type,
-      address: (p as any).address || (p as any).cleaned_address || '',
-      location: p.city,
-      county: p.state_or_province,
-      list_price: p.list_price || 0,
-      bedrooms: p.bedrooms_total || 0,
-      bathrooms: p.bathrooms_total || 0,
-      living_area_sqft: p.living_area || 0,
-      lot_size_sqft: p.lot_size_sq_ft || p.lot_size_sqft || 0,
-  status: p.status === 'Active' ? 'FOR SALE' : (p.status || 'UNKNOWN'),
-  statusColor: p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
-      publicRemarks: (p as any).public_remarks || '',
-      favorite: false,
-      _id: p.listing_key,
-      images: [],
-      main_image_url: p.main_image_url,
-      photosCount: p.photos_count || 0,
-      city: p.city,
-      state: p.state_or_province,
-      zip_code: (p as any).postal_code || '',
-      latitude: p.latitude || 0,
-      longitude: p.longitude || 0,
-      createdAt: p.created_at || new Date().toISOString(),
-      updatedAt: p.updated_at || new Date().toISOString()
-    }));
+  const data = result.properties.map((p: any) => {
+      // Attempt to derive a better address line (similar to detail endpoint logic) if not present
+      let baseAddress = (p as any).address || (p as any).cleaned_address || '';
+      if (!baseAddress) {
+        const raw = (p as any).raw_json;
+        try {
+          let parsed = raw;
+            if (parsed && typeof parsed === 'string') { try { parsed = JSON.parse(parsed); } catch {} }
+            if (parsed) {
+              baseAddress = parsed.UnparsedAddress || parsed.unparsed_address || '';
+              if (!baseAddress) {
+                const num = parsed.StreetNumber || parsed.street_number || parsed.StreetNumberNumeric || '';
+                const name = parsed.StreetName || parsed.street_name || '';
+                const suffix = parsed.StreetSuffix || parsed.street_suffix || '';
+                const unit = parsed.UnitNumber || parsed.unit_number || '';
+                const pieces = [num, name, suffix].filter(Boolean).join(' ').trim();
+                if (pieces) baseAddress = pieces + (unit ? ` #${unit}` : '');
+              }
+            }
+        } catch {}
+      }
+      const item = {
+        id: p.listing_key,
+        listing_key: p.listing_key,
+        image: p.main_photo_url,
+        property_type: p.property_type,
+        address: baseAddress,
+        location: p.city,
+        county: p.state_or_province,
+        list_price: p.list_price || 0,
+        bedrooms: p.bedrooms_total || 0,
+        bathrooms: p.bathrooms_total || 0,
+        living_area_sqft: p.living_area || 0,
+        lot_size_sqft: p.lot_size_sq_ft || p.lot_size_sqft || 0,
+        status: p.status === 'Active' ? 'FOR SALE' : (p.status || 'UNKNOWN'),
+        statusColor: p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
+        publicRemarks: (p as any).public_remarks || '',
+        favorite: false,
+        _id: p.listing_key,
+        images: [],
+        main_image_url: p.main_photo_url,
+        photosCount: p.photos_count || 0,
+        city: p.city,
+        state: p.state_or_province,
+        zip_code: (p as any).postal_code || '',
+        latitude: p.latitude || 0,
+        longitude: p.longitude || 0,
+        createdAt: p.created_at || new Date().toISOString(),
+        updatedAt: p.updated_at || new Date().toISOString()
+      };
+      // Add display_name so frontend can use directly
+      (item as any).display_name = deriveDisplayName({
+        listing_key: p.listing_key,
+        address: item.address,
+        city: item.city,
+        state: item.state,
+        county: item.county,
+        raw_json: (p as any).raw_json
+      });
+      return item;
+    });
 
     return NextResponse.json({
       success: true,
@@ -86,7 +119,8 @@ export async function GET(request: NextRequest) {
         total: result.total,
         limit,
         offset,
-        hasMore: result.hasMore
+        hasMore: result.hasMore,
+        totalEstimated: (result as any).totalEstimated || false
       }
     });
 

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get fresh user data from Supabase
-    const user = await SupabaseAuthService.getUserById(currentUser.userId);
+  const user = await SupabaseAuthService.getUserById(String(currentUser.userId));
 
     if (!user) {
       return NextResponse.json(

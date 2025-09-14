@@ -74,8 +74,41 @@ export async function getPropertyByListingKey(listingKey: string): Promise<Prope
 
 export async function searchProperties(params: PropertySearchParams) {
   const pool = await getPgPool();
+  const started = Date.now();
   const values: any[] = [];
   const where: string[] = ["status = 'Active'"];
+
+  // Defensive cap on limit to avoid extremely large requests hammering DB
+  if (params.limit && params.limit > 1000) params.limit = 1000; // hard upper bound
+
+  function isTransient(err: any): boolean {
+    if (!err) return false;
+    const msg = String(err.message || err.toString() || '').toLowerCase();
+    const code = (err.code || '').toString();
+    return (
+      msg.includes('terminat') ||
+      msg.includes('econnreset') ||
+      msg.includes('server closed the connection unexpectedly') ||
+      msg.includes('timeout') ||
+      code === 'ECONNRESET' ||
+      // Postgres error codes for transient issues
+      ['57P01','57P02','57P03','53300','53400','08006','08000','HY000'].includes(code)
+    );
+  }
+
+  function log(event: string, extra?: Record<string, any>) {
+    // Lightweight structured logging (avoid noisy stack traces)
+    try {
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify({
+        lvl: 'debug',
+        at: 'searchProperties',
+        event,
+        dur_ms: Date.now() - started,
+        ...extra,
+      }));
+    } catch {}
+  }
 
   function add(cond: string, val?: any) {
     if (val === undefined || val === null) return;
@@ -123,7 +156,7 @@ export async function searchProperties(params: PropertySearchParams) {
   values.push(limit, offset);
 
   const sql = `SELECT listing_key, list_price, city, state, bedrooms, bathrooms_total, living_area, lot_size_sqft, property_type,
-      status, photos_count, latitude, longitude, main_photo_url, modification_ts, first_seen_ts, last_seen_ts
+      status, photos_count, latitude, longitude, main_photo_url, modification_ts, first_seen_ts, last_seen_ts, raw_json
     FROM properties
     ${whereSql}
     ORDER BY ${orderBy}
@@ -131,40 +164,73 @@ export async function searchProperties(params: PropertySearchParams) {
 
   const countSql = `SELECT COUNT(*) FROM properties ${whereSql}`;
 
-  async function run(): Promise<[any, any]> {
-    return Promise.all([
-      pool.query(sql, values),
-      pool.query(countSql, values.slice(0, values.length - 2))
-    ]);
-  }
+  const baseValuesForCount = values.slice(0, values.length - 2);
 
-  let listResult: any, countResult: any;
-  try {
-    [listResult, countResult] = await run();
-  } catch (err: any) {
-    const msg = String(err?.message || '');
-    if (msg.includes('Connection terminated unexpectedly') || msg.includes('ECONNRESET')) {
-      // Lazy import to avoid circular
-      const { resetPgPool } = await import('./connection');
-      await resetPgPool('retry-after-termination');
-      const retryPool = await getPgPool();
-      try {
-        [listResult, countResult] = await Promise.all([
-          retryPool.query(sql, values),
-          retryPool.query(countSql, values.slice(0, values.length - 2))
-        ]);
-      } catch (e2) {
-        throw e2; // bubble after retry
+  const MAX_RETRIES = 3;
+  const results: { list?: any; count?: any; estimated?: boolean } = {};
+  let attempt = 0;
+  let lastErr: any;
+
+  while (attempt <= MAX_RETRIES) {
+    const usePool = attempt === 0 ? pool : await getPgPool();
+    const attemptStart = Date.now();
+    try {
+      // First: run list query alone with shorter client timeout (20s)
+      const LIST_TIMEOUT_MS = 20_000;
+      const listTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('list-timeout')), LIST_TIMEOUT_MS));
+      const listResult: any = await Promise.race([
+        usePool.query(sql, values),
+        listTimeout
+      ]);
+      results.list = listResult;
+      log('list-success', { attempt, rows: listResult?.rowCount });
+
+      // Second: run count query separately with shorter timeout (10s). If it times out, estimate.
+      const COUNT_TIMEOUT_MS = 10_000;
+      const countTimeout = new Promise((resolve) => setTimeout(() => resolve('count-timeout'), COUNT_TIMEOUT_MS));
+      const countOrTimeout: any = await Promise.race([
+        usePool.query(countSql, baseValuesForCount),
+        countTimeout
+      ]);
+      if (countOrTimeout === 'count-timeout') {
+        // Fallback estimate: if we got 'limit' rows assume more exist; set estimated flag.
+        results.estimated = true;
+        const baseTotal = offset + listResult.rows.length;
+        const hasMore = listResult.rows.length === limit;
+        results.count = { rows: [{ count: String(hasMore ? baseTotal + 1 : baseTotal) }] };
+        log('count-timeout', { attempt, baseTotal, hasMore });
+      } else {
+        results.count = countOrTimeout;
+        log('count-success', { attempt, count: countOrTimeout?.rows?.[0]?.count });
       }
-    } else {
-      throw err;
+      break;
+    } catch (err: any) {
+      lastErr = err;
+      const transient = isTransient(err);
+      log('list-failure', { attempt, transient, err: err?.message, code: err?.code, elapsed_ms: Date.now() - attemptStart });
+      if (!transient || attempt === MAX_RETRIES) {
+        throw err;
+      }
+      try {
+        const { resetPgPool } = await import('./connection');
+        await resetPgPool('transient-error-retry');
+      } catch {}
+      const backoff = Math.min(400 * 2 ** attempt, 3_000) + Math.random() * 120;
+      await new Promise(r => setTimeout(r, backoff));
+      attempt += 1;
+      continue;
     }
   }
 
-  const total = parseInt(countResult.rows[0].count, 10);
+  if (!results.list || !results.count) {
+    throw lastErr || new Error('Unknown query failure');
+  }
+
+  const total = parseInt(results.count.rows[0].count, 10);
   return {
-    properties: listResult.rows,
+    properties: results.list.rows,
     total,
-    hasMore: offset + limit < total
+    hasMore: offset + limit < total,
+    totalEstimated: !!results.estimated
   };
 }

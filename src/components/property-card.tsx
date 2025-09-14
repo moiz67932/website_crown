@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Property } from "@/interfaces";
+import { deriveDisplayName } from '@/lib/display-name';
 import React, { useState } from "react";
 import { useComparison } from "@/contexts/comparison-context";
 
@@ -180,6 +181,11 @@ export function PropertyCard({
   const proxied = raw.startsWith('/api/media') ? raw : (proxify(raw) || raw || '');
   // console.log("Image src going into <Image>:", proxied); // /api/media?listingKey=... path expected now
 
+  const displayName = (property as any).display_name || deriveDisplayName(property as any);
+  const locationLine = [property.city, (property as any).county || (property as any).state]
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <Link
       href={`/properties/${
@@ -193,6 +199,7 @@ export function PropertyCard({
       key={property.listing_key || property.id}
       className="group bg-white dark:bg-slate-900 rounded-3xl shadow-soft hover:shadow-strong p-0 w-full flex flex-col relative transition-all duration-500 hover-lift hover:scale-[1.02] border border-neutral-100 dark:border-slate-700 theme-transition"
     >
+      {/* Optional meta heading removed; displayName now handled below in card body */}
       {/* Enhanced Status badge */}
       <div
         className={`absolute top-6 left-6 z-20 px-4 py-2 rounded-2xl text-xs font-bold backdrop-blur-sm border transition-all duration-300 group-hover:scale-105 ${
@@ -292,13 +299,11 @@ export function PropertyCard({
       <div className="p-6 flex flex-col flex-1">
         <div className="mb-4">
           <h3 className="text-xl font-bold text-gradient-primary bg-clip-text text-transparent mb-2 line-clamp-2 leading-tight group-hover:text-primary-600 transition-colors duration-300">
-            {property.address}
+            {displayName}
           </h3>
           <div className="flex items-center text-neutral-500 dark:text-neutral-400 text-sm theme-transition">
             <MapPin className="h-4 w-4 mr-2 text-primary-400 dark:text-primary-300" />
-            <span className="font-medium">
-              {property.city}, {property.county}
-            </span>
+            <span className="font-medium">{locationLine}</span>
           </div>
         </div>
 
