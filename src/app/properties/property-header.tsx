@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { GridIcon, LayoutList } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { useMemo } from "react"
+import CountyHighlightMap from "@/components/county-highlight-map"
 
 interface IPropertyListingHeaderProps {
   totalProperties: number
@@ -12,8 +15,25 @@ interface IPropertyListingHeaderProps {
 }
 
 export default function PropertyListingHeader({ totalProperties, currentPage, sortBy, propertyType, onSortChange, onBuyClick }: IPropertyListingHeaderProps) {
+  const searchParams = useSearchParams()
   const startIndex = (currentPage - 1) * 12 + 1
   const endIndex = Math.min(startIndex + 11, totalProperties)
+
+  // Extract county from URL parameters
+  const countyName = useMemo(() => {
+    const county = searchParams.get("county")
+    const location = searchParams.get("location")
+    const searchLocationType = searchParams.get("searchLocationType")
+    
+    // Check if we have a county parameter or if location is a county
+    if (county) {
+      return county
+    } else if (searchLocationType === "county" && location) {
+      return location
+    }
+    return null
+  }, [searchParams])
+
   return (
     <div className="bg-gradient-to-br from-white via-neutral-50 to-primary-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-orange-900/10 border-b border-neutral-200/50 dark:border-slate-700/50 shadow-soft theme-transition">
       <div className="container mx-auto px-6 py-12 md:py-16">
@@ -32,6 +52,25 @@ export default function PropertyListingHeader({ totalProperties, currentPage, so
               Browse our curated collection of exceptional properties along California's stunning coastline
             </p>
           </div>
+
+          {/* County Map Section - Only show when county is detected */}
+          {countyName && (
+            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-neutral-200/50 dark:border-slate-600/50 shadow-soft theme-transition">
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+                  📍 {countyName} Properties
+                </h2>
+                <p className="text-neutral-600 dark:text-neutral-300 text-sm">
+                  Exploring properties in {countyName}. The highlighted area shows the county boundary.
+                </p>
+              </div>
+              <CountyHighlightMap 
+                countyName={countyName}
+                height="400px"
+                className="w-full"
+              />
+            </div>
+          )}
 
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-neutral-200/50 dark:border-slate-600/50 shadow-soft theme-transition">
             <div className="flex items-center text-neutral-600 dark:text-neutral-300 font-medium theme-transition">
