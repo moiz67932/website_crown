@@ -5,7 +5,7 @@ import Hero from './sections/Hero'
 import Intro from './sections/Intro'
 import StatsSection from './sections/Stats'
 // Replacing legacy FeaturedGrid with rich PropertyCard implementation
-import { PropertyCard } from '@/components/property-card'
+import PropertyCard from '../property-card-client'
 import NeighborhoodsSection from './sections/Neighborhoods'
 import SchoolsSection from './sections/Schools'
 import FAQSection from './sections/FAQ'
@@ -24,6 +24,7 @@ import CitySchema from '@/components/seo/CitySchema'
 import RelatedVariants from './sections/RelatedVariants'
 import Link from 'next/link'
 import { CA_CITIES, cityToTitle } from '@/lib/seo/cities'
+// FAQ collapse UI uses FAQSection; we pass structured items
 
 // Deferred / client-only sections (no ssr:false inside server component; Next will handle client boundary)
 const MapSection = dynamic<{ city: string }>(() => import('./sections/Map'), {
@@ -38,9 +39,10 @@ const TrendsSection = dynamic(() => import('./sections/Trends'), {
   )
 })
 
-interface Props { data: LandingData }
+type SimpleFAQ = { question: string; answer: string }
+interface Props { data: LandingData; faqItems?: SimpleFAQ[]; faqJsonLd?: any }
 
-export default function LandingTemplate({ data }: Props) {
+export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
   const { city, kind } = data
   const featured = data.featured || []
   const citySlug = city.toLowerCase().replace(/\s+/g, '-')
@@ -125,7 +127,16 @@ export default function LandingTemplate({ data }: Props) {
         <EconomicsSection data={data.economics} />
         <CrimeSection data={data.crime} />
         <BusinessDirectorySection businesses={data.businessDirectory} /> */}
-        <FAQSection items={data.faq} />
+        {/* Always render collapsible FAQ UI with structured items */}
+        <FAQSection
+          items={(faqItems && faqItems.length
+            ? faqItems.map(f => ({ q: f.question, a: f.answer }))
+            : data.faq)}
+        />
+        {/* Inject JSON-LD for SEO if provided */}
+        {faqJsonLd && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        )}
         <RelatedLinksSection links={data.related} />
   <RelatedCitiesSection cities={data.relatedCities} />
   <RelatedVariants citySlug={citySlug} currentSlug={kind} />

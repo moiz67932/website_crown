@@ -3,6 +3,8 @@ import LandingTemplate from '@/components/landing/LandingTemplate'
 import { CA_CITIES, cityToTitle } from '@/lib/seo/cities'
 import { LANDINGS, LANDINGS_BY_SLUG, type LandingSlug } from '@/lib/landing/defs'
 import { getLandingData } from '@/lib/landing/query'
+import { getSupabase } from '@/lib/supabase'
+import { getOrGenerateFaqs } from '@/lib/faqs'
 
 // Pre-render all CA city x landing combos
 export async function generateStaticParams() {
@@ -22,6 +24,31 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   const baseTitle = def.title(cityName)
   const canonical = def.canonicalPath(citySlug)
   const desc = def.description(cityName)
+  // Try SEO overrides from DB (no generation here)
+  try {
+    const sb = getSupabase()
+    if (sb) {
+      const { data } = await sb
+        .from('landing_pages')
+        .select('seo_metadata')
+        .eq('city', citySlug)
+        .eq('page_name', landing)
+        .maybeSingle()
+      const meta = (data?.seo_metadata as any) || null
+      const title = meta?.title || baseTitle
+      const description = meta?.description || desc
+      const keywords = Array.isArray(meta?.keywords) ? meta.keywords.join(', ') : undefined
+      return {
+        title,
+        description,
+        keywords,
+        alternates: { canonical },
+        robots: { index: true, follow: true },
+        openGraph: { title, description, url: canonical, type: 'website' },
+        twitter: { card: 'summary_large_image', title, description }
+      }
+    }
+  } catch {}
   return {
     title: baseTitle,
     description: desc,
@@ -39,5 +66,7 @@ export default async function Page({ params }: { params: Promise<{ city: string;
   const def = LANDINGS_BY_SLUG[landing]
   if (!def) return null
   const data = await getLandingData(cityName, def.slug as any, { landingDef: def })
-  return <LandingTemplate data={data} />
+  // FAQs: generate once then persist; reuse afterwards
+  const faqBundle = await getOrGenerateFaqs(cityName, def.slug)
+  return <LandingTemplate data={data} faqItems={faqBundle?.faqs} faqJsonLd={faqBundle?.jsonLd} />
 }

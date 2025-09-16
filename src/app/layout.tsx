@@ -1,30 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
 import "@/styles/globals.css";
 import Layout from "@/components/layout";
 import Providers from "@/components/providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
-
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
+// Avoid using next/font/google to prevent Turbopack internal font loader errors in dev.
+// Provide sensible CSS variable fallbacks to common system/local fonts instead.
+const FONT_VARS = {
+  // Geist / Inter-like sans stack
+  ['--font-geist-sans' as any]: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+  // Mono stack
+  ['--font-geist-mono' as any]: "ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace",
+  // Inter alias
+  ['--font-inter' as any]: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto",
+  // Playfair-like serif fallback
+  ['--font-playfair' as any]: "'Playfair Display', 'Georgia', 'Times New Roman', serif",
+}
 
 export const metadata: Metadata = {
   title: "Crown Coastal Homes - Premium California Real Estate",
@@ -47,7 +37,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfairDisplay.variable} antialiased`}
+        className={`antialiased`}
+        style={FONT_VARS}
         suppressHydrationWarning={true}
       >
         <Providers>

@@ -116,6 +116,35 @@ export async function searchProperties(params: PropertySearchParams) {
     where.push(cond.replace('$IDX', '$' + values.length));
   }
 
+  // Helper to race a promise against a timeout while ensuring the timeout is cleared
+  // when either side settles to avoid dangling timers or unhandled rejections.
+  function withTimeout<T>(p: Promise<T>, ms: number, timeoutValue: any, rejectOnTimeout = false): Promise<any> {
+    let timer: NodeJS.Timeout | null = null;
+    const timeoutP = new Promise((resolve, reject) => {
+      timer = setTimeout(() => {
+        if (rejectOnTimeout) reject(timeoutValue instanceof Error ? timeoutValue : new Error(String(timeoutValue)));
+        else resolve(timeoutValue);
+      }, ms);
+    });
+
+    return Promise.race([
+      p.then((res) => {
+        if (timer) clearTimeout(timer);
+        return res;
+      }).catch((err) => {
+        if (timer) clearTimeout(timer);
+        throw err;
+      }),
+      timeoutP.then((res) => {
+        if (timer) clearTimeout(timer);
+        return res;
+      }, (err) => {
+        if (timer) clearTimeout(timer);
+        throw err;
+      })
+    ]);
+  }
+
   add('LOWER(city) LIKE LOWER($IDX)', params.city ? `%${params.city}%` : undefined);
   add('LOWER(state) = LOWER($IDX)', params.state);
   add('list_price >= $IDX', params.minPrice);
@@ -174,24 +203,16 @@ export async function searchProperties(params: PropertySearchParams) {
   while (attempt <= MAX_RETRIES) {
     const usePool = attempt === 0 ? pool : await getPgPool();
     const attemptStart = Date.now();
-    try {
-      // First: run list query alone with shorter client timeout (20s)
-      const LIST_TIMEOUT_MS = 20_000;
-      const listTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('list-timeout')), LIST_TIMEOUT_MS));
-      const listResult: any = await Promise.race([
-        usePool.query(sql, values),
-        listTimeout
-      ]);
+      try {
+  // First: run list query alone with shorter client timeout (default 20s)
+  const LIST_TIMEOUT_MS = Number(process.env.PROPERTY_LIST_TIMEOUT_MS || 20000);
+  const listResult: any = await withTimeout(usePool.query(sql, values), LIST_TIMEOUT_MS, new Error('list-timeout'), true);
       results.list = listResult;
       log('list-success', { attempt, rows: listResult?.rowCount });
 
       // Second: run count query separately with shorter timeout (10s). If it times out, estimate.
-      const COUNT_TIMEOUT_MS = 10_000;
-      const countTimeout = new Promise((resolve) => setTimeout(() => resolve('count-timeout'), COUNT_TIMEOUT_MS));
-      const countOrTimeout: any = await Promise.race([
-        usePool.query(countSql, baseValuesForCount),
-        countTimeout
-      ]);
+  const COUNT_TIMEOUT_MS = Number(process.env.PROPERTY_COUNT_TIMEOUT_MS || 10000);
+  const countOrTimeout: any = await withTimeout(usePool.query(countSql, baseValuesForCount), COUNT_TIMEOUT_MS, 'count-timeout', false);
       if (countOrTimeout === 'count-timeout') {
         // Fallback estimate: if we got 'limit' rows assume more exist; set estimated flag.
         results.estimated = true;

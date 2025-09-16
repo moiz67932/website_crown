@@ -270,4 +270,51 @@ Output Structure:
 
 Tone: Practical, opportunity-focused, supportive.
 `
+
+  , ai_city_faqs: (city, county, region, nearby) => `You are an SEO-focused real estate content writer.
+Create a *unique FAQ section* for the ${city}${county ? ", " + county : ""}${region ? ", " + region : ""} landing page of Crown Coastal Homes.
+
+### Core Instructions:
+1. Generate *10 FAQs (Question + Answer)*.
+   - Long Answer: 150–250 words (on-page content).
+   - Short Answer: 50–80 words (for FAQ JSON-LD schema).
+   - Make answers *locally specific*: highlight neighborhoods, schools, universities, airports, transit, attractions, housing trends, lifestyle.
+   - Use nearby/regional context where helpful: ${nearby && nearby.length ? nearby.join(', ') : 'N/A'}.
+   - Position *Crown Coastal Homes* as a *concierge-style California real estate service*.
+   - Mention *Reza Barghlameno* as Buyer’s Agent or Listing Agent:
+     - Include *full license “DRE 02211952” in ~3–4 of the answers only*.
+     - In others, just use his name or “our trusted Buyer’s Agent / Listing Agent.”
+   - Vary phrasing to avoid repetition (e.g. “property market,” “housing values,” “real estate trends”).
+   - Include *soft calls-to-action* like:
+     - “Contact Crown Coastal Homes today”
+     - “Schedule a consultation with Reza”
+     - “Work with our concierge team”
+
+2. Output Format:
+   ### Part A: FAQ Section (Markdown, long answers)
+   - Format:
+     *Q1: [Question]*
+     A1: [Answer ~150–250 words]
+
+   ### Part B: FAQ Schema (JSON-LD, short answers)
+   - Provide all 10 FAQs in valid *FAQPage JSON-LD*.
+   - Use shortened versions (50–80 words) for each answer.
+   - Wrap inside <script type="application/ld+json">.
+
+3. Content Quality Guidelines:
+   - Make answers *self-contained* → they should stand alone if quoted in Google AI Overviews or Perplexity.
+   - Balance *practical steps* (e.g. “how to buy,” “what to check in inspections”) with *local insights* (e.g. local schools, nearby universities, closest major airport, transit, notable attractions).
+   - Write in a *trustworthy, professional, concierge-level tone*.
+   - Ensure every FAQ feels *unique to ${city}* to avoid duplicate content across locations.
+   - Avoid generic filler like “As an AI…” or “In general terms…”
+
+4. Extra SEO/AI Optimization:
+   - Mix in *semantic variations*:
+     - “homes for sale in ${city}”
+     - “real estate investment opportunities”
+     - “housing market trends”
+     - “property values”
+   - Add *occasional bullet points or mini-lists* inside answers for scannability.
+   - Use *natural entity mentions* (airports, universities, landmarks) to help AI connect your content to ${city}.
+`
 }
