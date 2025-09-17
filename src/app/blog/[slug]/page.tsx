@@ -7,12 +7,21 @@ import Image from 'next/image'
 // During development and immediate publish flows, render dynamically.
 export const dynamic = 'force-dynamic'
 
-export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> | { slug: string } }) {
+  // In some runtimes, params can be a Promise (Next.js sync dynamic APIs). Await defensively.
+  const resolvedParams = (typeof (params as any)?.then === 'function') ? await (params as Promise<{ slug: string }>) : (params as { slug: string })
+
   const supa = getSupabase()
-  if (!supa) return notFound()
+  if (!supa) {
+    // don't immediately bail to a 404 during RSC prefetch — log to debug why supabase isn't available
+    console.warn('getSupabase() returned null/undefined during render for slug=', resolvedParams?.slug)
+    // optional: continue and let queries fail gracefully, or create a read-only client here
+    return notFound()
+  }
+
   const bucket = getBucket()
-  let { slug } = await params
-  slug = decodeURIComponent(slug || '').trim().toLowerCase()
+  const rawSlug = resolvedParams?.slug || ''
+  const slug = decodeURIComponent(String(rawSlug)).trim().toLowerCase()
 
   const baseSelect = 'id, slug, title_primary, content_md, published_at, status, hero_image_url, city, meta_description, lede'
   // 1) exact match first
