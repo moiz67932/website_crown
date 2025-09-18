@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-t
 const JWT_EXPIRES_IN = '7d'; // Token expires in 7 days
 
 export interface JWTPayload {
-  userId: number | string;
+  userId: number;
   email: string;
   name: string;
   dateOfBirth?: string;
@@ -27,8 +27,14 @@ export class AuthService {
   // Verify JWT token
   static verifyToken(token: string): JWTPayload | null {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-      return decoded;
+      const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload | { userId?: string | number };
+      // Ensure userId is a number for server-side usage
+      if (decoded && typeof (decoded as any).userId !== 'undefined') {
+        const raw = (decoded as any).userId;
+        const num = typeof raw === 'string' ? Number(raw) : raw;
+        if (!Number.isNaN(num)) (decoded as any).userId = num;
+      }
+      return decoded as JWTPayload;
     } catch (error) {
       console.error('Token verification failed:', error);
       return null;

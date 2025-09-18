@@ -53,22 +53,22 @@ function PropertiesPageContent() {
   })
 
   useEffect(() => {
-    const sortByParam = searchParams.get("sortBy")
+    const sortByParam = searchParams?.get("sortBy")
     const validSortBy = ["recommended", "price-asc", "price-desc", "date-desc", "area-desc"].includes(sortByParam || "")
       ? sortByParam as "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
       : "recommended"
 
     setFilters({
-      propertyType: searchParams.get("propertyType") || "",
-      minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
-      maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
-      city: searchParams.get("searchLocationType") === "city" ? searchParams.get("location") || "" : "",
-      county: searchParams.get("searchLocationType") === "county" ? searchParams.get("location") || "" : "",
-      minBathroom: searchParams.get("minBathroom") ? Number(searchParams.get("minBathroom")) : undefined,
-      minBedroom: searchParams.get("minBedroom") ? Number(searchParams.get("minBedroom")) : undefined,
-      yearBuilt: searchParams.get("yearBuilt") ? Number(searchParams.get("yearBuilt")) : undefined,
-      max_sqft: searchParams.get("max_sqft") ? Number(searchParams.get("max_sqft")) : undefined,
-      min_sqft: searchParams.get("min_sqft") ? Number(searchParams.get("min_sqft")) : undefined,
+  propertyType: searchParams?.get("propertyType") || "",
+  minPrice: searchParams?.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+  maxPrice: searchParams?.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+  city: searchParams?.get("searchLocationType") === "city" ? searchParams?.get("location") || "" : "",
+  county: searchParams?.get("searchLocationType") === "county" ? searchParams?.get("location") || "" : "",
+  minBathroom: searchParams?.get("minBathroom") ? Number(searchParams.get("minBathroom")) : undefined,
+  minBedroom: searchParams?.get("minBedroom") ? Number(searchParams.get("minBedroom")) : undefined,
+  yearBuilt: searchParams?.get("yearBuilt") ? Number(searchParams.get("yearBuilt")) : undefined,
+  max_sqft: searchParams?.get("max_sqft") ? Number(searchParams.get("max_sqft")) : undefined,
+  min_sqft: searchParams?.get("min_sqft") ? Number(searchParams.get("min_sqft")) : undefined,
       sortBy: validSortBy
     })
   }, [searchParams])

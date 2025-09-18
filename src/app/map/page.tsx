@@ -33,12 +33,12 @@ function MapViewPage() {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const searchParams = useSearchParams()
 
-  // Get location from search params
-  const locationQuery = searchParams.get("location")
-  const propertyType = searchParams.get("propertyType")
-  const priceRange = searchParams.get("priceRange")
-  const searchLocationType = searchParams.get("searchLocationType")
-  const county = searchParams.get("county")
+  // Get location from search params (searchParams can be null)
+  const locationQuery = searchParams?.get("location")
+  const propertyType = searchParams?.get("propertyType")
+  const priceRange = searchParams?.get("priceRange")
+  const searchLocationType = searchParams?.get("searchLocationType")
+  const county = searchParams?.get("county")
   const convertPriceRange = (priceRange: string) => {
     if (priceRange === "100k-500k") return [100000, 500000]
     if (priceRange === "500k-1m") return [500000, 1000000]

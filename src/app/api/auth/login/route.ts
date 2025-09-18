@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Generate JWT token for session management
     const token = AuthService.generateToken({
-      userId: result.user!.id,
+      userId: Number(result.user!.id),
       email: result.user!.email,
       name: `${result.user!.first_name} ${result.user!.last_name}`
     });

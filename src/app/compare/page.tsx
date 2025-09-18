@@ -16,8 +16,8 @@ export default function ComparePage() {
   const [showPropertySearch, setShowPropertySearch] = useState(false)
   const { comparisonProperties, addToComparison, removeFromComparison, getComparisonCount } = useComparison()
   
-  // Get property IDs from URL parameters
-  const propertyIds = searchParams.get('properties')?.split(',') || []
+  // Get property IDs from URL parameters (searchParams can be null)
+  const propertyIds = (searchParams?.get('properties') || '').split(',').filter(Boolean)
   
   // Fetch properties based on IDs (you'll need to modify this based on your API)
   const { data: propertiesData, isLoading } = useListProperties({

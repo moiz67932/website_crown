@@ -69,7 +69,8 @@ export default function IntegratedPropertySearch({
 
   // Initialize filters from URL on mount
   useEffect(() => {
-    const urlFilters = parseURLToFilters(window.location.pathname, searchParams);
+    const spForParse: URLSearchParams = searchParams ? new URLSearchParams(searchParams.toString()) : new URLSearchParams();
+    const urlFilters = parseURLToFilters(window.location.pathname, spForParse);
     if (Object.keys(urlFilters).length > 0) {
       setFilters(urlFilters);
       performSearch(urlFilters);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
-export async function GET(req: NextRequest) {
+async function handler(req: NextRequest) {
   const supa = getSupabase()
   if (!supa) return NextResponse.json({ ok:false, error: 'Supabase not configured' }, { status: 500 })
   if (req.headers.get('x-cron-secret') !== process.env.CRON_SECRET) {
@@ -25,3 +25,6 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ ok:true, published: due?.length ?? 0 })
 }
+
+export async function GET(req: NextRequest) { return handler(req) }
+export async function POST(req: NextRequest) { return handler(req) }
