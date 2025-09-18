@@ -15,6 +15,14 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
   const loweredCity = city.toLowerCase()
   const key = `${loweredCity}::${kind}`
   const trace = !!process.env.LANDING_TRACE
+  // Detect build environments (npm lifecycle or next build) and skip external fetches
+  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
+  const likelyNextBuild = argv.includes('next') && argv.includes('build')
+  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
+    if (trace) console.log('[landing.hero] skipping unsplash due to build-detection', { key })
+    memCache.set(key, null)
+    return undefined
+  }
   if (trace) console.log('[landing.hero] START', { city: loweredCity, kind })
   if (memCache.has(key)) {
     const cached = memCache.get(key)

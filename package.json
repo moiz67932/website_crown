@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+  "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "generate-client": "openapi-ts --input $NEXT_PUBLIC_API_OPENAPI_URL --output ./src/client --client axios",
     "backfill:props": "ts-node --project tsconfig.scripts.json scripts/backfill-property-embeddings.ts",
     "backfill:posts": "ts-node --project tsconfig.scripts.json scripts/backfill-post-embeddings.ts"
+    ,"generate:landing-ai": "ts-node --project tsconfig.scripts.json scripts/generate-landing-ai.ts"
+    ,"regenerate:landing-ai": "ts-node --project tsconfig.scripts.json scripts/regenerate-landing-ai.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

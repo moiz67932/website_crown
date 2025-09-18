@@ -86,6 +86,14 @@ Rules:
 }
 
 export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ faqs: FAQItem[]; markdown: string; jsonLd: any; meta?: SEOMeta } | null> {
+  // Detect build/static-export and skip heavy DB/OpenAI work during npm build/next build
+  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
+  const likelyNextBuild = argv.includes('next') && argv.includes('build')
+  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
+    if (process.env.LANDING_TRACE) console.log('[faqs] skipping FAQ generation due to build-detection')
+    return null
+  }
+
   const sb = getSupabase()
   if (!sb) return null
   const pageName = slug
