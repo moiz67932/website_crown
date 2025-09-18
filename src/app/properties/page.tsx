@@ -17,7 +17,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, usePathname } from "next/navigation"
 import { PropertyCard } from "@/components/property-card"
 import { Property } from "@/interfaces"
 import { PropertyFilters } from "@/types/filters"
@@ -51,6 +51,7 @@ const PropertyGridSkeleton = () => (
 function PropertiesPageContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const router = useRouter()
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
   const [semanticQuery, setSemanticQuery] = useState('')
@@ -186,8 +187,9 @@ function PropertiesPageContent() {
     // Parse URL parameters into new filter format
     try {
       // useSearchParams() can return null; ensure we pass a real URLSearchParams instance
-      const spForParse: URLSearchParams = searchParams ? new URLSearchParams(searchParams.toString()) : new URLSearchParams()
-      const urlFilters = parseURLToFilters(window.location.pathname, spForParse)
+  const spForParse: URLSearchParams = searchParams ? new URLSearchParams(searchParams.toString()) : new URLSearchParams()
+  const pathForParse = pathname || (typeof window !== 'undefined' ? window.location.pathname : '/properties')
+  const urlFilters = parseURLToFilters(pathForParse, spForParse)
       
       // If URL has filters, use them, otherwise use legacy URL parsing
       if (Object.keys(urlFilters).length > 0) {

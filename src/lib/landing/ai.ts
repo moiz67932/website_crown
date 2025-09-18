@@ -88,8 +88,11 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
 
   const executor = async (): Promise<string | undefined> => {
     // 3. Generate (requires OpenAI key)
-    if (!process.env.OPENAI_API_KEY) {
-      if (trace || debug) console.warn('[ai.desc] OPENAI_API_KEY missing; skipping generation', { city: loweredCity, kind })
+    // During static builds the AI generation can be slow or hit rate limits.
+    // Allow builds to skip external OpenAI work by setting
+    // SKIP_LANDING_EXTERNAL_FETCHES=1. If OPENAI key is missing we also skip.
+    if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || !process.env.OPENAI_API_KEY) {
+      if (trace || debug) console.warn('[ai.desc] skipping OpenAI generation (SKIP_LANDING_EXTERNAL_FETCHES|VERCEL or missing OPENAI_API_KEY)', { city: loweredCity, kind, hasKey: !!process.env.OPENAI_API_KEY, isVercel: !!process.env.VERCEL })
       return undefined
     }
     const prompt = `You are a real estate SEO assistant. Write a 2–3 paragraph description of ${city} ${kind.replace(/-/g,' ')}, highlighting lifestyle, housing trends, and buyer appeal. Keep it factual, local, and professional.`

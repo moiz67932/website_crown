@@ -1,23 +1,104 @@
-import type { CityContext } from './context'
+// // src/lib/content/prompts.ts (or wherever your current prompts.ts lives)
+import type { CityContext } from "./context";
 
-export function buildSystemPrompt() {
-  return `You are a senior real-estate copywriter and SEO editor for "Crown Coastal Homes".\nSTRICT RULES:\n- Use only facts from provided context. If unknown, SKIP silently. No invented numbers, ratings, commute times, or company presence.\n- Tone: advisory, authoritative, approachable, conversion-oriented.\n- One H1 only. Use H2/H3 properly.\n- Write clean HTML-ready paragraphs (allow <p>, <ul>, <ol>, <li>, <strong>, <em>, <a>).\n- Optimize for intent, not keyword stuffing. Natural density.\n- Cities: California only (from input). Respect nearby cities list as given; do not add unverified places.\n- Output MUST be valid JSON per the response schema.`
+// *** NEW ***: inlines your prompt-template so we guarantee it’s used.
+// If you prefer file I/O, you can fs.readFileSync it in a server-only route.
+const PROMPT_TEMPLATE = `
+You are a senior real-estate copywriter and SEO editor for a reputable local brokerage. Your job is to produce a single, high-quality long-form blog post in strict JSON-only format (no markdown, no extra commentary) following the exact schema and constraints described below. Always obey the following rules:
+
+- Tone & Audience: Professional, helpful, locality-first. Write for prospective home buyers and local movers in the target city and region. Use American English, avoid superlatives that can't be verified, and do not hallucinate facts, numbers, distances, or specific statistics unless the source data is explicitly provided. If a fact or numeric detail is not known, omit it.
+
+- Fair Housing: Do not imply a preference for a protected class. Avoid language that could be interpreted as exclusionary. Focus on amenities, schools, commute corridors, lifestyle, and housing stock types.
+
+- Structure: Return valid JSON only, matching the schema in the "OUTPUT JSON SHAPE" section. Do not wrap the JSON in code fences or add any explanation. The content fields must contain HTML-ready strings where applicable (e.g., 'html' fields should be HTML with proper tags). There must be exactly one H1 (title). Use H2/H3 for sections and subheads as needed.
+
+- Length & Quality Gates: Total wordCount (intro + all sections + conclusion) must be at least 1500 words. Provide 7 or 8 sections. Title must contain the city name. Slug must be kebab-case and include the city name. metaDescription must be <= 155 characters and enticing. Provide a heroImagePrompt and 4-5 imagePrompts (short Unsplash-style query phrases). Provide 3-5 internalLinkSuggestions with brief reasons.
+
+- Imagery: imagePrompts should be short comma-separated query phrases suitable for Unsplash search (e.g., "cityname coastline homes at sunset, palm trees, warm light"). heroImagePrompt should be a single strong query phrase for a hero image.
+
+- Output JSON SHAPE (exact):
+{
+  "metaTitle": string,
+  "metaDescription": string,
+  "primaryKeyword": string,
+  "secondaryKeywords": string[],
+  "title": string,
+  "slug": string,
+  "lede": string,
+  "intro": string,
+  "sections": [ { "heading": string, "html": string } ],
+  "conclusion": string,
+  "heroImagePrompt": string,
+  "imagePrompts": string[],
+  "internalLinkSuggestions": [ { "anchorText": string, "reason": string } ],
+  "wordCount": number,
+  "jsonLd": string
 }
 
-export function buildUserPrompt(input: any, ctx: CityContext, blurbs: any) {
-  const nearby = (input.nearby ?? []).join(', ')
-  const sharedRules = `STRICT OUTPUT ORDER:\n1) metaTitle\n2) metaDescription (<=155 chars + CTA)\n3) h1 (primary intent)\n4) sections[]: H2/H3 segments per type below\n5) faqs[10] (distinct, locally relevant, 3–5 sentences each; skip unverifiable topics)\n6) cta (strong, brand-aligned)\n7) jsonLd (one consolidated block: FAQPage, LocalBusiness[Crown Coastal Homes, city], BreadcrumbList, WebPage; OMIT Place/Geo unless coords provided)\nAlso return titleVariantA and titleVariantB for A/B testing (distinct but accurate).\n\nCONTEXT (facts only):\n- City: ${ctx.city}\n- Neighborhoods: ${ctx.neighborhoods.slice(0,20).join(', ')}\n- Property Types: ${ctx.property_types.join(', ')}\n- Example Listings (titles): ${ctx.example_listings.map(x=>x.title).join(' | ')}\n- Nearby Cities (from input): ${nearby || '(none provided)'}\n- Retrieved blurbs: ${JSON.stringify(blurbs).slice(0,3000)}`
+- Sections: Provide 7 or 8 sections. Each section should be around 180-260 words and include useful local advice, calls to action where appropriate, and practical info for buyers (what to look for, neighborhood feel, tradeoffs). Insert inline image suggestions in the narrative where relevant, but actual image URLs will be resolved by the image pipeline.
 
-  const typeBlock = (() => {
-    switch (input.type) {
-      case 'top10': return `TYPE: "Top 10 Neighborhoods to Buy in ${ctx.city}"`;
-      case 'moving': return `TYPE: "Moving to ${ctx.city}: Complete Guide"`;
-      case 'predictions': return `TYPE: "${ctx.city} Real Estate Market Predictions"`;
-      case 'schools': return `TYPE: "Best Schools in ${ctx.city}" (QUALITATIVE ONLY)`;
-      case 'why_demographic': return `TYPE: "Why ${ctx.city} is Perfect for ${input.options?.demographic || '[Demographic]'}"`;
-      default: return ''
+- JSON-LD: Provide a single JSON-LD string suitable for embedding in the page (no <script> tags). Use WebPage and Article schema where appropriate and a BreadcrumbList. Do not include Place/GeoCoordinates unless lat/long are provided as input.
+
+- Final checks before returning: Ensure the JSON is valid, all required fields are present, wordCount >= 1500, sections length is 7 or 8, title includes the city, slug contains the city in kebab-case, and metaDescription <= 155 chars. Return only the JSON object literal.
+
+BEGIN PROMPT: Use the input variables below to fill the blog post.
+
+Input variables available to you when producing the JSON:
+- topic: main blog topic or angle (string)
+- city: city name (string)
+- county: optional county (string|null)
+- region: state or region (string)
+- nearbyCities: optional array of nearby city names (string[])
+- audience: optional audience descriptor (string)
+- focusKeywords: optional list of focus keywords (string[])
+- brand: optional brand name to reference in CTAs (string)
+- agent: optional agent name to sign the CTA or author (string)
+
+Write the JSON now. Do not include any text outside the JSON object.
+`.trim();
+
+export type GeneratorInput = {
+  topic: string;
+  city: string;
+  county?: string | null;
+  region: string;
+  nearbyCities?: string[];
+  audience?: string;
+  focusKeywords?: string[];
+  brand?: string;
+  agent?: string;
+  type?:
+    | "top10"
+    | "moving"
+    | "predictions"
+    | "schools"
+    | "why_demographic"; // optional flavor
+  options?: { demographic?: string };
+};
+
+export function buildTemplatePrompt(input: GeneratorInput, ctx: CityContext, blurbs: any) {
+  const payload = {
+    topic: input.topic,
+    city: input.city,
+    county: input.county ?? null,
+    region: input.region,
+    nearbyCities: input.nearbyCities ?? [],
+    audience: input.audience ?? "",
+    focusKeywords: input.focusKeywords ?? [],
+    brand: input.brand ?? "Crown Coastal Homes",
+    agent: input.agent ?? "",
+    // Extra context for the model to ground content (added at end):
+    context: {
+      neighborhoods: ctx.neighborhoods.slice(0, 20),
+      propertyTypes: ctx.property_types,
+      exampleListings: ctx.example_listings.map((e) => e.title),
+      retrievedBlurbs: Array.isArray(blurbs) ? blurbs : [],
+      postFlavor: input.type || "",
+      demographic: input.options?.demographic || ""
     }
-  })()
+  };
 
-  return `Generate a blog for Crown Coastal Homes using the following instructions.\n\n${sharedRules}\n\n${typeBlock}`
+  // The model will receive the template + serialized JSON of variables.
+  // Your API route should send this as a single user message.
+  return `${PROMPT_TEMPLATE}\n\nINPUT:\n${JSON.stringify(payload)}`;
 }

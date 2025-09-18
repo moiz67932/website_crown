@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useMemo } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -47,6 +47,7 @@ export default function IntegratedPropertySearch({
   
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   
   // State management
   const [currentView, setCurrentView] = useState<'list' | 'map'>(initialView);
@@ -69,8 +70,9 @@ export default function IntegratedPropertySearch({
 
   // Initialize filters from URL on mount
   useEffect(() => {
-    const spForParse: URLSearchParams = searchParams ? new URLSearchParams(searchParams.toString()) : new URLSearchParams();
-    const urlFilters = parseURLToFilters(window.location.pathname, spForParse);
+  const spForParse: URLSearchParams = searchParams ? new URLSearchParams(searchParams.toString()) : new URLSearchParams();
+  const path = pathname || (typeof window !== 'undefined' ? window.location.pathname : '/properties');
+  const urlFilters = parseURLToFilters(path, spForParse);
     if (Object.keys(urlFilters).length > 0) {
       setFilters(urlFilters);
       performSearch(urlFilters);
@@ -173,14 +175,16 @@ export default function IntegratedPropertySearch({
     const newUrl = generateSEOURL(newFilters);
     router.push(newUrl, { scroll: false });
     
-    // Update page title and meta
-    const pageTitle = generatePageTitle(newFilters);
-    document.title = pageTitle;
-    
-    const metaDescription = generateMetaDescription(newFilters, searchResults?.totalCount);
-    const metaDescElement = document.querySelector('meta[name="description"]');
-    if (metaDescElement) {
-      metaDescElement.setAttribute('content', metaDescription);
+    // Update page title and meta (client-only)
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const pageTitle = generatePageTitle(newFilters);
+      document.title = pageTitle;
+
+      const metaDescription = generateMetaDescription(newFilters, searchResults?.totalCount);
+      const metaDescElement = document.querySelector('meta[name="description"]');
+      if (metaDescElement) {
+        metaDescElement.setAttribute('content', metaDescription);
+      }
     }
     
     // Perform search

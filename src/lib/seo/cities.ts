@@ -1,16 +1,17 @@
 // Central California city slugs for initial SEO launch
 // Idempotent: safe to re-run without duplication.
 export const CA_CITIES = [
-  'escondido',
-  'san-diego',
-  'los-angeles',
+  // 'escondido',
+  // 'san-diego',
+  // 'los-angeles',
   'san-jose',
-  'fresno',
-  'oakland',
-  'irvine',
-  'riverside',
-  'sacramento',
-  'bakersfield',
+  'san-francisco',
+  // 'fresno',
+  // 'oakland',
+  // 'irvine',
+  // 'riverside',
+  // 'sacramento',
+  // 'bakersfield',
 ] as const;
 
 export type CACitySlug = typeof CA_CITIES[number];

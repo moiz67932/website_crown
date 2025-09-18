@@ -51,6 +51,15 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
     }
 
     // 2. External fetch (Unsplash)
+    // Allow builds to opt-out of making external network calls (Unsplash) by
+    // setting SKIP_LANDING_EXTERNAL_FETCHES=1. We still respect Supabase cache
+    // above, but avoid doing a potentially slow external request during static
+    // generation or CI builds.
+    if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1') {
+      if (trace) console.log('[landing.hero] skipping unsplash due to SKIP_LANDING_EXTERNAL_FETCHES', { key })
+      memCache.set(key, null)
+      return undefined
+    }
     const accessKey = process.env.UNSPLASH_ACCESS_KEY
     if (!accessKey) {
       memCache.set(key, null)

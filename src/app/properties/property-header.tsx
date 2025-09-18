@@ -3,7 +3,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GridIcon, LayoutList } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useMemo } from "react"
-import CountyHighlightMap from "@/components/county-highlight-map"
+import dynamic from "next/dynamic"
+
+// Load the client-only CountyHighlightMap dynamically with SSR disabled so
+// Leaflet (which depends on window) isn't evaluated during server builds.
+const CountyHighlightMap = dynamic(() => import("@/components/county-highlight-map"), { ssr: false })
 
 interface IPropertyListingHeaderProps {
   totalProperties: number
@@ -20,11 +24,13 @@ export default function PropertyListingHeader({ totalProperties, currentPage, so
   const endIndex = Math.min(startIndex + 11, totalProperties)
 
   // Extract county from URL parameters
-  const countyName = useMemo(() => {
-    const county = searchParams.get("county")
-    const location = searchParams.get("location")
-    const searchLocationType = searchParams.get("searchLocationType")
-    
+  const countyName: string | null = useMemo(() => {
+    // useSearchParams() can return null in some contexts, guard with fallback
+    const params = searchParams ?? new URLSearchParams()
+    const county = params.get("county")
+    const location = params.get("location")
+    const searchLocationType = params.get("searchLocationType")
+
     // Check if we have a county parameter or if location is a county
     if (county) {
       return county
