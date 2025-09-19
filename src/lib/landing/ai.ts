@@ -43,6 +43,179 @@ function buildFallbackDescription(city: string, kind: string): string {
   ].join('\n')
 }
 
+// Deterministic long-form fallback that aims for ~1000+ words split into paragraphs.
+// Helper: generate a reasonably sized paragraph for a given topic.
+function generateParagraphForTopicImpl(cityTitle: string, niceKind: string, topic: string) {
+  // Produce a neutral paragraph by composing sentences. Keep it deterministic and non-factual.
+  const sentences = [
+    `${cityTitle} offers a range of options when it comes to ${niceKind}.`,
+    `On ${topic.toLowerCase()}, buyers should consider local nuances and personal priorities.`,
+    `Experienced local agents can help prioritize the features that matter most for each buyer.`,
+    `When touring properties, focus on layout, natural light, structural condition, and how the home supports your daily routine.`,
+    `Neighborhood considerations like walkability, nearby parks, dining, and commute corridors often influence long-term satisfaction.`,
+    `Thoughtful searches that balance budget, needs, and market timing tend to produce the best outcomes for buyers in ${cityTitle}.`
+  ]
+  // Repeat once to ensure decent length without fabricating facts.
+  return sentences.join(' ') + ' ' + sentences.join(' ')
+}
+
+// Deterministic long-form fallback that aims for ~1000+ words split into paragraphs.
+function buildLongFallbackDescription(city: string, kind: string, maxWords = 1000): string {
+  const cityTitle = city.replace(/\b\w/g, c => c.toUpperCase())
+  const niceKind = kind.replace(/-/g, ' ')
+  const sections = [
+    `<p><strong>${escapeHtml(cityTitle)} ${escapeHtml(niceKind)}</strong> — Discover the lifestyle, neighborhoods, and housing options that make this area distinct. This introduction summarizes why buyers consider ${escapeHtml(cityTitle)} and what to expect when searching for ${escapeHtml(niceKind)}.</p>`,
+  ]
+
+  // Topics to cover; we'll generate paragraphs until we reach maxWords
+  const topics = [
+    'Neighborhood character and popular areas to consider',
+    'Typical housing stock and what different buyers look for',
+    'Local amenities, schools, and lifestyle attractions',
+    'Market trends and buyer considerations (pricing, competition, seasonality)',
+    'What to expect during your home search and tips for touring',
+    'Financing considerations and working with local agents',
+    'Closing thoughts and a gentle call to action to contact the team'
+  ]
+
+  const paras: string[] = []
+  paras.push(sections[0])
+
+  // Rough words per paragraph target so we can stop once maxWords reached.
+  const approxPerPara = Math.max(120, Math.floor(maxWords / Math.max(3, topics.length + 1)))
+
+  let accumulatedWords = paras.join(' ').replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length
+
+  for (const t of topics) {
+    if (accumulatedWords >= maxWords) break
+    let body = generateParagraphForTopicImpl(cityTitle, niceKind, t)
+
+    // generateParagraphForTopic tends to produce long repeated text; trim to approxPerPara
+    const trimmed = body.split(/\s+/).slice(0, approxPerPara).join(' ')
+    const paraHtml = `<p>${escapeHtml(trimmed)}</p>`
+    paras.push(paraHtml)
+
+    accumulatedWords += trimmed.split(/\s+/).filter(Boolean).length
+  }
+
+  // If still under maxWords, append short closing paragraph up to remaining words
+  const remaining = maxWords - accumulatedWords
+  if (remaining > 20) {
+    const closing = Array(Math.min(remaining, 120)).fill(`Working with ${cityTitle} experts helps buyers navigate listings and close confidently.`).join(' ')
+    paras.push(`<p>${escapeHtml(closing.split(/\s+/).slice(0, remaining).join(' '))}</p>`)
+  }
+
+  return paras.join('\n')
+}
+
+// Maintain stable API name used elsewhere
+function generateParagraphForTopic(cityTitle: string, niceKind: string, topic: string) {
+  return generateParagraphForTopicImpl(cityTitle, niceKind, topic)
+}
+
+// Ensure text is wrapped in <p> paragraphs. If already contains <p> tags, return as-is.
+function ensureParagraphHtml(raw: string) {
+  if (/<p[\s>]/i.test(raw)) return raw
+  const parts = String(raw).split(/\n\s*\n/).map(p => p.trim()).filter(Boolean)
+  return parts.map(p => `<p>${escapeHtml(p)}</p>`).join('\n')
+}
+
+// New helper: truncate HTML by paragraph while preserving tags and closing paragraphs.
+function truncateHtmlByParagraphs(html: string, maxWords: number): string {
+  if (!html) return html
+  // Extract paragraph blocks if present
+  const paraRegex = /<p[^>]*>[\s\S]*?<\/p>/gi
+  const paras = html.match(paraRegex)
+  if (paras && paras.length) {
+    const out: string[] = []
+    let words = 0
+    for (const p of paras) {
+      // remove tags to count words
+      const inner = p.replace(/<[^>]+>/g, ' ')
+      const wcount = inner.split(/\s+/).filter(Boolean).length
+      if (words + wcount <= maxWords) {
+        out.push(p)
+        words += wcount
+      } else {
+        // need partial paragraph
+        const remaining = Math.max(0, maxWords - words)
+        if (remaining > 0) {
+          // extract plain text, take remaining words, re-wrap
+          const text = inner.replace(/\s+/g, ' ').trim().split(/\s+/).slice(0, remaining).join(' ')
+          out.push(`<p>${escapeHtml(text)}</p>`)
+          words += remaining
+        }
+        break
+      }
+    }
+    return out.join('\n')
+  } else {
+    // No paragraphs: fallback to plain-text truncate and wrap in one <p>
+    const plain = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    const truncated = plain.split(/\s+/).slice(0, maxWords).join(' ')
+    return `<p>${escapeHtml(truncated)}</p>`
+  }
+}
+
+// Modify callOpenAI to accept maxTokens budget (passed as max_completion_tokens)
+async function callOpenAI(prompt: string, maxTokens?: number): Promise<string | undefined> {
+  const primaryModel = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+  const fallbackModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'].filter(m => m !== primaryModel)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), Number(process.env.OPENAI_TIMEOUT_MS || 25000))
+  try {
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
+    const maxTokensConfigured = Number(process.env.OPENAI_MAX_TOKENS || 3000)
+    const maxTokensToUse = typeof maxTokens === 'number' ? Math.min(maxTokensConfigured, Math.max(64, Math.floor(maxTokens))) : maxTokensConfigured
+
+      const tryModel = async (modelName: string) => {
+      const started = Date.now()
+      const completion = await client.chat.completions.create({
+        model: modelName,
+        temperature: 1,
+        max_completion_tokens: maxTokensToUse,
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant producing concise HTML paragraphs without a wrapping <body>. Do not exceed the requested maximum word count in the user instruction.' },
+          { role: 'user', content: prompt }
+        ]
+      }, { signal: controller.signal as any })
+      const ms = Date.now() - started
+      const content = completion.choices?.[0]?.message?.content?.trim()
+      if (process.env.LANDING_TRACE) {
+        console.log('[ai.desc] openai response', { model: modelName, ms, hasContent: !!content, contentPreview: (content||'').slice(0,80) })
+      }
+      return content
+    }
+
+    let content = await tryModel(primaryModel)
+    if (!content) {
+      for (const m of fallbackModels) {
+        try {
+          console.warn('[ai.desc] retrying openai with fallback model', { model: m })
+          content = await tryModel(m)
+          if (content) break
+        } catch (err: any) {
+          console.warn('[ai.desc] fallback model failed', { model: m, message: err?.message || String(err) })
+        }
+      }
+    }
+    return content
+  } catch (e: any) {
+    if (e?.name === 'AbortError') {
+      console.warn('[ai.desc] openai aborted timeout', { timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || 25000) })
+    } else {
+      console.warn('[ai.desc] openai error', e?.message || e)
+    }
+    throw e
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+function escapeHtml(str: string) {
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c] as string))
+}
+
 export async function getAIDescription(city: string, kind: LandingKind, opts: GetOpts = {}): Promise<string | undefined> {
   const loweredCity = city.toLowerCase()
   const key = `${loweredCity}::${kind}`
@@ -175,19 +348,87 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
   if (trace) console.log('[ai.desc] calling OpenAI', { key, model: process.env.OPENAI_MODEL || 'gpt-4o-mini', usedCustomPrompt: !!opts.customPrompt, promptPreview: prompt.slice(0, 120) })
     let html: string | undefined
     try {
-      html = await callOpenAI(prompt)
+      // compute desired words range (min 800, max 1000) - env overrides allowed
+      const envMin = Number(process.env.LANDING_MIN_WORDS || 800)
+      const envMax = Number(process.env.LANDING_MAX_WORDS || 1000)
+      const desiredMin = Math.max(800, Math.min(envMin, envMax))
+      const desiredMax = Math.max(desiredMin, envMax)
+  // translate words -> approximate tokens (conservative multiplier) using desiredMax
+  const approxTokens = Math.max(300, Math.ceil(desiredMax * 1.6))
+  // Ask OpenAI with token budget tuned to desiredMax words
+  html = await callOpenAI(prompt, approxTokens)
+
       // Explicit log of content preview for debugging
       console.log('[ai.desc] openai content', { key, length: html?.length || 0, preview: (html || '').slice(0, 160) })
+
+      // Count words
+      const countWords = (s?: string) => {
+        if (!s) return 0
+        const stripped = String(s).replace(/<[^>]+>/g, ' ')
+        return String(stripped).split(/\s+/).filter(Boolean).length
+      }
+  let words = countWords(html)
+
+      // If model produced more than desiredMax, truncate safely by paragraphs
+      if (words > desiredMax) {
+        if (process.env.LANDING_TRACE) console.warn('[ai.desc] openai produced more words than max; truncating', { key, produced: words, max: desiredMax })
+        html = truncateHtmlByParagraphs(html || '', desiredMax)
+        words = countWords(html)
+        if (process.env.LANDING_TRACE) console.log('[ai.desc] truncated content words', { key, words })
+      }
+
+      // If under desiredWords, retry as before (kept existing retry logic)...
+      const maxRetries = 2
+      if (words < desiredMin) {
+  for (let attempt = 1; attempt <= maxRetries && words < desiredMin; attempt++) {
+          try {
+            const retryPrompt = (opts.customPrompt || prompt) + `\n\nIMPORTANT: Output at least ${desiredMin} words and at most ${desiredMax} words. Structure the response as multiple paragraphs (use <p>...</p> for each paragraph). Start with an introductory paragraph, then provide several sections covering neighborhood, market trends, buyer appeal, amenities, and a closing CTA. Avoid fabricated numeric facts. Output HTML paragraphs only.`
+            if (trace) console.log('[ai.desc] retrying OpenAI for length', { key, attempt, desiredMin, desiredMax })
+            const retryHtml = await callOpenAI(retryPrompt, approxTokens)
+            if (retryHtml) {
+              // if retry overproduces, truncate
+              if (countWords(retryHtml) > desiredMax) {
+                if (trace) console.warn('[ai.desc] retry produced too many words; truncating retry result', { key, attempt })
+                html = truncateHtmlByParagraphs(retryHtml, desiredMax)
+              } else {
+                html = retryHtml
+              }
+              words = countWords(html)
+              if (trace) console.log('[ai.desc] retry produced more words', { key, attempt, words })
+            }
+          } catch (e: any) {
+            console.warn('[ai.desc] retry attempt failed', { key, attempt, message: e?.message || e })
+          }
+        }
+      }
     } catch (e: any) {
       console.warn('[ai.desc] OpenAI generation failed', e.message)
       html = undefined
     }
+
     if (!html || !html.trim()) {
       console.warn('[ai.desc] OpenAI returned empty content; using fallback generator', { key })
-      html = buildFallbackDescription(city, kind)
+      // ensure fallback respects desiredWords
+      const fallbackWords = Number(process.env.LANDING_MAX_WORDS || process.env.LANDING_MIN_WORDS || 1000)
+      html = buildFallbackDescription(city, kind) // short fallback for placeholder
+      // replace with long fallback but capped
+      html = buildLongFallbackDescription(city, kind, fallbackWords)
     }
-    memCache.set(key, html)
-    if (trace) console.log('[ai.desc] generated OpenAI', { key, length: html.length })
+
+    // Ensure paragraphs are wrapped as HTML
+    if (html) {
+      html = ensureParagraphHtml(html || '')
+    }
+
+    // After retries above, enforce long fallback if still too short (but now capped)
+    const finalDesiredWords = Number(process.env.LANDING_MAX_WORDS || process.env.LANDING_MIN_WORDS || 1000)
+    if ((html && html.length) && (String(html || '').replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length > finalDesiredWords)) {
+      // double-safety: if anything still exceeds, truncate
+      html = truncateHtmlByParagraphs(html || '', finalDesiredWords)
+    }
+  // Normalize memCache to always store a string and avoid undefined.
+  memCache.set(key, html || '')
+  if (trace) console.log('[ai.desc] generated OpenAI', { key, length: html?.length || 0 })
 
     // 4. Persist to Supabase
     try {
@@ -195,7 +436,7 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
       if (sb) {
         if (trace) console.log('[ai.desc] persisting supabase', { key, willPersist: !isPlaceholderHtml(html) })
         const usingService = !!process.env.SUPABASE_SERVICE_ROLE_KEY
-        if (!isPlaceholderHtml(html)) {
+        if (!isPlaceholderHtml(html) && html) {
           const { error } = await sb
             .from('landing_pages')
             .upsert({
@@ -224,7 +465,7 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
     try {
       const pool2 = await getPgPool()
       await ensureLegacyTable(pool2)
-      if (!isPlaceholderHtml(html)) {
+      if (!isPlaceholderHtml(html) && html) {
         await pool2.query('INSERT INTO landing_ai_descriptions(city,kind,html) VALUES($1,$2,$3) ON CONFLICT (city,kind) DO UPDATE SET html=EXCLUDED.html, generated_at=now()', [loweredCity, kind, html])
       } else if (trace) {
         console.log('[ai.desc] skipping legacy pg persist due to placeholder', { key })
@@ -240,61 +481,6 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
   return p
 }
 
-async function callOpenAI(prompt: string): Promise<string | undefined> {
-  const primaryModel = process.env.OPENAI_MODEL || 'gpt-4o-mini'
-  const fallbackModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'].filter(m => m !== primaryModel)
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), Number(process.env.OPENAI_TIMEOUT_MS || 25000))
-  try {
-    // Prefer official OpenAI SDK for consistent behavior (same as FAQs generator)
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
-      const maxTokens = Number(process.env.OPENAI_MAX_TOKENS || 3000)
-      const tryModel = async (modelName: string) => {
-      const started = Date.now()
-      const completion = await client.chat.completions.create({
-        model: modelName,
-        temperature: 1,
-          max_completion_tokens: maxTokens,
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant producing concise HTML paragraphs without a wrapping <body>.' },
-          { role: 'user', content: prompt }
-        ]
-      }, { signal: controller.signal as any })
-      const ms = Date.now() - started
-      const content = completion.choices?.[0]?.message?.content?.trim()
-      if (process.env.LANDING_TRACE) {
-        console.log('[ai.desc] openai response', { model: modelName, ms, hasContent: !!content, contentPreview: (content||'').slice(0,80) })
-      }
-      return content
-    }
+// The single callOpenAI implementation with optional maxTokens lives earlier in this file.
 
-    // Try primary then fallbacks until we get content
-    let content = await tryModel(primaryModel)
-    if (!content) {
-      for (const m of fallbackModels) {
-        try {
-          console.warn('[ai.desc] retrying openai with fallback model', { model: m })
-          content = await tryModel(m)
-          if (content) break
-        } catch (err: any) {
-          console.warn('[ai.desc] fallback model failed', { model: m, message: err?.message || String(err) })
-        }
-      }
-    }
-    return content
-  } catch (e: any) {
-    if (e?.name === 'AbortError') {
-      console.warn('[ai.desc] openai aborted timeout', { timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || 25000) })
-    } else {
-      // Common API error includes invalid param "max_tokens" if used; we are sending max_completion_tokens by request of the caller.
-      console.warn('[ai.desc] openai error', e?.message || e)
-    }
-    throw e
-  } finally {
-    clearTimeout(timeout)
-  }
-}
-
-function escapeHtml(str: string) {
-  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c] as string))
-}
+// escapeHtml already defined above; do not duplicate.

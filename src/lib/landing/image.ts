@@ -4,6 +4,12 @@ import { getSupabase } from '@/lib/supabase'
 const memCache = new Map<string, string | null>()
 const pending = new Map<string, Promise<string | undefined>>()
 
+
+type InlineImg = { url: string; alt: string; position: 'inline_1' | 'inline_2' | 'inline_3' | 'inline_4' }
+
+const memHero = new Map<string, string | null>()
+const pendingHero = new Map<string, Promise<string | undefined>>()
+
 /**
  * Fetch (and cache) a hero image for a landing page (city + kind).
  * Order of operations:
@@ -125,4 +131,92 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
   })().finally(() => pending.delete(key))
   pending.set(key, p)
   return p
+}
+
+
+/** NEW: curated inline images, persisted on landing_pages.inline_images_json */
+const memInline = new Map<string, InlineImg[] | null>()
+const pendingInline = new Map<string, Promise<InlineImg[]>>()
+
+export async function getLandingInlineImages(city: string, kind: string): Promise<InlineImg[]> {
+  const loweredCity = city.toLowerCase()
+  const key = `${loweredCity}::${kind}::inline`
+
+  if (memInline.has(key)) return memInline.get(key) || []
+  if (pendingInline.has(key)) return pendingInline.get(key)!
+
+  const p = (async (): Promise<InlineImg[]> => {
+    // 1) Try Supabase cache
+    try {
+      const sb = getSupabase()
+      if (sb) {
+        const { data } = await sb
+          .from('landing_pages')
+          .select('inline_images_json')
+          .eq('city', loweredCity)
+          .eq('page_name', kind)
+          .maybeSingle()
+        if (data?.inline_images_json && Array.isArray(data.inline_images_json) && data.inline_images_json.length) {
+          memInline.set(key, data.inline_images_json as InlineImg[])
+          return data.inline_images_json as InlineImg[]
+        }
+      }
+    } catch { /* ignore */ }
+
+    // 2) Build topic-aware queries
+    const accessKey = process.env.UNSPLASH_ACCESS_KEY
+    if (!accessKey) { memInline.set(key, []); return [] }
+
+    const prompts = buildInlinePrompts(city, kind)
+    const qs = prompts.map(q => encodeURIComponent(q))
+
+    const fetchOne = async (q: string) => {
+      const url = `https://api.unsplash.com/search/photos?query=${q}&per_page=1&orientation=landscape&client_id=${accessKey}`
+      try {
+        const resp = await fetch(url, { headers: { 'Accept-Version': 'v1' }, cache: 'no-store' })
+        const json = await resp.json()
+        const u = json?.results?.[0]?.urls?.regular || json?.results?.[0]?.urls?.full
+        const alt = json?.results?.[0]?.alt_description || decodeURIComponent(q)
+        return u ? { url: u as string, alt: String(alt) } : undefined
+      } catch { return undefined }
+    }
+
+    const results = await Promise.all(qs.map(fetchOne))
+    const imgs: InlineImg[] = results
+      .filter(Boolean)
+      .slice(0, 4)
+      .map((r, i) => ({ url: (r as any).url, alt: (r as any).alt, position: (`inline_${i + 1}` as InlineImg['position']) }))
+
+    // 3) Persist best-effort
+    try {
+      const sb2 = getSupabase()
+      if (sb2) {
+        await sb2.from('landing_pages').upsert({
+          city: loweredCity,
+          page_name: kind,
+          kind,
+          inline_images_json: imgs,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'city,page_name' })
+      }
+    } catch { /* ignore */ }
+
+    memInline.set(key, imgs)
+    return imgs
+  })().finally(() => pendingInline.delete(key))
+
+  pendingInline.set(key, p)
+  return p
+}
+
+function buildInlinePrompts(city: string, kind: string): string[] {
+  // hero handled elsewhere; these are inline vibes that work across variants
+  const base = city
+  const prettyKind = kind.replace(/-/g, ' ')
+  return [
+    `${base} residential streetscape, tree-lined, day, real estate`,
+    `${base} skyline aerial neighborhood, architecture, community`,
+    `${base} lifestyle at parks or waterfront, families walking`,
+    `${base} modern home interior living room, natural light`
+  ].map(p => `${p} — ${prettyKind}`) // lightly bias to the page topic
 }
