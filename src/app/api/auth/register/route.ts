@@ -43,11 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token for session management
-    const token = AuthService.generateToken({
-      userId: result.userId!,
-      email,
-      name: `${firstName} ${lastName}`
-    });
+      const token = AuthService.generateToken({
+        userId: Number(result.userId!),
+        email,
+        name: `${firstName} ${lastName}`
+      });
 
     // Create response with cookie
     const response = NextResponse.json({

@@ -73,6 +73,29 @@ export async function getPropertyByListingKey(listingKey: string): Promise<Prope
 }
 
 export async function searchProperties(params: PropertySearchParams) {
+  // Short-circuit during static builds or when landing external fetches are disabled.
+  // Setting SKIP_LANDING_EXTERNAL_FETCHES=1 (or VERCEL=1) prevents expensive DB/list queries
+  // from blocking the Next.js static export. Additionally detect when we're running inside
+  // a Next.js `next build` worker (process.argv contains 'next' and 'build') or when the
+  // env var NEXT_BUILD=1 is set by CI. In these cases return an empty result quickly so
+  // pages can be exported without waiting for external listing data.
+  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
+  const likelyNextBuild = argv.includes('next') && argv.includes('build')
+  if (
+    process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' ||
+    process.env.VERCEL === '1' ||
+    process.env.npm_lifecycle_event === 'build' ||
+    process.env.NPM_LIFECYCLE_EVENT === 'build' ||
+    process.env.NEXT_BUILD === '1' ||
+    likelyNextBuild
+  ) {
+    try {
+      // lightweight log to aid debugging during CI/builds
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify({ lvl: 'debug', at: 'searchProperties', event: 'skipped-due-to-skip-flag' }))
+    } catch {}
+    return { properties: [], total: 0, hasMore: false, totalEstimated: false }
+  }
   const pool = await getPgPool();
   const started = Date.now();
   const values: any[] = [];

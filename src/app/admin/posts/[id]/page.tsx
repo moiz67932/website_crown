@@ -1,20 +1,22 @@
 import { getSupabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 
-export default async function EditPost({ params }: { params: { id: string } }) {
+export default async function EditPost({ params }: { params: Promise<{ id: string }> }) {
+  // Next.js (v15+) expects params to be a Promise in app router pages. Await it.
+  const resolvedParams = await params
   const supa = getSupabase()
   if (!supa) return notFound()
   const { data: post } = await supa
     .from('posts')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', resolvedParams.id)
     .single()
   if (!post) return notFound()
 
   const { data: variants } = await supa
     .from('post_title_variants')
     .select('id,label,title,impressions,clicks')
-    .eq('post_id', params.id)
+  .eq('post_id', resolvedParams.id)
 
   return (
     <div className="p-6 space-y-6">

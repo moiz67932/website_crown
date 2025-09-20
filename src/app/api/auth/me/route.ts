@@ -14,14 +14,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get fresh user data from Supabase
-  const user = await SupabaseAuthService.getUserById(String(currentUser.userId));
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'User not found' },
-        { status: 404 }
-      );
+    // Admin token case has userId 0 and doesn't exist in Supabase; handle gently
+    let user = null as any
+    if (currentUser.isAdmin) {
+      user = { created_at: new Date().toISOString(), updated_at: new Date().toISOString(), date_of_birth: null }
+    } else {
+      // Get fresh user data from Supabase
+      user = await SupabaseAuthService.getUserById(String(currentUser.userId));
+      if (!user) {
+        return NextResponse.json(
+          { success: false, message: 'User not found' },
+          { status: 404 }
+        );
+      }
     }
 
     return NextResponse.json({
@@ -30,6 +35,7 @@ export async function GET(request: NextRequest) {
         userId: currentUser.userId,
         name: currentUser.name,
         email: currentUser.email,
+        isAdmin: !!currentUser.isAdmin,
         dateOfBirth: user.date_of_birth,
         createdAt: user.created_at,
         updatedAt: user.updated_at

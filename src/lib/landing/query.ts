@@ -78,6 +78,14 @@ async function ensureSchemaIntrospection() {
 
 export async function getLandingStats(cityOrState: string, kind: LandingKind): Promise<LandingStats> {
   await ensureSchemaIntrospection()
+  // Avoid heavy DB queries during Next.js build/static export.
+  // If build is detected, return empty stats quickly.
+  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
+  const likelyNextBuild = argv.includes('next') && argv.includes('build')
+  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
+    if (process.env.LANDING_TRACE) console.log('[landing.stats] skipping DB stats due to build-detection', { cityOrState, kind })
+    return {}
+  }
   const pool = await getPgPool()
   const stateInfo = detectStateToken(cityOrState)
   const baseParams: any[] = []
@@ -148,6 +156,13 @@ export async function getLandingStats(cityOrState: string, kind: LandingKind): P
 export async function getFeaturedProperties(cityOrState: string, kind: LandingKind, limit = 12, extraFilters?: Record<string, any>): Promise<LandingPropertyCard[]> {
   const kindFilter = buildKindFilter(kind)
   const stateInfo = detectStateToken(cityOrState)
+  // Short-circuit during build/static export
+  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
+  const likelyNextBuild = argv.includes('next') && argv.includes('build')
+  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
+    if (process.env.LANDING_TRACE) console.log('[landing.featured] skipping properties fetch due to build-detection', { cityOrState, kind })
+    return []
+  }
   try {
     const baseParams: any = {
       limit,
@@ -236,11 +251,7 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
       if (process.env.LANDING_TRACE) {
         console.log('[landing.ai.prompt.preview]', generatedPrompt.slice(0, 140) + '...')
       }
-      // Reuse existing OpenAI logic by calling getAIDescription with a synthetic kind (still uses caching per city+kind)
-      // If we want unique cache per landing variant, that's already handled by passing the landing slug as kind.
-      aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
-      // NOTE: For now we let backend use its internal prompt; to fully customize we'd extend getAIDescription to accept raw prompt.
-      // Future: pass customPrompt down when getAIDescription supports it.
+      aiDescriptionPromise = getAIDescription(cityOrState, kind, { customPrompt: generatedPrompt, promptKey: landingDef.aiPromptKey })
     } else {
       aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
     }

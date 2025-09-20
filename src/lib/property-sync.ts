@@ -360,11 +360,12 @@ export function getPropertySyncService(): PropertySyncService {
   return syncServiceInstance;
 }
 
-// Auto-start scheduled sync in production
-if (process.env.NODE_ENV === 'production') {
+// Auto-start scheduled sync in production runtime only when explicitly enabled.
+// This avoids starting background tasks during Next.js build / prerender.
+if (process.env.NODE_ENV === 'production' && process.env.TRESTLE_AUTO_START === 'true') {
   const syncService = getPropertySyncService();
   syncService.startScheduledSync();
-  
+
   // Cleanup old logs every 24 hours
   setInterval(() => {
     syncService.cleanupOldLogs();

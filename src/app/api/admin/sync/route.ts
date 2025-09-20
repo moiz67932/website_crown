@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPropertySyncService } from '@/lib/property-sync';
 
-const syncService = getPropertySyncService();
-
 export async function GET(request: NextRequest) {
   try {
+    const syncService = getPropertySyncService();
     const status = syncService.getSyncStatus();
     const apiHealth = await syncService.getApiHealthStatus();
 
@@ -33,48 +32,33 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, syncType } = body;
+    const syncService = getPropertySyncService();
 
     switch (action) {
       case 'start':
         syncService.startScheduledSync();
-        return NextResponse.json({
-          success: true,
-          message: 'Scheduled sync started'
-        });
+        return NextResponse.json({ success: true, message: 'Scheduled sync started' });
 
       case 'stop':
         syncService.stopScheduledSync();
-        return NextResponse.json({
-          success: true,
-          message: 'Scheduled sync stopped'
-        });
+        return NextResponse.json({ success: true, message: 'Scheduled sync stopped' });
 
-      case 'trigger':
+      case 'trigger': {
         const result = await syncService.triggerManualSync(syncType || 'recent');
-        return NextResponse.json({
-          success: true,
-          data: result
-        });
+        return NextResponse.json({ success: true, data: result });
+      }
 
-      case 'test':
+      case 'test': {
         const isConnected = await syncService.testApiConnection();
-        return NextResponse.json({
-          success: true,
-          data: { connected: isConnected }
-        });
+        return NextResponse.json({ success: true, data: { connected: isConnected } });
+      }
 
       case 'cleanup':
         syncService.cleanupOldLogs();
-        return NextResponse.json({
-          success: true,
-          message: 'Old logs cleaned up'
-        });
+        return NextResponse.json({ success: true, message: 'Old logs cleaned up' });
 
       default:
-        return NextResponse.json(
-          { success: false, error: 'Invalid action' },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
     }
 
   } catch (error: any) {

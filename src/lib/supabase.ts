@@ -7,9 +7,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 let supabase: SupabaseClient | null = null
 
 export function getSupabase(): SupabaseClient | null {
-  const url = process.env.SUPABASE_URL
+  // Allow NEXT_PUBLIC_* fallbacks in dev to simplify .env setup
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!url) return null
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!key) return null
   if (!supabase) {
     supabase = createClient(url, key, {

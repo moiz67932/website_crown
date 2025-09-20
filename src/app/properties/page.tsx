@@ -17,7 +17,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, usePathname } from "next/navigation"
 import { PropertyCard } from "@/components/property-card"
 import { Property } from "@/interfaces"
 import { PropertyFilters } from "@/types/filters"
@@ -51,6 +51,7 @@ const PropertyGridSkeleton = () => (
 function PropertiesPageContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const router = useRouter()
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
   const [semanticQuery, setSemanticQuery] = useState('')
@@ -185,7 +186,10 @@ function PropertiesPageContent() {
   useEffect(() => {
     // Parse URL parameters into new filter format
     try {
-      const urlFilters = parseURLToFilters(window.location.pathname, searchParams)
+      // useSearchParams() can return null; ensure we pass a real URLSearchParams instance
+  const spForParse: URLSearchParams = searchParams ? new URLSearchParams(searchParams.toString()) : new URLSearchParams()
+  const pathForParse = pathname || (typeof window !== 'undefined' ? window.location.pathname : '/properties')
+  const urlFilters = parseURLToFilters(pathForParse, spForParse)
       
       // If URL has filters, use them, otherwise use legacy URL parsing
       if (Object.keys(urlFilters).length > 0) {
@@ -193,14 +197,14 @@ function PropertiesPageContent() {
         setLegacyFilters(convertToLegacyFilters(urlFilters))
       } else {
         // Legacy URL parsing for backward compatibility
-        const sortByParam = searchParams.get("sortBy")
+        const sortByParam = searchParams?.get("sortBy")
         const validSortBy = ["recommended", "price-asc", "price-desc", "date-desc", "area-desc"].includes(sortByParam || "")
           ? sortByParam as "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"
           : "recommended"
 
         // Map status to propertyType for legacy API compatibility
-        let propertyTypeFromStatus = searchParams.get("propertyType") || "";
-        const status = searchParams.get("status");
+  let propertyTypeFromStatus = searchParams?.get("propertyType") || "";
+  const status = searchParams?.get("status");
         
         // If no propertyType but has status, determine propertyType from status
         if (!propertyTypeFromStatus && status) {
@@ -213,15 +217,15 @@ function PropertiesPageContent() {
 
         const legacyFiltersFromUrl = {
           propertyType: propertyTypeFromStatus,
-          minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
-          maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
-          city: searchParams.get("search") || searchParams.get("city") || (searchParams.get("searchLocationType") === "city" ? searchParams.get("location") || "" : ""),
-          county: searchParams.get("county") || (searchParams.get("searchLocationType") === "county" ? searchParams.get("location") || "" : ""),
-          minBathroom: searchParams.get("minBathroom") ? Number(searchParams.get("minBathroom")) : undefined,
-          minBedroom: searchParams.get("minBedroom") ? Number(searchParams.get("minBedroom")) : undefined,
-          yearBuilt: searchParams.get("yearBuilt") ? Number(searchParams.get("yearBuilt")) : undefined,
-          max_sqft: searchParams.get("max_sqft") ? Number(searchParams.get("max_sqft")) : undefined,
-          min_sqft: searchParams.get("min_sqft") ? Number(searchParams.get("min_sqft")) : undefined,
+          minPrice: searchParams?.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+          maxPrice: searchParams?.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+          city: searchParams?.get("search") || searchParams?.get("city") || (searchParams?.get("searchLocationType") === "city" ? searchParams?.get("location") || "" : ""),
+          county: searchParams?.get("county") || (searchParams?.get("searchLocationType") === "county" ? searchParams?.get("location") || "" : ""),
+          minBathroom: searchParams?.get("minBathroom") ? Number(searchParams.get("minBathroom")) : undefined,
+          minBedroom: searchParams?.get("minBedroom") ? Number(searchParams.get("minBedroom")) : undefined,
+          yearBuilt: searchParams?.get("yearBuilt") ? Number(searchParams.get("yearBuilt")) : undefined,
+          max_sqft: searchParams?.get("max_sqft") ? Number(searchParams.get("max_sqft")) : undefined,
+          min_sqft: searchParams?.get("min_sqft") ? Number(searchParams.get("min_sqft")) : undefined,
           sortBy: validSortBy
         }
         
@@ -229,9 +233,9 @@ function PropertiesPageContent() {
         
         // Convert to new format
         const newFilters: PropertyFilters = {
-          searchQuery: searchParams.get("search") || "",
+          searchQuery: searchParams?.get("search") || "",
           propertyType: legacyFiltersFromUrl.propertyType ? [legacyFiltersFromUrl.propertyType] : [],
-          status: searchParams.get("status") ? [searchParams.get("status")!] : [],
+          status: searchParams?.get("status") ? [searchParams.get("status")!] : [],
           priceRange: legacyFiltersFromUrl.minPrice || legacyFiltersFromUrl.maxPrice ? 
             [legacyFiltersFromUrl.minPrice || 0, legacyFiltersFromUrl.maxPrice || 5000000] : undefined,
           city: legacyFiltersFromUrl.city,
