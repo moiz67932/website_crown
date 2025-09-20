@@ -14,6 +14,7 @@ const templates = [
 export default function NewPostGenerator() {
   const [city, setCity] = useState('')
   const [template, setTemplate] = useState(templates[0])
+  const [postType, setPostType] = useState('general')
   const [keywords, setKeywords] = useState('')
   const [scheduleAt, setScheduleAt] = useState('')
   const [autoAttachProperties, setAutoAttach] = useState(true)
@@ -28,7 +29,7 @@ export default function NewPostGenerator() {
     try {
       const res = await fetch('/api/content/generate', {
         method: 'POST', headers: { 'content-type':'application/json' },
-        body: JSON.stringify({ city, template, keywords: splitKeywords(keywords), scheduleAt: scheduleAt || undefined, autoAttachProperties })
+        body: JSON.stringify({ city, template, keywords: splitKeywords(keywords), scheduleAt: scheduleAt || undefined, autoAttachProperties, post_type: postType })
       })
       const j = await res.json()
       if (!j.ok) throw new Error(j.error || 'Error')
@@ -44,6 +45,19 @@ export default function NewPostGenerator() {
         <div>
           <label className="block text-sm font-medium mb-1">City</label>
           <input className="w-full border rounded px-3 py-2" value={city} onChange={e=>setCity(e.target.value)} required />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Type</label>
+          <select className="w-full border rounded px-3 py-2" value={postType} onChange={e=>setPostType(e.target.value)}>
+            <option value="general">General</option>
+            <option value="top10">Top 10</option>
+            <option value="moving">Moving Guide</option>
+            <option value="predictions">Predictions</option>
+            <option value="schools">Schools</option>
+            <option value="demographic">Demographic</option>
+            <option value="events">Events/News</option>
+            <option value="discovery">Discovery</option>
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Template</label>

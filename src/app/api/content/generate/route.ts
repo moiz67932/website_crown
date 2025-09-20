@@ -15,6 +15,7 @@ const Payload = z.object({
   category: z.string().optional(),
   tags: z.array(z.string()).optional(),
   autoAttachProperties: z.boolean().optional(),
+  post_type: z.string().optional(),
 })
 
 function slugify(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }
@@ -24,8 +25,9 @@ export async function POST(req: NextRequest) {
   if (!supa) return NextResponse.json({ ok:false, error:'Supabase not configured' }, { status: 500 })
   try {
     const input = Payload.parse(await req.json())
-    const sys = 'You are an expert real estate content writer. Output valid markdown only.'
-    const user = `Write a blog post for ${input.city} using template "${input.template}". Include:\n1) H1 title\n2) 2-3 line lede\n3) Meta description (<=160 chars)\n4) Structured sections and bullet lists\n5) Short CTA "How to get started"\nFocus keywords: ${input.keywords.join(', ')}`
+  const sys = 'You are an expert real estate content writer. Output valid markdown only.'
+  const chosenTemplate = chooseTemplate(input)
+  const user = `Write a blog post for ${input.city} using template title: "${chosenTemplate}". Include:\n1) H1 title\n2) 2-3 line lede\n3) Meta description (<=160 chars)\n4) Structured sections and bullet lists\n5) Short CTA "How to get started"\nFocus keywords: ${input.keywords.join(', ')}`
 
     const chat = await openai.chat.completions.create({
       model: process.env.LLM_MODEL || 'gpt-4o-mini',
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
     const slug = slugify(title)
 
     const scheduled = input.scheduleAt ? new Date(input.scheduleAt) : null
-    const status = scheduled ? 'scheduled' : 'draft'
+  const status = scheduled ? 'scheduled' : 'draft'
 
     const { data: post, error } = await supa
       .from('posts')
@@ -56,6 +58,7 @@ export async function POST(req: NextRequest) {
         tags: input.tags || null,
         scheduled_at: scheduled ? scheduled.toISOString() : null,
         generated: true,
+        post_type: input.post_type || 'general',
       })
       .select('id,slug,title_primary,city')
       .single()
@@ -72,4 +75,23 @@ export async function POST(req: NextRequest) {
   } catch (e: any) {
     return NextResponse.json({ ok:false, error: e.message }, { status: 400 })
   }
+}
+
+function chooseTemplate(input: z.infer<typeof Payload>) {
+  // Map post_type to a display string title. In the future we can read file contents.
+  const city = input.city
+  const map: Record<string, string> = {
+    top10: `Top 10 Neighborhoods to Buy in ${city}`,
+    moving: `Moving to ${city}: Complete Guide`,
+  }
+  const pt = (input.post_type || '').toLowerCase()
+  if (pt === 'top10') return map.top10
+  if (pt === 'moving') return map.moving
+  if (pt === 'predictions') return `${city} Real Estate Market Predictions`
+  if (pt === 'schools') return `Best Schools in ${city}`
+  if (pt === 'demographic') return `Why ${city} is Perfect for [Demographic]`
+  if (pt === 'events') return `Local Events & Market News in ${city}`
+  if (pt === 'discovery') return input.template
+  // default fallback uses original provided template
+  return input.template
 }

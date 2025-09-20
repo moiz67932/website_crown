@@ -28,11 +28,11 @@ export default async function SeoAdmin() {
       </IssueCard>
 
       <IssueCard title={`Posts missing hero image (${missingHero.data?.length ?? 0})`}>
-        <IssueTable rows={missingHero.data || []} cols={["title_primary", "slug"]} link={(r:any)=>`/admin/posts/${r.id}`} />
+        <ActionTable rows={missingHero.data || []} cols={["title_primary", "slug"]} actionLabel="Add Hero" actionPath="/api/admin/posts/add-hero" />
       </IssueCard>
 
       <IssueCard title={`Posts under 300 words (${shortContent.data?.length ?? 0})`}>
-        <IssueTable rows={shortContent.data} cols={["title_primary", "slug", "word_count"]} link={(r:any)=>`/admin/posts/${r.id}`} />
+        <ActionTable rows={shortContent.data} cols={["title_primary", "slug", "word_count"]} actionLabel="Expand Content" actionPath="/api/admin/posts/expand" />
       </IssueCard>
 
       <IssueCard title={`Landing pages missing intro (${missingIntro.data?.length ?? 0})`}>
@@ -85,4 +85,46 @@ function IssueTable({ rows, cols, link }: { rows: any[]; cols: string[]; link: (
       </table>
     </div>
   );
+}
+
+function ActionTable({ rows, cols, actionLabel, actionPath }: { rows: any[]; cols: string[]; actionLabel: string; actionPath: string }) {
+  if (!rows?.length) return <div className="text-sm text-slate-600">No issues found.</div>;
+  return (
+    <div className="rounded-xl border overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="bg-slate-50/80">
+          <tr className="text-left text-slate-600">
+            {cols.map((c) => (
+              <th key={c} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">{c.replace(/_/g, " ")}</th>
+            ))}
+            <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide w-40 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className="border-t hover:bg-slate-50/50">
+              {cols.map((c) => (
+                <td key={c} className="p-3 align-top">{String(r[c] ?? '—')}</td>
+              ))}
+              <td className="p-3 align-top text-right">
+                <form action={quickFix.bind(null, actionPath, r.id)}>
+                  <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">{actionLabel}</button>
+                </form>
+                {actionLabel === 'Add Hero' ? (
+                  <form action={quickFix.bind(null, '/api/admin/posts/rewrite', r.id)} className="inline-block ml-2">
+                    <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">Regenerate Meta</button>
+                  </form>
+                ) : null}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+async function quickFix(path: string, postId: string) {
+  'use server'
+  await fetch(path, { method: 'POST', headers: { 'content-type':'application/json' }, body: JSON.stringify({ postId }) })
 }

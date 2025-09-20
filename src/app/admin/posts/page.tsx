@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import PostActions from "@/components/admin/PostActions";
+import ReviewerCell from "@/components/admin/ReviewerCell";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function PostsAdmin({
   // Base fetch
   let query = supa
     .from("posts")
-    .select("id,slug,title_primary,city,status,hero_image_url,published_at,created_at")
+  .select("id,slug,title_primary,city,status,hero_image_url,published_at,created_at,reviewer")
     .order("created_at", { ascending: false });
 
   if (status) query = query.eq("status", status);
@@ -91,6 +92,7 @@ export default async function PostsAdmin({
               <Th>Post</Th>
               <Th className="w-24">Status</Th>
               <Th className="w-32">Published</Th>
+              <Th className="w-40">Reviewer</Th>
               <Th className="w-24 text-right">Views (30d)</Th>
               <Th className="w-24 text-right">CTR</Th>
               <Th className="w-40 text-right">Actions</Th>
@@ -131,6 +133,7 @@ export default async function PostsAdmin({
                     {p.published_at ? new Date(p.published_at).toLocaleDateString() : "—"}
                   </td>
                   <td className="p-3 align-top text-right">{v}</td>
+                  <td className="p-3 align-top"><ReviewerCell id={p.id} initial={p.reviewer} /></td>
                   <td className="p-3 align-top text-right">{ctrPct.toFixed(1)}%</td>
                   <td className="p-3 align-top">
                     <div className="flex justify-end">
