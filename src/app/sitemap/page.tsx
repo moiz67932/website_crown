@@ -243,12 +243,12 @@ export default function SitemapPage() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/contact">
-                <button className="bg-slate-900 text-white px-6 py-2 rounded-md hover:bg-slate-800 transition-colors">
+                <button className="bg-slate-900 text-white px-6 py-2 rounded-md hover:bg-slate-800 transition-colors hover:cursor-pointer">
                   Contact Support
                 </button>
               </Link>
               <Link href="/properties">
-                <button className="border border-slate-300 text-slate-700 px-6 py-2 rounded-md hover:bg-slate-50 transition-colors">
+                <button className="border border-slate-300 text-slate-700 px-6 py-2 rounded-md hover:bg-slate-50 transition-colors hover:cursor-pointer">
                   Browse Properties
                 </button>
               </Link>

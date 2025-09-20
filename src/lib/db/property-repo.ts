@@ -11,6 +11,7 @@ export interface PropertyListItem {
   lot_size_sqft: number | null;
   property_type: string | null;
   status: string | null;
+  hidden?: boolean | null;
   photos_count: number | null;
   latitude: number | null;
   longitude: number | null;
@@ -100,6 +101,8 @@ export async function searchProperties(params: PropertySearchParams) {
   const started = Date.now();
   const values: any[] = [];
   const where: string[] = ["status = 'Active'"];
+  // Exclude hidden properties from public search
+  where.push('(hidden IS NULL OR hidden = false)');
 
   // Defensive cap on limit to avoid extremely large requests hammering DB
   if (params.limit && params.limit > 1000) params.limit = 1000; // hard upper bound
@@ -208,7 +211,7 @@ export async function searchProperties(params: PropertySearchParams) {
   values.push(limit, offset);
 
   const sql = `SELECT listing_key, list_price, city, state, bedrooms, bathrooms_total, living_area, lot_size_sqft, property_type,
-      status, photos_count, latitude, longitude, main_photo_url, modification_ts, first_seen_ts, last_seen_ts, raw_json
+      status, hidden, photos_count, latitude, longitude, main_photo_url, modification_ts, first_seen_ts, last_seen_ts, raw_json
     FROM properties
     ${whereSql}
     ORDER BY ${orderBy}
@@ -217,6 +220,22 @@ export async function searchProperties(params: PropertySearchParams) {
   const countSql = `SELECT COUNT(*) FROM properties ${whereSql}`;
 
   const baseValuesForCount = values.slice(0, values.length - 2);
+
+  // Emit debug info about the built query (without dumping entire SQL if not needed)
+  const paramsPreview = values.map((v) => {
+    if (v === null || v === undefined) return v;
+    if (typeof v === 'string') return v.length > 80 ? v.slice(0, 80) + '…' : v;
+    return v;
+  });
+  log('list-build', {
+    where_count: where.length,
+    where_sql: whereSql.length > 800 ? (whereSql.slice(0, 800) + '…') : whereSql,
+    orderBy,
+    limit,
+    offset,
+    params_count: values.length,
+    params_preview: paramsPreview,
+  });
 
   const MAX_RETRIES = 3;
   const results: { list?: any; count?: any; estimated?: boolean } = {};
@@ -251,7 +270,24 @@ export async function searchProperties(params: PropertySearchParams) {
     } catch (err: any) {
       lastErr = err;
       const transient = isTransient(err);
-      log('list-failure', { attempt, transient, err: err?.message, code: err?.code, elapsed_ms: Date.now() - attemptStart });
+      log('list-failure', { attempt, transient, err: err?.message, code: err?.code, elapsed_ms: Date.now() - attemptStart, limit, offset });
+      // Optional: attempt to fetch a quick EXPLAIN plan to diagnose slow queries (no ANALYZE to avoid execution)
+      if (String(err?.message || '').includes('list-timeout')) {
+        try {
+          const explainSql = 'EXPLAIN ' + sql;
+          const EXPLAIN_TIMEOUT_MS = Number(process.env.PROPERTY_EXPLAIN_TIMEOUT_MS || 5000);
+          const planRes: any = await withTimeout(usePool.query(explainSql, values), EXPLAIN_TIMEOUT_MS, 'explain-timeout', false);
+          if (planRes !== 'explain-timeout' && planRes?.rows) {
+            // Flatten first few lines of the plan for logs
+            const planLines = planRes.rows.map((r: any) => r['QUERY PLAN']).filter(Boolean).slice(0, 12);
+            log('explain-plan', { attempt, lines: planLines });
+          } else {
+            log('explain-skip', { attempt, reason: String(planRes) });
+          }
+        } catch (e: any) {
+          log('explain-error', { attempt, err: e?.message || String(e) });
+        }
+      }
       if (!transient || attempt === MAX_RETRIES) {
         throw err;
       }
@@ -267,6 +303,12 @@ export async function searchProperties(params: PropertySearchParams) {
   }
 
   if (!results.list || !results.count) {
+    // If we timed out repeatedly, return a safe fallback instead of crashing the page.
+    const isTimeout = String(lastErr?.message || lastErr || '').toLowerCase().includes('timeout');
+    if (isTimeout) {
+      log('timeout-fallback', { reason: String(lastErr?.message || lastErr || 'timeout'), limit, offset });
+      return { properties: [], total: 0, hasMore: false, totalEstimated: true };
+    }
     throw lastErr || new Error('Unknown query failure');
   }
 

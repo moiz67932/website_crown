@@ -24,32 +24,32 @@ export default async function BulkAdmin() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card title="Vector index">
           <form action={call.bind(null, '/api/admin/bulk/rebuild-index')}>
-            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800">Rebuild property index</button>
+            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800 hover:cursor-pointer">Rebuild property index</button>
           </form>
         </Card>
         <Card title="Landing pages">
           <form action={call.bind(null, '/api/admin/bulk/regenerate-landing')}>
-            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800">Regenerate all landing</button>
+            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800 hover:cursor-pointer">Regenerate all landing</button>
           </form>
         </Card>
         <Card title="Blog FAQs">
           <form action={call.bind(null, '/api/admin/bulk/regenerate-faqs')}>
-            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800">Regenerate all FAQs</button>
+            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800 hover:cursor-pointer">Regenerate all FAQs</button>
           </form>
         </Card>
         <Card title="Short posts">
           <form action={call.bind(null, '/api/admin/bulk/short-posts')}>
-            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800">Regenerate short posts (&lt;500 words)</button>
+            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800 hover:cursor-pointer">Regenerate short posts (&lt;500 words)</button>
           </form>
         </Card>
         <Card title="Publish queue">
           <form action={call.bind(null, '/api/admin/bulk/republish-today')}>
-            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800">Republish scheduled today</button>
+            <button className="rounded-lg bg-slate-900 text-white px-4 py-2 hover:bg-slate-800 hover:cursor-pointer">Republish scheduled today</button>
           </form>
         </Card>
         <Card title="Export">
           <form action={call.bind(null, '/api/admin/bulk/export')}>
-            <button className="rounded-lg border bg-white px-4 py-2 hover:bg-slate-50">Export blog data</button>
+            <button className="rounded-lg border bg-white px-4 py-2 hover:bg-slate-50 hover:cursor-pointer">Export blog data</button>
           </form>
         </Card>
       </section>

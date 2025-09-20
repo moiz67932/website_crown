@@ -453,3 +453,29 @@
 .dark .border-brand-silverMist\/50 {
   border-color: hsl(220 20% 40% / 0.5);
 }
+
+/* Ensure interactive elements show pointer cursor on hover/click */
+@layer utilities {
+  /* Generic interactive elements */
+  button,
+  a[href],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"],
+  .btn,
+  .button,
+  .clickable,
+  .interactive {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Make sure disabled controls don't show pointer */
+  button:disabled,
+  input:disabled,
+  [aria-disabled="true"] {
+    cursor: default;
+    opacity: 0.6;
+  }
+}

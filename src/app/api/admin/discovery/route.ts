@@ -3,6 +3,7 @@ import { getSupabase } from '@/lib/supabase'
 import { fetchRealEstateTrends } from '@/lib/discovery/google-trends'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET() {
   const supa = getSupabase()

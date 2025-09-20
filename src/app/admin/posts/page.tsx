@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function PostsAdmin({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string; status?: string }>;
+  searchParams?: { q?: string; status?: string };
 }) {
-  const sp = (await searchParams) || {};
+  const sp = searchParams || {};
   const q = (sp.q || "").trim();
   const status = (sp.status || "").trim();
 
@@ -21,13 +21,21 @@ export default async function PostsAdmin({
   // Base fetch
   let query = supa
     .from("posts")
-  .select("id,slug,title_primary,city,status,hero_image_url,published_at,created_at,reviewer")
+  .select("id,slug,title_primary,city,status,hero_image_url,published_at,created_at")
     .order("created_at", { ascending: false });
 
   if (status) query = query.eq("status", status);
   if (q) query = query.ilike("title_primary", `%${q}%`);
 
-  const { data: posts } = await query.limit(200);
+  const { data: posts, error } = await query.limit(200);
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="mb-2 text-red-600 font-medium">Failed to load posts.</div>
+        <pre className="text-xs text-red-700 bg-red-50 rounded p-3 overflow-auto">{error.message}</pre>
+      </div>
+    );
+  }
 
   // Views last 30 days
   const since = new Date(Date.now() - 30 * 864e5).toISOString();
@@ -81,7 +89,7 @@ export default async function PostsAdmin({
           <option value="draft">Draft</option>
           <option value="scheduled">Scheduled</option>
         </select>
-        <button className="rounded-lg border px-4 py-2 bg-white hover:bg-slate-50">Filter</button>
+  <button className="rounded-lg border px-4 py-2 bg-white hover:bg-slate-50 hover:cursor-pointer">Filter</button>
       </form>
 
       {/* Table */}
@@ -92,7 +100,6 @@ export default async function PostsAdmin({
               <Th>Post</Th>
               <Th className="w-24">Status</Th>
               <Th className="w-32">Published</Th>
-              <Th className="w-40">Reviewer</Th>
               <Th className="w-24 text-right">Views (30d)</Th>
               <Th className="w-24 text-right">CTR</Th>
               <Th className="w-40 text-right">Actions</Th>
@@ -133,7 +140,6 @@ export default async function PostsAdmin({
                     {p.published_at ? new Date(p.published_at).toLocaleDateString() : "—"}
                   </td>
                   <td className="p-3 align-top text-right">{v}</td>
-                  <td className="p-3 align-top"><ReviewerCell id={p.id} initial={p.reviewer} /></td>
                   <td className="p-3 align-top text-right">{ctrPct.toFixed(1)}%</td>
                   <td className="p-3 align-top">
                     <div className="flex justify-end">

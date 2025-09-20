@@ -23,7 +23,7 @@ export async function GET(
 
     // Fetch property from Postgres
     const row = await getPropertyByListingKey(listingKey);
-    if (!row) {
+    if (!row || (row as any).hidden === true) {
       return NextResponse.json({ success: false, error: 'Property not found' }, { status: 404 });
     }
     // Images: prefer media_urls array, then raw_json.Media/Photos, finally main_photo_url

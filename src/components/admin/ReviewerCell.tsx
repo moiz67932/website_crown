@@ -17,7 +17,7 @@ export default function ReviewerCell({ id, initial }: { id: string; initial?: st
   return (
     <div className="flex items-center gap-2">
       <input className="w-32 border rounded px-2 py-1 text-xs" value={value} onChange={e=>setValue(e.target.value)} placeholder="name or @handle" />
-      <button onClick={save} disabled={saving} className="rounded border px-2 py-1 text-xs hover:bg-slate-50">Save</button>
+  <button onClick={save} disabled={saving} className="rounded border px-2 py-1 text-xs hover:bg-slate-50 hover:cursor-pointer">Save</button>
     </div>
   )
 }

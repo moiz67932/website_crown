@@ -30,7 +30,7 @@ export default async function EditProperty({ params }: { params: Promise<{ id: s
       <form action={`/api/admin/properties`} method="post" className="flex gap-3">
         <input type="hidden" name="id" value={row.id} />
         <input type="hidden" name="_method" value="DELETE" />
-        <button className="rounded-lg border px-3 py-2 text-sm hover:bg-red-50">Delete</button>
+  <button className="rounded-lg border px-3 py-2 text-sm hover:bg-red-50 hover:cursor-pointer">Delete</button>
         <a href={`/property/${row.slug}`} className="rounded-lg border px-3 py-2 text-sm hover:bg-slate-50">View</a>
       </form>
     </div>

@@ -108,11 +108,11 @@ function ActionTable({ rows, cols, actionLabel, actionPath }: { rows: any[]; col
               ))}
               <td className="p-3 align-top text-right">
                 <form action={quickFix.bind(null, actionPath, r.id)}>
-                  <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">{actionLabel}</button>
+                  <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 hover:cursor-pointer">{actionLabel}</button>
                 </form>
                 {actionLabel === 'Add Hero' ? (
                   <form action={quickFix.bind(null, '/api/admin/posts/rewrite', r.id)} className="inline-block ml-2">
-                    <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">Regenerate Meta</button>
+                    <button className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 hover:cursor-pointer">Regenerate Meta</button>
                   </form>
                 ) : null}
               </td>
