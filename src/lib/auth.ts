@@ -9,6 +9,7 @@ export interface JWTPayload {
   userId: number;
   email: string;
   name: string;
+  isAdmin?: boolean;
   dateOfBirth?: string;
   createdAt?: string;
   updatedAt?: string;

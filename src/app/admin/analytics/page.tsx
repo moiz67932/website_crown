@@ -1,6 +1,6 @@
 import { getSupabase } from '@/lib/supabase'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function AnalyticsPage() {
   const supa = getSupabase()

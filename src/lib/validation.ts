@@ -74,7 +74,7 @@ export const loginSchema = z.object({
   email: z
     .string()
     .min(1, 'Email is required')
-    .regex(emailRegex, 'Please enter a valid email address'),
+    .refine((v) => v === 'admin' || emailRegex.test(v), 'Please enter a valid email address'),
   
   password: z
     .string()

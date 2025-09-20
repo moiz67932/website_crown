@@ -43,6 +43,7 @@ export default function Navbar() {
   const leftNavItems = [
     { name: "Home", href: "/" },
     { name: "Buy", href: "/buy" },
+    { name: "Blogs", href: "/blog" },
     { name: "Rent", href: "/rent" },
     { name: "Sell", href: "/sell" },
     // { name: "Get a mortgage", href: "/mortgage" },
@@ -173,6 +174,9 @@ export default function Navbar() {
           <nav className={navStyles.rightNav}>
             <Link href="/about" className={navStyles.rightNavLink}>About</Link>
             <Link href="/contact" className={navStyles.rightNavLink}>Contact</Link>
+            {isAuthenticated && (user as any)?.isAdmin && (
+              <Link href="/admin/posts" className={navStyles.rightNavLink}>Admin</Link>
+            )}
             
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -198,6 +202,22 @@ export default function Navbar() {
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
+                      { (user as any).isAdmin && (
+                        <>
+                          <DropdownMenuLabel className="text-xs text-muted-foreground">Admin</DropdownMenuLabel>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/posts/new" className="flex items-center gap-2">
+                              New Blog
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/posts" className="flex items-center gap-2">
+                              Review Blogs
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
                       <DropdownMenuItem asChild>
                         <Link href="/profile" className="flex items-center gap-2">
                           <Settings className="h-4 w-4" />
@@ -319,14 +339,32 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-              <Link
-                    href="/sell"
-                    key="Sell"
+                <Link
+                      href="/sell"
+                      key="Sell"
+                      className={navStyles.mobileNavLink}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Sell
+                    </Link>
+                <Link
+                      href="/blog"
+                      key="Blogs"
+                      className={navStyles.mobileNavLink}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Blogs
+                    </Link>
+                {isAuthenticated && (user as any)?.isAdmin && (
+                  <Link
+                    href="/admin/posts"
+                    key="Admin"
                     className={navStyles.mobileNavLink}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Sell
+                    Admin
                   </Link>
+                )}
               {/* Other nav items */}
               {navItems
                 .filter(item => item.name !== "Home" && item.name !== "Buy" && item.name !== "Rent")
