@@ -30,6 +30,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <Link href="/admin" className="hover:text-slate-700">Dashboard</Link>
             <Link href="/admin/properties" className="hover:text-slate-700">Properties</Link>
             <Link href="/admin/posts" className="hover:text-slate-700">Posts</Link>
+            <Link href="/admin/discovery" className="hover:text-slate-700">Discovery</Link>
             <Link href="/admin/landing" className="hover:text-slate-700">Landing</Link>
             <Link href="/admin/bulk" className="hover:text-slate-700">Bulk</Link>
             <Link href="/admin/analytics" className="hover:text-slate-700">Analytics</Link>
@@ -46,6 +47,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <NavItem href="/admin" icon={<GaugeCircle size={18} />}>Overview</NavItem>
             <NavItem href="/admin/properties" icon={<Building2 size={18} />}>Properties</NavItem>
             <NavItem href="/admin/posts" icon={<FileText size={18} />}>Blog posts</NavItem>
+            <NavItem href="/admin/discovery" icon={<SearchCheck size={18} />}>Discovery</NavItem>
             <NavItem href="/admin/landing" icon={<Home size={18} />}>Landing pages</NavItem>
             <NavItem href="/admin/bulk" icon={<Layers size={18} />}>Bulk operations</NavItem>
             <NavItem href="/admin/analytics" icon={<LineChart size={18} />}>Performance</NavItem>

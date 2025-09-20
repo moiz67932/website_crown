@@ -1,4 +1,6 @@
 import { getSupabase } from '@/lib/supabase'
+import ChartCard from '@/components/admin/ChartCard'
+import { ViewsLine, CTRBar } from '@/components/admin/charts/AnalyticsCharts'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,31 +41,13 @@ export default async function AnalyticsPage() {
     <div className="p-6 space-y-8">
       <h1 className="text-2xl font-semibold">Analytics</h1>
 
-      <section>
-        <h2 className="font-medium mb-2">Views by day</h2>
-        {byDay && byDay.length ? (
-          <table className="w-full text-sm border">
-            <thead className="bg-muted/50"><tr><th className="p-2 text-left">Day</th><th className="p-2 text-right">Views</th></tr></thead>
-            <tbody>
-              {byDay.map((r:any)=> (
-                <tr key={r.day} className="border-t"><td className="p-2">{r.day}</td><td className="p-2 text-right">{r.views}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        ) : <div className="text-sm text-slate-600">No data</div>}
-      </section>
+      <ChartCard title="Views by day">
+        {byDay && byDay.length ? <ViewsLine data={byDay as any} /> : <div className="text-sm text-slate-600">No data</div>}
+      </ChartCard>
 
-      <section>
-        <h2 className="font-medium mb-2">A/B Variant Split</h2>
-        <div className="flex gap-6 text-sm">
-          {variantRows.map(v => (
-            <div key={v.variant} className="border rounded p-3 bg-white">
-              <div className="font-semibold">Variant {v.variant}</div>
-              <div>{v.count} views</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ChartCard title="A/B Variant Split">
+        <CTRBar data={variantRows.map(v=>({ label: v.variant, value: v.count }))} />
+      </ChartCard>
 
       <section>
         <h2 className="font-medium mb-2">Top Posts</h2>
