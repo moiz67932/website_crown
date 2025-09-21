@@ -12,6 +12,7 @@
 
 import { openai } from "@/lib/openai"
 import { toFile } from "openai/uploads"
+import { guardRateLimit } from "@/lib/rate-limit"
 
 // Force Node runtime (Edge can't reliably handle multipart audio for Whisper)
 export const runtime = "nodejs"
@@ -48,6 +49,10 @@ function isTransient(err: any) {
 }
 
 export async function POST(req: Request) {
+  // Lightweight header access for IP; Request in App Router doesn't have NextRequest helpers
+  const ip = (req.headers.get('x-forwarded-for') || 'anon')
+  const { allowed } = await guardRateLimit(`rl:${ip}:/api/voice/stt`)
+  if (!allowed) return new Response(JSON.stringify({ error: 'rate_limited' }), { status: 429 })
   try {
     const form = await req.formData()
     const file = form.get("audio")

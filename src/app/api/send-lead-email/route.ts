@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { guardRateLimit } from '@/lib/rate-limit'
 
 type LeadPayload = any
 
@@ -11,6 +12,9 @@ function getEnv(name: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || 'anon'
+    const { allowed } = await guardRateLimit(`rl:${ip}:/api/send-lead-email`)
+    if (!allowed) return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
     const body: LeadPayload = await req.json().catch(() => ({}))
     if (!body) return NextResponse.json({ error: 'Bad JSON' }, { status: 400 })
 

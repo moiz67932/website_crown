@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AnalyticsMount from '@/components/analytics/AnalyticsMount'
 import "@/styles/globals.css";
 import Layout from "@/components/layout";
 import Providers from "@/components/providers";
@@ -21,6 +22,8 @@ export const metadata: Metadata = {
   title: "Crown Coastal Homes - Premium California Real Estate",
   description:
     "Discover luxury coastal properties and homes throughout California. Buy, rent, and invest in premium real estate with Crown Coastal Homes.",
+  alternates: { canonical: process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.com" },
+  robots: { index: true, follow: true },
   icons: {
     icon: [
       { url: "/logo.svg", sizes: "16x16" },
@@ -37,6 +40,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        <link rel="preconnect" href="https://api.openai.com" />
+      </head>
       <body
         className={`antialiased`}
         style={FONT_VARS}
@@ -46,6 +55,7 @@ export default function RootLayout({
           <Layout>
             {children}
           </Layout>
+          <AnalyticsMount />
           {/* Floating chat widget (client-only), needs to be inside Providers for context hooks */}
           <ChatWidgetProvider />
         </Providers>
