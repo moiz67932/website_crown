@@ -31,6 +31,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import MortgageCalculatorModal from "./mortage-calculator-modal"
 import PropertyFAQ from "./property-faq"
 import dynamic from "next/dynamic"
+import { PropertyChat } from "@/components/PropertyChat"
 
 // Dynamic import for PropertyMap to avoid SSR issues with Leaflet
 const PropertyMap = dynamic(() => import("./property-map"), {
@@ -114,6 +115,25 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(propertyJsonLd) }} />
+      {/* Inject minimal property context for the floating chat widget (no-op elsewhere) */}
+      {propertyData ? (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__activeProperty = ${JSON.stringify({
+              listing_key: propertyData.listing_key,
+              address: propertyData.address,
+              city: propertyData.city,
+              state: (propertyData as any)["state"] || propertyData.county,
+              price: propertyData.list_price,
+              living_area_sqft: propertyData.living_area_sqft,
+              property_tax_annual: (propertyData as any).property_tax_annual ?? undefined,
+              hoa: (propertyData as any).hoa ?? (propertyData as any).hoa_monthly ?? undefined,
+              home_insurance_annual: (propertyData as any).home_insurance_annual ?? undefined,
+              image: (propertyData.images && propertyData.images[0]) || undefined,
+            })};`,
+          }}
+        />
+      ) : null}
       <div className="bg-neutral-50 dark:bg-slate-900 min-h-screen w-full pt-16 theme-transition">
         <section className="relative overflow-hidden">
           <Carousel className="w-full" data-carousel="main" opts={{ loop: true }}>
@@ -439,6 +459,14 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     Get More Info
                   </h3>
                   <ContactForm propertyId={propertyData.listing_key} proertyData={propertyData} />
+                </div>
+
+                <div className="glass-card p-8 rounded-3xl">
+                  <h3 className="text-xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-primary rounded-xl flex items-center justify-center"><span className="text-white text-sm">💬</span></div>
+                    Chat about this property
+                  </h3>
+                  <PropertyChat propertyId={propertyData.listing_key} snapshot={propertyData} />
                 </div>
               </div>
             </div>

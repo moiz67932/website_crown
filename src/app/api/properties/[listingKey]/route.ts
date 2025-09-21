@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPropertyByListingKey } from '@/lib/db/property-repo';
+import { deriveDisplayName } from '@/lib/display-name';
 
 // Now sourcing from Postgres rather than external Trestle API
 
@@ -83,7 +84,7 @@ export async function GET(
       list_price: row.list_price || 0,
       previous_list_price: (row as any).previous_list_price || null,
       lease_amount: null,
-  address: derivedAddress,
+      address: derivedAddress,
       city: (row as any).city || '',
       county: (row as any).county || '',
       postal_code: (row as any).postal_code || '',
@@ -147,6 +148,19 @@ export async function GET(
       parking_features: (row as any).parking_features || '',
       laundry_features: (row as any).laundry_features || '',
     };
+
+    // Add a friendly display_name used by cards and headings
+    (detail as any).display_name = deriveDisplayName({
+      listing_key: row.listing_key,
+      address: derivedAddress,
+      city: (row as any).city,
+      state: (row as any).state || (row as any).state_or_province,
+      county: (row as any).county,
+      title: (row as any).title,
+      h1_heading: (row as any).h1_heading,
+      seo_title: (row as any).seo_title,
+      raw_json: (row as any).raw_json,
+    });
 
     return NextResponse.json({ success: true, data: detail });
 
