@@ -5,8 +5,15 @@ import { retrieve } from "@/lib/rag"
 import { toolSearchProperties, mortgageBreakdown, toolScheduleViewing, toolCreateLeadDB } from "@/lib/tools"
 import { logTurn, summarizeIfNeeded, ensureSession } from "@/lib/memory"
 import { qdrant } from "@/lib/qdrant"
+import { guardRateLimit } from "@/lib/rate-limit"
+import { getSupabase } from "@/lib/supabase"
 
 export async function POST(req: NextRequest) {
+  // Rate limiting guard (per IP + path)
+  const ip = req.headers.get('x-forwarded-for') || 'anon'
+  const { allowed } = await guardRateLimit(`rl:${ip}:/api/chat`)
+  if (!allowed) return new Response(JSON.stringify({ error: 'rate_limited' }), { status: 429 })
+
   const { message, session_id, lang, property_id, property_snapshot } = await req.json()
 
   // Ensure session with 24h expiry; language from request or classifier later
@@ -171,14 +178,39 @@ Use retrieved context where available. Be concise and helpful; for property sear
     })
   }
   if (intent === "lead_capture" && (entities as any).name && (entities as any).email) {
+    // Enrich meta with attribution cookies
+    const cookies = req.headers.get('cookie') || ''
+    function getCookie(name:string){ const m = cookies.match(new RegExp('(?:^|; )'+name+'=([^;]+)')); return m?decodeURIComponent(m[1]):undefined }
+    const meta = {
+      city: (entities as any).city,
+      price_max: (entities as any).price_max,
+      ref: getCookie('ref'),
+      utm_source: getCookie('utm_source'),
+      utm_medium: getCookie('utm_medium'),
+      utm_campaign: getCookie('utm_campaign'),
+      utm_term: getCookie('utm_term'),
+      utm_content: getCookie('utm_content'),
+    }
     resultPayload = await toolCreateLeadDB({
       name: (entities as any).name,
       email: (entities as any).email,
       phone: (entities as any).phone,
       source: "chat",
       message: (entities as any).message,
-      meta: { city: (entities as any).city, price_max: (entities as any).price_max },
+      meta,
     })
+    // Record referral event if cookie exists
+    try {
+      const ref = meta.ref
+      if (ref) {
+        const supa = getSupabase()
+        if (supa) {
+          await supa.from('referrals').insert({ code: ref, referred_cookie: getCookie('cc_session') })
+          const pts = Number(process.env.REFERRAL_REWARD_POINTS || 50)
+          await supa.from('referral_rewards').insert({ code: ref, points: pts, reason: 'Lead created' })
+        }
+      }
+    } catch {}
     // Also notify via existing email endpoint
     try {
       const proto = req.headers.get('x-forwarded-proto') || 'https'

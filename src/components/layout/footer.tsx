@@ -1,5 +1,6 @@
 import { FC } from "react";
 import Image from "next/image";
+import Notices from "@/components/legal/Notices";
 
 const Footer: FC = () => {
   return (
@@ -97,6 +98,7 @@ const Footer: FC = () => {
             <span>in California</span>
           </div>
         </div>
+        <Notices />
       </div>
     </footer>
   );

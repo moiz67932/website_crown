@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server"
 import { getPgPool } from "@/lib/db/connection"
+import { guardRateLimit } from "@/lib/rate-limit"
 
 // Node runtime (DB access)
 export const runtime = "nodejs"
@@ -11,6 +12,9 @@ export const runtime = "nodejs"
  */
 export async function GET(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || 'anon'
+    const { allowed } = await guardRateLimit(`rl:${ip}:/api/property-snapshot`)
+    if (!allowed) return Response.json({ error: 'rate_limited' }, { status: 429 })
     const { searchParams } = new URL(req.url)
     const listingKey = searchParams.get("listing_key")
     if (!listingKey) {

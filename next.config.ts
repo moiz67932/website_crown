@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import withPWA from "next-pwa";
 
-const nextConfig: NextConfig = {
+const isProd = process.env.NODE_ENV === "production";
+
+const baseConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -15,7 +18,14 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
+  assetPrefix: process.env.CDN_URL || undefined,
   
 };
+const withPwa = withPWA({
+  dest: "public",
+  disable: !isProd,
+  register: true,
+  skipWaiting: true,
+});
 
-export default nextConfig;
+export default withPwa(baseConfig);

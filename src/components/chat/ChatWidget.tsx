@@ -121,19 +121,24 @@ export function ChatWidget() {
     return () => root.removeEventListener('keydown', onKeyDown)
   }, [open])
 
+  const [consented, setConsented] = useState<boolean>(true)
+  useEffect(() => {
+    try { setConsented(localStorage.getItem('cc_cookie_consent') === 'granted') } catch {}
+  }, [])
+
   const panel = (
     <div className="fixed inset-0 pointer-events-none z-[100]">
       {/* Bubble button */}
       <button
         aria-label={open ? "Close chat" : "Open chat"}
         onClick={() => setOpen((v) => !v)}
-        className="pointer-events-auto fixed bottom-5 right-5 w-14 h-14 rounded-full shadow-xl bg-blue-600 text-white flex items-center justify-center"
+        className={`pointer-events-auto fixed right-5 w-14 h-14 rounded-full shadow-xl bg-blue-600 text-white flex items-center justify-center ${consented ? 'bottom-5' : 'bottom-20'}`}
       >
         {open ? "×" : "💬"}
       </button>
 
       {/* Popup panel */}
-      <div ref={panelRef} className={`pointer-events-auto fixed bottom-20 right-5 w-[380px] max-w-[92vw] h-[70vh] max-h-[80vh] bg-white rounded-2xl shadow-2xl border overflow-hidden flex flex-col transition transform origin-bottom-right ${open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}>
+  <div ref={panelRef} className={`pointer-events-auto fixed right-5 w-[380px] max-w-[92vw] h-[70vh] max-h-[80vh] bg-white rounded-2xl shadow-2xl border overflow-hidden flex flex-col transition transform origin-bottom-right ${consented ? 'bottom-20' : 'bottom-32'} ${open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
           <div className="font-semibold">Crown Coastal AI</div>
           <div className="flex items-center gap-2">

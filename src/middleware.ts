@@ -1,6 +1,20 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
+// Build CSP as a single-line string to satisfy Edge runtime header validation
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://static.hotjar.com https://script.hotjar.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://api.openai.com https://api.elevenlabs.io https://*.qdrant.io https://*.google-analytics.com https://region1.google-analytics.com https://*.hotjar.com https://*.vercel-insights.com https://*.upstash.io",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ')
+
 export function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl
 
@@ -9,6 +23,7 @@ export function middleware(req: NextRequest) {
     pathname.includes('/api/') ||
     /\.[a-z0-9]+$/i.test(pathname)
   ) {
+    // Skip heavy work for static/assets/api
     return NextResponse.next()
   }
 
@@ -33,5 +48,54 @@ export function middleware(req: NextRequest) {
       wrote = true
     }
   }
-  return wrote ? res : res
+  // referral code capture
+  const ref = req.nextUrl.searchParams.get('ref')
+  if (ref) {
+    res.cookies.set('ref', ref, { path: '/', maxAge: 60*60*24*90 })
+    wrote = true
+  }
+
+  // Assign AB test cookie (client-side code can read it)
+  if (process.env.AB_TEST_ENABLED === 'true') {
+    const v = req.cookies.get('ab_variant')?.value
+    if (!v) {
+      const assigned = Math.random() < 0.5 ? 'A' : 'B'
+      res.cookies.set('ab_variant', assigned, { path: '/', maxAge: 60*60*24*30 })
+      wrote = true
+    }
+  }
+
+  // Admin basic auth
+  if (req.nextUrl.pathname.startsWith('/admin')) {
+    const auth = req.headers.get('authorization') || ''
+    const [scheme, encoded] = auth.split(' ')
+    if (scheme !== 'Basic' || !encoded) {
+      return new NextResponse('Auth required', { status: 401, headers: { 'WWW-Authenticate': 'Basic realm="Admin"' }})
+    }
+    let decoded = ''
+    try {
+      // atob is available in edge runtime
+      decoded = (globalThis as any).atob ? (globalThis as any).atob(encoded) : ''
+    } catch {}
+    const [u,p] = decoded ? decoded.split(':') : ['','']
+    const adminUser = process.env.NEXT_ADMIN_USER || process.env.ADMIN_USERNAME
+    const adminPass = process.env.NEXT_ADMIN_PASS || process.env.ADMIN_PASSWORD
+    if (u !== (adminUser || '') || p !== (adminPass || '')) {
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+  }
+
+  // Security headers
+  res.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  res.headers.set('X-Content-Type-Options', 'nosniff')
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.headers.set('X-DNS-Prefetch-Control', 'on')
+  res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  res.headers.set('Content-Security-Policy', CSP)
+
+  return res
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo.svg).*)'],
 }
