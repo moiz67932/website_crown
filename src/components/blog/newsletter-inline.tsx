@@ -37,7 +37,7 @@ export default function NewsletterInline({ city }: { city?: string | null }) {
       <form onSubmit={submit} className="flex flex-col sm:flex-row gap-2">
         <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="you@example.com" className="flex-1 border rounded px-3 py-2" required />
         <input value={hp} onChange={e=>setHp(e.target.value)} name="company" className="hidden" aria-hidden="true" />
-        <button disabled={!emailOk || status==='loading'} className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50">
+  <button disabled={!emailOk || status==='loading'} className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50 hover:cursor-pointer">
           {status==='loading' ? 'Joining…' : 'Join Newsletter'}
         </button>
       </form>

@@ -110,7 +110,7 @@ export async function getLandingStats(cityOrState: string, kind: LandingKind): P
       ${selectDays},
       COUNT(*) AS total_active
     FROM properties
-    WHERE status = 'Active'
+    WHERE status = 'Active' AND (hidden IS NULL OR hidden = false)
       ${locationPredicate}`
 
   // Inject kind-specific predicate & params (only once)

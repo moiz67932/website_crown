@@ -1,17 +1,20 @@
-import 'dotenv/config';
-
-import OpenAI from 'openai'
+import 'dotenv/config'
+import { openai } from './openai'
 import { getSupabase } from '../lib/supabase'
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
 export async function embedText(text: string): Promise<number[]> {
   const trimmed = (text || '').slice(0, 8000) // safety cap
   const res = await openai.embeddings.create({
-    model: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
+    model: process.env.EMBEDDING_MODEL || process.env.EMBED_MODEL || 'text-embedding-3-small',
     input: trimmed,
   })
   return res.data[0].embedding as unknown as number[]
+}
+
+// Batch embedding helper for RAG retrieval
+export async function embed(texts: string[], model = process.env.EMBED_MODEL || process.env.EMBEDDING_MODEL || 'text-embedding-3-small') {
+  const r = await openai.embeddings.create({ model, input: texts })
+  return r.data.map(d => d.embedding as unknown as number[])
 }
 
 export async function upsertPostEmbedding(postId: string, text: string) {

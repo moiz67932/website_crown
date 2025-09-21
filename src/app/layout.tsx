@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 import Layout from "@/components/layout";
 import Providers from "@/components/providers";
+import { ChatWidgetProvider } from "@/components/chat/ChatWidgetProvider";
 
 // Avoid using next/font/google to prevent Turbopack internal font loader errors in dev.
 // Provide sensible CSS variable fallbacks to common system/local fonts instead.
@@ -45,6 +46,8 @@ export default function RootLayout({
           <Layout>
             {children}
           </Layout>
+          {/* Floating chat widget (client-only), needs to be inside Providers for context hooks */}
+          <ChatWidgetProvider />
         </Providers>
       </body>
     </html>

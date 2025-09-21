@@ -64,7 +64,7 @@ export default function PostActions({
       >
         Edit
       </Link>
-      <button onClick={rewriteSEO} disabled={busy} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50">Rewrite SEO</button>
+  <button onClick={rewriteSEO} disabled={busy} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 hover:cursor-pointer disabled:opacity-50">Rewrite SEO</button>
       {status !== "published" ? (
         <button
           disabled={busy}
@@ -82,7 +82,7 @@ export default function PostActions({
           Unpublish
         </button>
       )}
-      <button onClick={copy} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">
+  <button onClick={copy} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 hover:cursor-pointer">
         Copy link
       </button>
       <select

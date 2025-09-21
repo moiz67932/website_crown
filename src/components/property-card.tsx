@@ -66,12 +66,17 @@ interface PropertyCardProps {
   property: Property;
   showCompareButton?: boolean;
   onCompareClick?: (property: Property) => void;
+  // Optional display controls (for chat cards etc.)
+  showBaths?: boolean; // default true
+  showLivingArea?: boolean; // default false
 }
 
 export function PropertyCard({
   property,
   showCompareButton = true,
   onCompareClick,
+  showBaths = true,
+  showLivingArea = false,
 }: PropertyCardProps) {
   const [favoriteProperties, setFavoriteProperties] = useState<string[]>([]);
   // currentImageSrc not needed; compute on render
@@ -326,15 +331,29 @@ export function PropertyCard({
             <span className="font-semibold">{property.bedrooms}</span>
             <span className="text-neutral-400 dark:text-neutral-500">beds</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="p-1.5 rounded-lg bg-accent-50 dark:bg-cyan-900/30">
-              <Bath className="h-4 w-4 text-accent-600 dark:text-cyan-400" />
+          {showBaths && (
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 rounded-lg bg-accent-50 dark:bg-cyan-900/30">
+                <Bath className="h-4 w-4 text-accent-600 dark:text-cyan-400" />
+              </div>
+              <span className="font-semibold">{property.bathrooms}</span>
+              <span className="text-neutral-400 dark:text-neutral-500">baths</span>
             </div>
-            <span className="font-semibold">{property.bathrooms}</span>
-            <span className="text-neutral-400 dark:text-neutral-500">
-              baths
-            </span>
-          </div>
+          )}
+          {showLivingArea && (
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 rounded-lg bg-neutral-100 dark:bg-slate-700/50">
+                <Square className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
+              </div>
+              <span className="font-semibold text-xs">
+                {property.living_area_sqft
+                  ? `${(property.living_area_sqft as any)?.toLocaleString?.() ?? property.living_area_sqft}`
+                  : "-"}
+              </span>
+              <span className="text-neutral-400 dark:text-neutral-500 text-xs">sqft</span>
+            </div>
+          )}
+          {!showLivingArea && (
           <div className="flex items-center gap-1.5">
             <div className="p-1.5 rounded-lg bg-gold-50 dark:bg-amber-900/30">
               <Maximize className="h-4 w-4 text-gold-600 dark:text-amber-400" />
@@ -348,6 +367,7 @@ export function PropertyCard({
               sqft
             </span>
           </div>
+          )}
         </div>
       </div>
     </Link>

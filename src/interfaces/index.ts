@@ -2,6 +2,8 @@ export interface Property {
   id: string;
   image: string;
   listing_key: string;
+  // Human-friendly name to display on cards/headings (e.g., street address or SEO title)
+  display_name?: string;
   property_type: string;
   address: string;
   location: string;

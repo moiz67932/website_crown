@@ -43,7 +43,7 @@ export default function LeadForm({ defaults }: { defaults?: Partial<Record<strin
       </select>
       <label className="inline-flex items-center gap-2"><input type="checkbox" name="wantsTour" /> I want a tour</label>
       {err && <div className="text-red-600 text-sm">{err}</div>}
-      <button disabled={loading} className="rounded bg-black text-white px-4 py-2">{loading ? 'Sending…' : 'Contact Agent'}</button>
+  <button disabled={loading} className="rounded bg-black text-white px-4 py-2 hover:cursor-pointer">{loading ? 'Sending…' : 'Contact Agent'}</button>
     </form>
   )
 }

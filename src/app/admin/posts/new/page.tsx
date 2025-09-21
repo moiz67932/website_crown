@@ -78,7 +78,7 @@ export default function NewPostGenerator() {
           <span className="text-sm">Auto-attach properties</span>
         </label>
         <div className="flex gap-3">
-          <button disabled={!city || loading} className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50">{loading ? 'Generating…' : 'Generate'}</button>
+          <button disabled={!city || loading} className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50 hover:cursor-pointer">{loading ? 'Generating…' : 'Generate'}</button>
           {error && <div className="text-sm text-red-600">{error}</div>}
         </div>
       </form>

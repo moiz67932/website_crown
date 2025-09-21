@@ -1,3 +1,66 @@
+# Crown Coastal Homes Website
+
+## Milestone 4: RAG Chatbot + Voice Assistant
+
+This milestone adds a production-grade RAG chatbot with property search, neighborhood/legal/market Q&A, deterministic mortgage calculator, lead capture and appointment scheduling, short-term memory (24h), basic voice (Whisper STT + ElevenLabs TTS), multilingual support (EN/ES/DE), and analytics hooks.
+
+### Install
+
+```powershell
+npm i @qdrant/js-client-rest openai @supabase/supabase-js nodemailer
+```
+
+### Environment
+
+Copy `env.example` to `.env.local` and fill:
+
+- QDRANT_URL, QDRANT_API_KEY
+- OPENAI_API_KEY, CHAT_MODEL, EMBED_MODEL
+- SUPABASE_URL, SUPABASE_SERVICE_ROLE (or SUPABASE_SERVICE_ROLE_KEY)
+- EMAIL_HOST, EMAIL_PORT, EMAIL_SECURE, EMAIL_USER, EMAIL_PASS, EMAIL_TO
+- ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID
+
+### Database
+
+Apply migration `supabase/migrations/20250920_m4_chat_leads.sql` to your Postgres/Supabase project. Includes tables for chat memory, leads, appointments, and optional feedback.
+
+### API Routes
+
+- POST `/api/chat` – intent pipeline + RAG + mortgage calc + lead/schedule side-effects
+- POST `/api/voice/stt` – form-data { audio: File } → Whisper transcription
+- POST `/api/voice/tts` – JSON { text, voice? } → mp3 stream
+- POST `/api/chat/feedback` – store thumbs up/down rating
+- GET `/api/debug` – simple health
+
+### UI
+
+Go to `/chat` for a simple chat surface with results cards and thumbs up/down.
+
+### KB Ingestion
+
+Create the KB collection in Qdrant (auto on first run), then ingest seed docs:
+
+```powershell
+npx ts-node --project tsconfig.scripts.json scripts/ingest_kb.ts
+```
+
+Batch size is 48 and uses `text-embedding-3-small` (1536-dim). Collections:
+
+- properties_seo_v1: 1 vector per property (already exists)
+- kb_realestate_v1: 200–600 token chunks, payload: { type, title, city, state, source, updated_at, lang, text }
+
+### Acceptance Checklist (dev notes)
+
+- Search: “3 bed under $500k in San Diego” returns relevant listing cards.
+- KB Q&A: neighborhood/legal/market answers cite context.
+- Mortgage: computed server-side with clear monthly breakdown; prompts for missing fields.
+- Leads: inserts into DB and POSTs to `/api/send-lead-email` using EMAIL_* envs.
+- Appointments: inserts into `appointments`.
+- Memory: logs messages and keeps short summary; sessions purgeable >24h.
+- Voice: STT/ TTS roundtrip works.
+- Multilingual replies based on user language.
+- Uses max_output_tokens only.
+
 # Real Estate Property Management System
 
 A modern Next.js application for real estate property management with Trestle API integration, advanced search capabilities, and interactive maps.

@@ -35,7 +35,7 @@ export default function DiscoverPage() {
           <label className="block text-sm">Niche</label>
           <input className="border rounded px-3 py-2" value={niche} onChange={e=>setNiche(e.target.value)} />
         </div>
-        <button disabled={!city || loading} className="px-4 py-2 bg-primary text-white rounded">{loading? 'Loading…':'Suggest'}</button>
+  <button disabled={!city || loading} className="px-4 py-2 bg-primary text-white rounded hover:cursor-pointer">{loading? 'Loading…':'Suggest'}</button>
       </form>
 
       <ul className="space-y-2">
@@ -45,7 +45,7 @@ export default function DiscoverPage() {
               <div className="font-medium">{i.title}</div>
               {i.keywords && <div className="text-xs text-slate-600">{i.keywords.join(', ')}</div>}
             </div>
-            <button className="px-3 py-2 border rounded" onClick={()=>generate(i)}>Generate Draft</button>
+            <button className="px-3 py-2 border rounded hover:cursor-pointer" onClick={()=>generate(i)}>Generate Draft</button>
           </li>
         ))}
       </ul>

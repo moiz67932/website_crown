@@ -75,7 +75,7 @@ export default function Comments({ slug }: { slug: string }) {
       <form onSubmit={submit} className="space-y-3">
         <input value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Your name (optional)" className="w-full border rounded px-3 py-2" />
         <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Your comment" className="w-full border rounded px-3 py-2 h-28" required />
-        <button disabled={submitting || !body.trim()} className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50">
+  <button disabled={submitting || !body.trim()} className="px-4 py-2 bg-primary text-white rounded disabled:opacity-50 hover:cursor-pointer">
           {submitting ? "Sending…" : "Submit Comment"}
         </button>
       </form>

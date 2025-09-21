@@ -20,13 +20,13 @@ async function fetchCitySqlContext(city: string): Promise<string> {
               MIN(list_price)::int AS min_price,
               MAX(list_price)::int AS max_price
          FROM properties
-        WHERE status='Active' AND LOWER(city)=LOWER($1)`,
+        WHERE status='Active' AND (hidden IS NULL OR hidden = false) AND LOWER(city)=LOWER($1)`,
       [city]
     )
     const types = await pool.query(
       `SELECT LOWER(COALESCE(property_type,'unknown')) AS type, COUNT(*)::int AS count
          FROM properties
-        WHERE status='Active' AND LOWER(city)=LOWER($1)
+        WHERE status='Active' AND (hidden IS NULL OR hidden = false) AND LOWER(city)=LOWER($1)
         GROUP BY 1
         ORDER BY 2 DESC
         LIMIT 5`,
