@@ -199,6 +199,10 @@ export class SupabaseAuthService {
         return null
       }
 
+      // Guard against invalid identifiers like "null"/"NaN" that break uuid casts
+      const bad = !id || id === 'null' || id === 'undefined' || id === 'NaN'
+      if (bad) return null
+
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -213,6 +217,28 @@ export class SupabaseAuthService {
       return data
     } catch (error) {
       console.error('Error getting user by ID:', error)
+      return null
+    }
+  }
+
+  // Get user by email (fallback)
+  static async getUserByEmail(email: string): Promise<Omit<User, 'password'> | null> {
+    try {
+      const supabase = getSupabaseAuth()
+      if (!supabase) return null
+      if (!email) return null
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single()
+      if (error || !data) {
+        if (error) console.error('Error fetching user by email:', error)
+        return null
+      }
+      return data
+    } catch (e) {
+      console.error('Error getting user by email:', e)
       return null
     }
   }

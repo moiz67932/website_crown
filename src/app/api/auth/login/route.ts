@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseAuthService } from '@/lib/supabase-auth';
 import { loginSchema } from '@/lib/validation';
 import { AuthService } from '@/lib/auth';
+import { mergeSessionIntoUser } from '@/lib/referrals'
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,7 +66,8 @@ export async function POST(request: NextRequest) {
         maxAge: 7 * 24 * 60 * 60,
         path: '/',
       });
-      return response;
+  // Referral merge for admin: skip
+  return response;
     }
 
     // Attempt login with Supabase
@@ -78,9 +80,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT token for session management
+    // Generate JWT token for session management (keep UUID string)
     const token = AuthService.generateToken({
-      userId: Number(result.user!.id),
+      userId: String(result.user!.id),
       email: result.user!.email,
       name: `${result.user!.first_name} ${result.user!.last_name}`,
       isAdmin: false,
@@ -101,6 +103,12 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
+
+    // Merge any session attribution into this user
+    try {
+      const cc = request.cookies.get(process.env.CC_SESSION_COOKIE_NAME || 'cc_session')?.value
+      if (result.user?.id && cc) await mergeSessionIntoUser({ userId: String(result.user.id), ccSession: cc })
+    } catch {}
 
     return response;
 

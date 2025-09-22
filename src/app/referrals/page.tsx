@@ -12,12 +12,7 @@ export default function ReferralsPage() {
         if (r.ok) {
           const j = await r.json()
           setCode(j.code || null)
-          setStats(j.stats || null)
-          if (!j.code) {
-            const c = await fetch('/api/referrals/create', { method: 'POST' })
-            const jj = await c.json()
-            setCode(jj.code || null)
-          }
+          setStats(j.totals || null)
         }
       } catch {}
     })()
@@ -27,15 +22,19 @@ export default function ReferralsPage() {
 
   return (
     <main className="max-w-xl mx-auto p-6 space-y-4">
-      <h1 className="text-xl font-semibold">Your referral link</h1>
+      <h1 className="text-xl font-semibold">Referrals</h1>
       {code ? (
         <div className="rounded border p-4">
           <div className="text-sm text-gray-600">Share this link to earn rewards:</div>
           <div className="mt-2 font-mono break-all">{shareUrl}</div>
         </div>
-      ) : <div>Loading…</div>}
+      ) : (
+        <div className="rounded border p-4 text-sm text-gray-700">
+          Create an account or log in to get your referral link and earn rewards when friends sign up or inquire.
+        </div>
+      )}
       {stats && (
-        <div className="text-sm text-gray-600">Successful referrals: {stats.success || 0}</div>
+        <div className="text-sm text-gray-600">Visits: {stats.visits || 0} • Signups: {stats.signups || 0} • Leads: {stats.leads || 0}</div>
       )}
     </main>
   )

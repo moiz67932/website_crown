@@ -212,6 +212,25 @@ back/
 └── package.json          # Node.js dependencies
 ```
 
+## 🎁 Referrals (Milestone 5)
+
+Referrals are enabled via env in `env.example`.
+
+- Middleware sets `cc_session` and captures `?ref=CODE`; sends a visit to `/api/referrals/visit`.
+- `/api/referrals/me` returns your code and totals (requires Supabase auth token or cookie).
+- `/api/chat` and `/api/send-lead-email` award lead points when a ref cookie is present.
+- Users can request redemptions; admins manage them under `/admin/referrals`.
+
+SQL quick checks:
+
+```sql
+select * from public.referral_visits order by created_at desc limit 5;
+select * from public.referral_events order by created_at desc limit 5;
+select * from public.referral_rewards order by created_at desc limit 5;
+select * from public.referral_redemptions order by created_at desc limit 5;
+```
+
+
 ## 🔧 Development Workflow
 
 ### 1. Before Starting Development

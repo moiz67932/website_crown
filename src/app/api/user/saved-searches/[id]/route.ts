@@ -33,8 +33,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved searches are not available for this account type' },
+        { status: 400 }
+      );
+    }
     const result = SavedSearchesService.updateSavedSearch(
-      currentUser.userId,
+      userIdNum,
       searchId,
       name,
       searchCriteria,
@@ -82,7 +89,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const result = SavedSearchesService.deleteSavedSearch(currentUser.userId, searchId);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved searches are not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const result = SavedSearchesService.deleteSavedSearch(userIdNum, searchId);
 
     if (!result.success) {
       return NextResponse.json(

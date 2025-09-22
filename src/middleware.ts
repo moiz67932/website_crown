@@ -41,6 +41,14 @@ export function middleware(req: NextRequest) {
   const known = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid']
   const res = NextResponse.next()
   let wrote = false
+  // Ensure cc_session cookie exists (anonymous session tracking)
+  const CC_COOKIE = process.env.CC_SESSION_COOKIE_NAME || 'cc_session'
+  const ccExisting = req.cookies.get(CC_COOKIE)?.value
+  if (!ccExisting) {
+    const uuid = (globalThis as any).crypto?.randomUUID ? (globalThis as any).crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2,10)}`
+    res.cookies.set(CC_COOKIE, uuid, { path: '/', maxAge: 60*60*24*90, sameSite: 'lax' })
+    wrote = true
+  }
   for (const k of known) {
     const v = req.nextUrl.searchParams.get(k)
     if (v) {
@@ -49,10 +57,30 @@ export function middleware(req: NextRequest) {
     }
   }
   // referral code capture
+  const REF_COOKIE = process.env.REFERRAL_COOKIE_NAME || 'ref'
+  const REF_DAYS = Number(process.env.REFERRAL_COOKIE_MAX_DAYS || 90)
   const ref = req.nextUrl.searchParams.get('ref')
   if (ref) {
-    res.cookies.set('ref', ref, { path: '/', maxAge: 60*60*24*90 })
+    res.cookies.set(REF_COOKIE, ref, { path: '/', maxAge: 60*60*24*REF_DAYS, sameSite: 'lax' })
     wrote = true
+    // Fire-and-forget visit beacon
+    try {
+      const url = new URL(req.url)
+      const utm: Record<string,string> = {}
+      for (const k of known) {
+        const v = req.nextUrl.searchParams.get(k)
+        if (v) utm[k] = v
+      }
+      // Use absolute URL to avoid Next middleware relative fetch pitfalls
+      const base = `${url.protocol}//${url.host}`
+      const body = JSON.stringify({ ref, cc_session: req.cookies.get(CC_COOKIE)?.value, path: url.pathname, utm })
+      // Don't await
+      fetch(`${base}/api/referrals/visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      }).catch(() => {})
+    } catch {}
   }
 
   // Assign AB test cookie (client-side code can read it)

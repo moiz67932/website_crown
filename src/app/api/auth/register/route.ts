@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseAuthService } from '@/lib/supabase-auth';
 import { registerSchema } from '@/lib/validation';
 import { AuthService } from '@/lib/auth';
+import { claimReferrerOnSignup } from '@/lib/referrals'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,9 +43,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT token for session management
+    // Generate JWT token for session management (keep Supabase UUID as string)
       const token = AuthService.generateToken({
-        userId: Number(result.userId!),
+        userId: String(result.userId!),
         email,
         name: `${firstName} ${lastName}`
       });
@@ -69,6 +70,13 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
+
+    // Referral: claim referrer and merge session using cookies
+    try {
+      const ref = request.cookies.get(process.env.REFERRAL_COOKIE_NAME || 'ref')?.value
+      const cc = request.cookies.get(process.env.CC_SESSION_COOKIE_NAME || 'cc_session')?.value
+      if (result.userId) await claimReferrerOnSignup({ newUserId: String(result.userId), refCookie: ref, ccSession: cc })
+    } catch {}
 
     return response;
 

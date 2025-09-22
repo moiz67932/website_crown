@@ -6,7 +6,7 @@ import { toolSearchProperties, mortgageBreakdown, toolScheduleViewing, toolCreat
 import { logTurn, summarizeIfNeeded, ensureSession } from "@/lib/memory"
 import { qdrant } from "@/lib/qdrant"
 import { guardRateLimit } from "@/lib/rate-limit"
-import { getSupabase } from "@/lib/supabase"
+import { awardForLead } from "@/lib/referrals"
 
 export async function POST(req: NextRequest) {
   // Rate limiting guard (per IP + path)
@@ -199,17 +199,14 @@ Use retrieved context where available. Be concise and helpful; for property sear
       message: (entities as any).message,
       meta,
     })
-    // Record referral event if cookie exists
+    // Record referral event if cookie exists (user-centric helper)
     try {
       const ref = meta.ref
-      if (ref) {
-        const supa = getSupabase()
-        if (supa) {
-          await supa.from('referrals').insert({ code: ref, referred_cookie: getCookie('cc_session') })
-          const pts = Number(process.env.REFERRAL_REWARD_POINTS || 50)
-          await supa.from('referral_rewards').insert({ code: ref, points: pts, reason: 'Lead created' })
-        }
-      }
+      const cc = getCookie(process.env.CC_SESSION_COOKIE_NAME || 'cc_session')
+      const authHeader = req.headers.get('authorization')
+      const token = authHeader?.replace('Bearer ', '') || undefined
+      // We don't have a user id here; award with session. If client sends bearer for auth user, downstream could expand; for now, rely on session merging later.
+      await awardForLead({ refereeSession: cc, refCookie: ref })
     } catch {}
     // Also notify via existing email endpoint
     try {

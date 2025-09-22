@@ -16,9 +16,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const onlyFavorites = searchParams.get('favorites') === 'true';
 
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
     const savedProperties = onlyFavorites 
-      ? SavedPropertiesService.getUserFavoriteProperties(currentUser.userId)
-      : SavedPropertiesService.getUserSavedProperties(currentUser.userId);
+      ? SavedPropertiesService.getUserFavoriteProperties(userIdNum)
+      : SavedPropertiesService.getUserSavedProperties(userIdNum);
 
     // Parse property data for each saved property
     const formattedProperties = savedProperties.map(saved => ({
@@ -69,8 +76,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
     const result = SavedPropertiesService.saveProperty(
-      currentUser.userId,
+      userIdNum,
       property,
       isFavorite,
       notes,
@@ -119,7 +133,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = SavedPropertiesService.removeSavedProperty(currentUser.userId, listingKey);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const result = SavedPropertiesService.removeSavedProperty(userIdNum, listingKey);
 
     if (!result.success) {
       return NextResponse.json(

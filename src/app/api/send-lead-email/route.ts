@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { guardRateLimit } from '@/lib/rate-limit'
+import { awardForLead } from '@/lib/referrals'
 
 type LeadPayload = any
 
@@ -106,6 +107,15 @@ export async function POST(req: NextRequest) {
     }
 
     await transporter.sendMail(mailOptions)
+
+    // Award referral if cookie present (anonymous or authenticated)
+    try {
+      const cookies = req.headers.get('cookie') || ''
+      function getCookie(name:string){ const m = cookies.match(new RegExp('(?:^|; )'+name+'=([^;]+)')); return m?decodeURIComponent(m[1]):undefined }
+      const ref = getCookie(process.env.REFERRAL_COOKIE_NAME || 'ref')
+      const cc = getCookie(process.env.CC_SESSION_COOKIE_NAME || 'cc_session')
+      if (ref) await awardForLead({ refereeSession: cc, refCookie: ref })
+    } catch {}
 
     return NextResponse.json({ success: true })
   } catch (e: any) {
