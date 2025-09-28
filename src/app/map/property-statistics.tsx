@@ -257,12 +257,12 @@ export default function PropertyStatistics({
                     cy="50%"
                     outerRadius={100}
                     fill="#8884d8"
-                    label={({ name, percent }) => {
-                      const pct =
-                        typeof percent === "number"
-                          ? (percent * 100).toFixed(0)
-                          : null;
-                      return pct ? `${name} (${pct}%)` : name;
+                    label={({ name, percent }: { name?: string; percent?: number | null }) => {
+                      if (typeof percent !== 'number' || Number.isNaN(percent)) {
+                        return name ?? ''
+                      }
+                      const pct = Math.round(percent * 100)
+                      return `${name ?? ''} (${pct}%)`
                     }}
                     labelLine={false}
                     paddingAngle={5}
