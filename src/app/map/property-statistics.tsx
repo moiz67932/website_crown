@@ -244,7 +244,7 @@ export default function PropertyStatistics({
           <Separator />
 
           {/* Status Distribution */}
-          <div>
+          {/* <div>
             <h4 className="text-sm font-medium mb-3">Property Status</h4>
             <div className="h-[120px] flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -268,7 +268,7 @@ export default function PropertyStatistics({
                     paddingAngle={5}
                   /> */}
 
-                  <Tooltip
+                  {/* <Tooltip
                     formatter={(value: number, name: string) => [
                       `${value} properties`,
                       name,
@@ -281,68 +281,68 @@ export default function PropertyStatistics({
                 </PieChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </div> */}
 
           {/* Year Built Stats (if available) */}
-          {stats.yearBuiltStats && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="text-sm font-medium mb-2">Year Built</h4>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-xs text-slate-500">
-                    {stats.yearBuiltStats.oldestYear} -{" "}
-                    {stats.yearBuiltStats.newestYear}
-                  </span>
-                  <span className="text-sm">
-                    Avg: {stats.yearBuiltStats.avgYear}
-                  </span>
-                </div>
-                {/* {stats.yearBuiltStats.decadeDistribution.length > 1 && (
-                  <div className="h-[100px]">
-                    <ChartContainer
-                      config={{
-                        years: {
-                          label: "Decade Built",
-                          color: "hsl(var(--chart-2))",
-                        },
-                      }}
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.yearBuiltStats.decadeDistribution}>
-                          <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
-                          <YAxis hide />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="value" name="Properties" fill="var(--color-years)" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </div>
-                )} */}
-              </div>
-            </>
-          )}
-
-          {/* Common Features (if available) */}
-          {stats.commonFeatures.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="text-sm font-medium mb-2">Common Features</h4>
-                <div className="space-y-2">
-                  {stats.commonFeatures.map((feature) => (
-                    <div key={feature.name}>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span>{feature.name}</span>
-                        {/* <span>{feature.percentage}%</span> */}
+                {stats.yearBuiltStats && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Year Built</h4>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs text-slate-500">
+                          {stats.yearBuiltStats.oldestYear} -{" "}
+                          {stats.yearBuiltStats.newestYear}
+                        </span>
+                        <span className="text-sm">
+                          Avg: {stats.yearBuiltStats.avgYear}
+                        </span>
                       </div>
-                      {/* <Progress value={feature.percentage} className="h-1.5" /> */}
+                      {/* {stats.yearBuiltStats.decadeDistribution.length > 1 && (
+                        <div className="h-[100px]">
+                          <ChartContainer
+                            config={{
+                              years: {
+                                label: "Decade Built",
+                                color: "hsl(var(--chart-2))",
+                              },
+                            }}
+                          >
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={stats.yearBuiltStats.decadeDistribution}>
+                                <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                                <YAxis hide />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="value" name="Properties" fill="var(--color-years)" radius={[4, 4, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </ChartContainer>
+                        </div>
+                      )} */}
                     </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+                  </>
+                )}
+
+                {/* Common Features (if available) */}
+                {stats.commonFeatures.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Common Features</h4>
+                      <div className="space-y-2">
+                        {stats.commonFeatures.map((feature) => (
+                          <div key={feature.name}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span>{feature.name}</span>
+                              {/* <span>{feature.percentage}%</span> */}
+                            </div>
+                            {/* <Progress value={feature.percentage} className="h-1.5" /> */}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
         </div>
       </div>
     </Card>
