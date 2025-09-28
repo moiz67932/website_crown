@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { useUserProfile } from "@/hooks/use-user-management"
 import { ArrowLeft, User, Settings, Bell, Shield } from "lucide-react"
 import Link from "next/link"
+import { toast } from "@/hooks/use-toast"
 
 function calculateAge(dateOfBirth: string) {
   const today = new Date()
@@ -45,7 +46,6 @@ export default function ProfilePage() {
     },
     notificationSettings: {
       emailAlerts: true,
-      pushNotifications: true,
       weeklyDigest: true,
       marketingEmails: false
     }
@@ -63,9 +63,13 @@ export default function ProfilePage() {
           units: 'imperial',
           theme: 'light'
         },
-        notificationSettings: profile.notificationSettings || {
+        notificationSettings: profile.notificationSettings ? {
+          // Ignore deprecated pushNotifications field if present
+          emailAlerts: profile.notificationSettings.emailAlerts ?? true,
+          weeklyDigest: profile.notificationSettings.weeklyDigest ?? true,
+          marketingEmails: profile.notificationSettings.marketingEmails ?? false
+        } : {
           emailAlerts: true,
-          pushNotifications: true,
           weeklyDigest: true,
           marketingEmails: false
         }
@@ -98,9 +102,12 @@ export default function ProfilePage() {
           units: 'imperial',
           theme: 'light'
         },
-        notificationSettings: profile.notificationSettings || {
+        notificationSettings: profile.notificationSettings ? {
+          emailAlerts: profile.notificationSettings.emailAlerts ?? true,
+          weeklyDigest: profile.notificationSettings.weeklyDigest ?? true,
+          marketingEmails: profile.notificationSettings.marketingEmails ?? false
+        } : {
           emailAlerts: true,
-          pushNotifications: true,
           weeklyDigest: true,
           marketingEmails: false
         }
@@ -314,26 +321,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive push notifications for important updates
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.notificationSettings.pushNotifications}
-                    onCheckedChange={(checked) =>
-                      setFormData({
-                        ...formData,
-                        notificationSettings: {
-                          ...formData.notificationSettings,
-                          pushNotifications: checked
-                        }
-                      })
-                    }
-                  />
-                </div>
+                {/* Push Notifications toggle removed per requirements */}
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -425,12 +413,7 @@ export default function ProfilePage() {
                       }
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Email Verified:</span>
-                    <span className={profile.isEmailVerified ? "text-green-600" : "text-red-600"}>
-                      {profile.isEmailVerified ? 'Yes' : 'No'}
-                    </span>
-                  </div>
+                  {/* Email Verified display removed per requirements */}
                 </div>
               </CardContent>
             </Card>
@@ -453,22 +436,65 @@ export default function ProfilePage() {
                     Browse Properties
                   </Button>
                 </Link>
+                <Link href="/referrals">
+                  <Button variant="outline" className="w-full justify-start">
+                    <User className="h-4 w-4 mr-2" />
+                    View Referrals
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
-            {/* Security Alert */}
+            {/* Account Security */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
                   Account Security
                 </CardTitle>
+                <CardDescription>Manage sensitive account actions.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  You can initiate a password reset. A secure link will be sent to your email.
+                </p>
+                <Button
+                  onClick={async () => {
+                    if (!user?.email) return
+                    try {
+                      const res = await fetch('/api/auth/reset-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: user.email })
+                      })
+                      const data = await res.json().catch(() => ({ success: false, message: 'Invalid response' }))
+                      if (res.ok && data.success) {
+                        toast({
+                          title: 'Password Reset Email Sent',
+                          description: 'Check your inbox for further instructions.'
+                        })
+                      } else {
+                        toast({
+                          title: 'Reset Failed',
+                          description: data.message || 'Unable to send reset email',
+                          variant: 'destructive'
+                        })
+                      }
+                    } catch (e) {
+                      toast({
+                        title: 'Network Error',
+                        description: 'Could not reach reset password service.',
+                        variant: 'destructive'
+                      })
+                    }
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Reset Password
+                </Button>
                 <Alert>
-                  <AlertDescription>
-                    To change your password or update security settings, please contact support.
-                    We're working on adding these features soon.
+                  <AlertDescription className="text-xs">
+                    If you did not request a password reset but receive an email, you can safely ignore it.
                   </AlertDescription>
                 </Alert>
               </CardContent>

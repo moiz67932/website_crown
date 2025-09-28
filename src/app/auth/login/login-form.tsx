@@ -82,9 +82,6 @@ export default function LoginForm() {
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <Label htmlFor="password">Password</Label>
-            <Link href="/forgot-password" className="text-sm text-slate-600 hover:text-slate-900">
-              Forgot password?
-            </Link>
           </div>
           <div className="relative">
             <Input
@@ -105,6 +102,11 @@ export default function LoginForm() {
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
+          </div>
+          <div className="text-right">
+            <Link href="/auth/reset-password" className="text-sm text-indigo-600 hover:text-indigo-800">
+              Forgot Password?
+            </Link>
           </div>
         </div>
 

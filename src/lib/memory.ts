@@ -1,13 +1,7 @@
 import { chatText } from "./openai"
-import { createClient } from "@supabase/supabase-js"
+import { supaServer } from '@/lib/supabase'
 
-function admin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    (process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY)!,
-    { auth: { persistSession: false } }
-  )
-}
+function admin() { return supaServer() }
 
 // Ensure a chat session exists and has a 24h expiry window.
 // Decision: we use upsert to make this idempotent and safe to call per request.

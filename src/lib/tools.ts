@@ -131,15 +131,9 @@
 
 // lib/tools.ts
 import { retrieve } from "./rag"
-import { createClient } from "@supabase/supabase-js"
+import { supaServer } from '@/lib/supabase'
 
-function admin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE!,
-    { auth: { persistSession: false } }
-  )
-}
+function admin() { return supaServer() }
 
 export async function toolSearchProperties(entities: any) {
   const f = {

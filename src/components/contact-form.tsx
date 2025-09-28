@@ -96,6 +96,15 @@ export default function ContactForm({
       if (!res.ok) throw new Error(json?.error || "Failed to submit form");
       setIsSubmitted(true);
 
+      // Optional referral code tracking
+      const referralCode = (fd.get('referralCode') as string || '').trim().toUpperCase()
+      if (referralCode) {
+        try {
+          const tr = await fetch('/api/referrals/track-lead', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ referralCode, name, email, phone, propertyId }) })
+          if (tr.status === 400) setError('Invalid referral code.')
+        } catch {}
+      }
+
       // Fire-and-handle email notification in parallel to keep Lofty integration intact.
       try {
         const emailRes = await fetch('/api/send-lead-email', {
@@ -185,6 +194,11 @@ export default function ContactForm({
           <Label htmlFor="wantsTour" className="text-sm font-normal">
             I want to schedule a tour
           </Label>
+        </div>
+
+        <div>
+          <Label htmlFor="referralCode">Referral code (optional)</Label>
+          <Input id="referralCode" name="referralCode" placeholder="ABC123" />
         </div>
 
         <div className="flex items-start space-x-2">

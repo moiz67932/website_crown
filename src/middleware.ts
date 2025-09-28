@@ -56,32 +56,7 @@ export function middleware(req: NextRequest) {
       wrote = true
     }
   }
-  // referral code capture
-  const REF_COOKIE = process.env.REFERRAL_COOKIE_NAME || 'ref'
-  const REF_DAYS = Number(process.env.REFERRAL_COOKIE_MAX_DAYS || 90)
-  const ref = req.nextUrl.searchParams.get('ref')
-  if (ref) {
-    res.cookies.set(REF_COOKIE, ref, { path: '/', maxAge: 60*60*24*REF_DAYS, sameSite: 'lax' })
-    wrote = true
-    // Fire-and-forget visit beacon
-    try {
-      const url = new URL(req.url)
-      const utm: Record<string,string> = {}
-      for (const k of known) {
-        const v = req.nextUrl.searchParams.get(k)
-        if (v) utm[k] = v
-      }
-      // Use absolute URL to avoid Next middleware relative fetch pitfalls
-      const base = `${url.protocol}//${url.host}`
-      const body = JSON.stringify({ ref, cc_session: req.cookies.get(CC_COOKIE)?.value, path: url.pathname, utm })
-      // Don't await
-      fetch(`${base}/api/referrals/visit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      }).catch(() => {})
-    } catch {}
-  }
+  // (Referrals simplified) Removed legacy ?ref= capture and visit beacon.
 
   // Assign AB test cookie (client-side code can read it)
   if (process.env.AB_TEST_ENABLED === 'true') {

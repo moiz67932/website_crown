@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+import { supaServer } from '@/lib/supabase'
 import OpenAI from 'openai'
 import { qdrant, COLLECTION_CONTEXT } from '@/lib/vec/qdrant'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
-const supa = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const supa = supaServer()
 
 export type CityContext = {
   city: string

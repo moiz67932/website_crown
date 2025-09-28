@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { getSupabaseClient } from '@/lib/supabase-auth'
+import { supaBrowser } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
 interface SupabaseContextType {
@@ -27,11 +27,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const supabase = getSupabaseClient()
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
+    let supabase
+    try { supabase = supaBrowser() } catch { setLoading(false); return }
 
     // Get initial session
     const getInitialSession = async () => {

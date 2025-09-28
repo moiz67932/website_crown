@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseAuthService } from '@/lib/supabase-auth';
 import { loginSchema } from '@/lib/validation';
 import { AuthService } from '@/lib/auth';
-import { mergeSessionIntoUser } from '@/lib/referrals'
+// Legacy referral session merge removed (explicit referral system now)
 
 export async function POST(request: NextRequest) {
   try {
@@ -104,11 +104,7 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
-    // Merge any session attribution into this user
-    try {
-      const cc = request.cookies.get(process.env.CC_SESSION_COOKIE_NAME || 'cc_session')?.value
-      if (result.user?.id && cc) await mergeSessionIntoUser({ userId: String(result.user.id), ccSession: cc })
-    } catch {}
+    // (No implicit referral session merge)
 
     return response;
 

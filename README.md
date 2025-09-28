@@ -212,23 +212,38 @@ back/
 └── package.json          # Node.js dependencies
 ```
 
-## 🎁 Referrals (Milestone 5)
+## 🎁 Referrals (Simplified Code Entry)
 
-Referrals are enabled via env in `env.example`.
+Referral tracking has been simplified: users manually enter a referral code during signup or on lead forms. No cookies, URL params, or visit tracking are used.
 
-- Middleware sets `cc_session` and captures `?ref=CODE`; sends a visit to `/api/referrals/visit`.
-- `/api/referrals/me` returns your code and totals (requires Supabase auth token or cookie).
-- `/api/chat` and `/api/send-lead-email` award lead points when a ref cookie is present.
-- Users can request redemptions; admins manage them under `/admin/referrals`.
+Core behavior:
+
+- Each user gets a stable code (`referral_codes` table). If absent it is created on first `/api/referrals/me` call.
+- Signup form has an optional "Referral code" field; if valid the referrer gains one signup (idempotent per referred user).
+- Property/lead contact form has an optional "Referral code"; if valid the referrer gains one lead.
+- Counters (`signup_count`, `lead_count`) are stored directly on `referral_codes` for fast dashboard reads.
+
+Key tables:
+
+- `public.referral_codes (code, user_id, signup_count, lead_count)`
+- `public.referral_signups (referrer_code, referred_user_id)` unique pair prevents double counting.
+- `public.referral_leads (referrer_code, lead metadata...)`.
+
+API endpoints:
+
+- `GET /api/referrals/me` → `{ code, signup_count, lead_count, recent_signups, recent_leads }`.
+- `POST /api/referrals/track-signup` body `{ referralCode }` (auth) → credits signup if first time for that user.
+- `POST /api/referrals/track-lead` body `{ referralCode, name?, email?, phone?, propertyId? }` (public) → credits a lead.
 
 SQL quick checks:
 
 ```sql
-select * from public.referral_visits order by created_at desc limit 5;
-select * from public.referral_events order by created_at desc limit 5;
-select * from public.referral_rewards order by created_at desc limit 5;
-select * from public.referral_redemptions order by created_at desc limit 5;
+select * from public.referral_codes order by created_at desc limit 5;
+select * from public.referral_signups order by created_at desc limit 5;
+select * from public.referral_leads order by created_at desc limit 5;
 ```
+
+Legacy visit/event/reward logic has been removed from active code paths.
 
 
 ## 🔧 Development Workflow

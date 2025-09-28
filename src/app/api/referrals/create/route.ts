@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server'
-import { ensureReferralCode, mergeSessionIntoUser } from '@/lib/referrals'
+// Legacy referral create endpoint deprecated; explicit tracking only.
+// Keeping minimal stub to avoid 404 if frontend still calls temporarily.
+// Remove after clients updated.
+import { ensureReferralCode } from '@/lib/referrals'
 import { getSupabaseAuth } from '@/lib/supabase-auth'
 
 export async function POST(req: NextRequest) {
@@ -12,8 +15,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await auth.auth.getUser(token)
     if (!user) return Response.json({ error: 'unauthorized' }, { status: 401 })
     const code = await ensureReferralCode(user.id)
-    const cc = req.cookies.get(process.env.CC_SESSION_COOKIE_NAME || 'cc_session')?.value
-    if (cc) await mergeSessionIntoUser({ userId: user.id, ccSession: cc })
+  // Session merge removed
     return Response.json({ code })
   } catch (e: any) {
     return Response.json({ error: e?.message || 'server_error' }, { status: 500 })

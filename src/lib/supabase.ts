@@ -1,21 +1,35 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
-// Server-side Supabase client. We prefer service role key for insert/update to bypass RLS for now
-// (You can later enable RLS and add policies for table access.)
-// Falls back to anon key (read-only) if service role not set.
-
-let supabase: SupabaseClient | null = null
-
-export function getSupabase(): SupabaseClient | null {
-  // Allow NEXT_PUBLIC_* fallbacks in dev to simplify .env setup
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!url) return null
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!key) return null
-  if (!supabase) {
-    supabase = createClient(url, key, {
-      auth: { persistSession: false },
-    })
+// SERVER: service role (NEVER import in client components)
+export function supaServer() {
+  const url = process.env.SUPABASE_URL
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !service) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
   }
-  return supabase
+  return createClient(url, service, { auth: { persistSession: false } })
+}
+
+// BROWSER: public anon (must use NEXT_PUBLIC_*)
+export function supaBrowser() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anon) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  }
+  return createClient(url, anon)
+}
+
+// Backwards-compatible alias used in other parts of the codebase
+export function getSupabase() {
+  return supaServer()
+}
+
+// Dev-only guard: ensure both URLs point to the same project
+if (process.env.NODE_ENV !== 'production') {
+  const a = process.env.SUPABASE_URL
+  const b = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (a && b && a !== b) {
+    console.warn('[supabase] URL mismatch dev warning:', { SUPABASE_URL: a, NEXT_PUBLIC_SUPABASE_URL: b })
+  }
 }

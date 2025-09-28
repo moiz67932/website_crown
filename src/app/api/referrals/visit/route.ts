@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { recordVisit } from '@/lib/referrals'
+// Visit tracking removed. Endpoint retained as no-op for backward compatibility.
 
 // Basic in-memory rate limit (per IP)
 const buckets = new Map<string,{ n:number; t:number }>()
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest){
     const path = body?.path ? String(body.path) : undefined
     const utm = body?.utm && typeof body.utm === 'object' ? body.utm : undefined
 
-    await recordVisit({ refCode: ref, ccSession: cc, path, utm, req })
-    return NextResponse.json({ ok: true })
+  // No-op
+  return NextResponse.json({ ok: true, deprecated: true })
   } catch (e:any) {
     return NextResponse.json({ ok: true })
   }

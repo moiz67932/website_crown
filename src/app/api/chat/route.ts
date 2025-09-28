@@ -6,7 +6,7 @@ import { toolSearchProperties, mortgageBreakdown, toolScheduleViewing, toolCreat
 import { logTurn, summarizeIfNeeded, ensureSession } from "@/lib/memory"
 import { qdrant } from "@/lib/qdrant"
 import { guardRateLimit } from "@/lib/rate-limit"
-import { awardForLead } from "@/lib/referrals"
+// Legacy referral award removed; explicit /api/referrals/track-lead handles attribution
 
 export async function POST(req: NextRequest) {
   // Rate limiting guard (per IP + path)
@@ -199,15 +199,7 @@ Use retrieved context where available. Be concise and helpful; for property sear
       message: (entities as any).message,
       meta,
     })
-    // Record referral event if cookie exists (user-centric helper)
-    try {
-      const ref = meta.ref
-      const cc = getCookie(process.env.CC_SESSION_COOKIE_NAME || 'cc_session')
-      const authHeader = req.headers.get('authorization')
-      const token = authHeader?.replace('Bearer ', '') || undefined
-      // We don't have a user id here; award with session. If client sends bearer for auth user, downstream could expand; for now, rely on session merging later.
-      await awardForLead({ refereeSession: cc, refCookie: ref })
-    } catch {}
+    // No implicit referral awarding here anymore.
     // Also notify via existing email endpoint
     try {
       const proto = req.headers.get('x-forwarded-proto') || 'https'
