@@ -16,7 +16,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const viewedProperties = ViewedPropertiesService.getUserViewedProperties(currentUser.userId, limit);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Viewed properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const viewedProperties = ViewedPropertiesService.getUserViewedProperties(userIdNum, limit);
 
     // Parse property data for each viewed property
     const formattedProperties = viewedProperties.map(viewed => ({
@@ -64,8 +71,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Viewed properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
     const result = ViewedPropertiesService.addViewedProperty(
-      currentUser.userId,
+      userIdNum,
       property,
       viewDuration
     );
@@ -102,7 +116,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = ViewedPropertiesService.clearUserViewedProperties(currentUser.userId);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Viewed properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const result = ViewedPropertiesService.clearUserViewedProperties(userIdNum);
 
     if (!result.success) {
       return NextResponse.json(

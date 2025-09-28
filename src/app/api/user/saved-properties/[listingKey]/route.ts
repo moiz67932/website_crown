@@ -18,6 +18,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { action, notes, isFavorite } = body;
 
+    // Saved properties are stored in local SQLite and require a numeric user id
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
+
     if (action === 'update_notes') {
       if (notes === undefined) {
         return NextResponse.json(
@@ -27,7 +36,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
 
       const result = SavedPropertiesService.updatePropertyNotes(
-        currentUser.userId,
+        userIdNum,
         params.listingKey,
         notes
       );
@@ -46,7 +55,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
 
       const result = SavedPropertiesService.togglePropertyFavorite(
-        currentUser.userId,
+        userIdNum,
         params.listingKey,
         isFavorite
       );
@@ -83,7 +92,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const isSaved = SavedPropertiesService.isPropertySaved(currentUser.userId, params.listingKey);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved properties are not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const isSaved = SavedPropertiesService.isPropertySaved(userIdNum, params.listingKey);
 
     return NextResponse.json({
       success: true,

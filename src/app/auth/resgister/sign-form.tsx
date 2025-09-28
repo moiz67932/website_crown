@@ -21,6 +21,7 @@ export default function SignupForm() {
     email: "",
     password: "",
     dateOfBirth: "",
+    referralCode: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
@@ -71,7 +72,13 @@ export default function SignupForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            password: formData.password,
+            dateOfBirth: formData.dateOfBirth
+        }),
       })
 
       const data = await response.json()
@@ -89,8 +96,17 @@ export default function SignupForm() {
         return
       }
 
-      // Registration successful - refresh page to update auth state
-      window.location.href = "/"
+      // Registration successful. If referral code provided, attempt credit then proceed.
+      if (formData.referralCode) {
+        try {
+          await fetch('/api/referrals/track-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ referralCode: formData.referralCode })
+          })
+        } catch {}
+      }
+      window.location.href = "/" // refresh auth state
     } catch (err) {
       setError("Network error. Please try again.")
     } finally {
@@ -140,6 +156,22 @@ export default function SignupForm() {
               <p className="text-sm text-red-600">{fieldErrors.lastName}</p>
             )}
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="referralCode">Referral code (optional)</Label>
+          <Input
+            id="referralCode"
+            name="referralCode"
+            placeholder="ABC123"
+            value={formData.referralCode}
+            onChange={handleChange}
+            disabled={isLoading}
+            className={fieldErrors.referralCode ? "border-red-500" : ""}
+          />
+          {fieldErrors.referralCode && (
+            <p className="text-sm text-red-600">{fieldErrors.referralCode}</p>
+          )}
         </div>
 
         <div className="space-y-2">

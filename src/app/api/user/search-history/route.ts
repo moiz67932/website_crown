@@ -16,7 +16,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const searchHistory = SearchHistoryService.getUserSearchHistory(currentUser.userId, limit);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Search history is not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const searchHistory = SearchHistoryService.getUserSearchHistory(userIdNum, limit);
 
     // Parse search filters for each history item
     const formattedHistory = searchHistory.map(item => ({
@@ -63,8 +70,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Search history is not available for this account type' },
+        { status: 400 }
+      );
+    }
     const result = SearchHistoryService.addSearchHistory(
-      currentUser.userId,
+      userIdNum,
       searchQuery,
       searchFilters,
       resultsCount
@@ -102,7 +116,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = SearchHistoryService.clearUserSearchHistory(currentUser.userId);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Search history is not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const result = SearchHistoryService.clearUserSearchHistory(userIdNum);
 
     if (!result.success) {
       return NextResponse.json(

@@ -212,6 +212,40 @@ back/
 └── package.json          # Node.js dependencies
 ```
 
+## 🎁 Referrals (Simplified Code Entry)
+
+Referral tracking has been simplified: users manually enter a referral code during signup or on lead forms. No cookies, URL params, or visit tracking are used.
+
+Core behavior:
+
+- Each user gets a stable code (`referral_codes` table). If absent it is created on first `/api/referrals/me` call.
+- Signup form has an optional "Referral code" field; if valid the referrer gains one signup (idempotent per referred user).
+- Property/lead contact form has an optional "Referral code"; if valid the referrer gains one lead.
+- Counters (`signup_count`, `lead_count`) are stored directly on `referral_codes` for fast dashboard reads.
+
+Key tables:
+
+- `public.referral_codes (code, user_id, signup_count, lead_count)`
+- `public.referral_signups (referrer_code, referred_user_id)` unique pair prevents double counting.
+- `public.referral_leads (referrer_code, lead metadata...)`.
+
+API endpoints:
+
+- `GET /api/referrals/me` → `{ code, signup_count, lead_count, recent_signups, recent_leads }`.
+- `POST /api/referrals/track-signup` body `{ referralCode }` (auth) → credits signup if first time for that user.
+- `POST /api/referrals/track-lead` body `{ referralCode, name?, email?, phone?, propertyId? }` (public) → credits a lead.
+
+SQL quick checks:
+
+```sql
+select * from public.referral_codes order by created_at desc limit 5;
+select * from public.referral_signups order by created_at desc limit 5;
+select * from public.referral_leads order by created_at desc limit 5;
+```
+
+Legacy visit/event/reward logic has been removed from active code paths.
+
+
 ## 🔧 Development Workflow
 
 ### 1. Before Starting Development

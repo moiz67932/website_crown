@@ -6,7 +6,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-t
 const JWT_EXPIRES_IN = '7d'; // Token expires in 7 days
 
 export interface JWTPayload {
-  userId: number;
+  // userId can be a numeric id (e.g., local/admin = 0) or a Supabase UUID string
+  userId: number | string;
   email: string;
   name: string;
   isAdmin?: boolean;
@@ -28,12 +29,20 @@ export class AuthService {
   // Verify JWT token
   static verifyToken(token: string): JWTPayload | null {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload | { userId?: string | number };
-      // Ensure userId is a number for server-side usage
-      if (decoded && typeof (decoded as any).userId !== 'undefined') {
-        const raw = (decoded as any).userId;
-        const num = typeof raw === 'string' ? Number(raw) : raw;
-        if (!Number.isNaN(num)) (decoded as any).userId = num;
+      const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload | { userId?: unknown };
+      // Normalize or reject invalid userId values
+      if (!decoded || !Object.prototype.hasOwnProperty.call(decoded as any, 'userId')) {
+        return null;
+      }
+      const raw = (decoded as any).userId as unknown;
+      if (typeof raw === 'string') {
+        // purely digits -> number; otherwise keep string (UUIDs)
+        (decoded as any).userId = /^\d+$/.test(raw) ? Number(raw) : raw;
+      } else if (typeof raw === 'number') {
+        // ok
+      } else {
+        // null/undefined/object/etc -> invalid token
+        return null;
       }
       return decoded as JWTPayload;
     } catch (error) {

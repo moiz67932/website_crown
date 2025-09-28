@@ -1,14 +1,14 @@
 #!/usr/bin/env ts-node
 import 'dotenv/config'
-import { createClient } from '@supabase/supabase-js'
+import { supaServer } from '@/lib/supabase'
 import OpenAI from 'openai'
 import crypto from 'crypto'
 import { QdrantClient } from '@qdrant/js-client-rest'
 
 const SUPABASE_URL = process.env.SUPABASE_URL!
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
-const supa = createClient(SUPABASE_URL, SUPABASE_KEY!)
+const supa = supaServer()
 const qdrant = new QdrantClient({ url: process.env.QDRANT_URL!, apiKey: process.env.QDRANT_API_KEY! })
 const COLLECTION_CONTEXT = 'blog_context_v1'
 const VECTOR_SIZE = 1536

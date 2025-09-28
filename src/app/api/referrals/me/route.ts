@@ -1,14 +1,24 @@
 import { NextRequest } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabaseAuth } from '@/lib/supabase-auth'
+import { AuthService } from '@/lib/auth'
+import { getMyReferralOverview } from '@/lib/referrals'
 
 export async function GET(req: NextRequest) {
-  const supa = getSupabase()
-  if (!supa) return Response.json({ code: null, stats: null })
-  const id = req.cookies.get('cc_session')?.value || null
-  if (!id) return Response.json({ code: null, stats: null })
-  const { data: rows } = await supa.from('referral_codes').select('*').eq('user_id', id).limit(1)
-  const code = rows?.[0]?.code || null
-  // basic stats
-  const { data: refs } = await supa.from('referrals').select('id').eq('code', code).limit(1000)
-  return Response.json({ code, stats: { success: refs?.length || 0 } })
+  try {
+    const auth = getSupabaseAuth()
+    if (!auth) return Response.json({ error: 'supabase_unconfigured' }, { status: 500 })
+
+    const jwt = AuthService.getCurrentUser(req)
+    let userId: string | null = null
+    if (jwt?.email) {
+      const { data: u } = await auth.from('users').select('id').eq('email', jwt.email).maybeSingle()
+      userId = u?.id || null
+    }
+    if (!userId) return Response.json({ code: null, signup_count: 0, lead_count: 0, recent_signups: [], recent_leads: [] })
+
+    const overview = await getMyReferralOverview(userId)
+    return Response.json(overview)
+  } catch (e:any) {
+    return Response.json({ error: e?.message || 'server_error' }, { status: 500 })
+  }
 }

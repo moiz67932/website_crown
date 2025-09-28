@@ -6,7 +6,7 @@ import { toolSearchProperties, mortgageBreakdown, toolScheduleViewing, toolCreat
 import { logTurn, summarizeIfNeeded, ensureSession } from "@/lib/memory"
 import { qdrant } from "@/lib/qdrant"
 import { guardRateLimit } from "@/lib/rate-limit"
-import { getSupabase } from "@/lib/supabase"
+// Legacy referral award removed; explicit /api/referrals/track-lead handles attribution
 
 export async function POST(req: NextRequest) {
   // Rate limiting guard (per IP + path)
@@ -199,18 +199,7 @@ Use retrieved context where available. Be concise and helpful; for property sear
       message: (entities as any).message,
       meta,
     })
-    // Record referral event if cookie exists
-    try {
-      const ref = meta.ref
-      if (ref) {
-        const supa = getSupabase()
-        if (supa) {
-          await supa.from('referrals').insert({ code: ref, referred_cookie: getCookie('cc_session') })
-          const pts = Number(process.env.REFERRAL_REWARD_POINTS || 50)
-          await supa.from('referral_rewards').insert({ code: ref, points: pts, reason: 'Lead created' })
-        }
-      }
-    } catch {}
+    // No implicit referral awarding here anymore.
     // Also notify via existing email endpoint
     try {
       const proto = req.headers.get('x-forwarded-proto') || 'https'

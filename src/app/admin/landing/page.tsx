@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
 export default async function LandingAdmin({
   searchParams,
 }: {
-  searchParams?: { q?: string };
+  searchParams?: Promise<{ q?: string }>;
 }) {
-  const sp = searchParams || {};
+  const sp = searchParams ? await searchParams : {} as { q?: string };
   const q = (sp.q || "").trim();
 
   const supa = getSupabase();

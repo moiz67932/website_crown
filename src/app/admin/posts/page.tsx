@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function PostsAdmin({
   searchParams,
 }: {
-  searchParams?: { q?: string; status?: string };
+  searchParams?: Promise<{ q?: string; status?: string }>;
 }) {
-  const sp = searchParams || {};
+  const sp = searchParams ? await searchParams : ({} as { q?: string; status?: string });
   const q = (sp.q || "").trim();
   const status = (sp.status || "").trim();
 

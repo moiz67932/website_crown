@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { guardRateLimit } from '@/lib/rate-limit'
+// Legacy cookie-based referral lead awarding removed. Lead referral now explicit via /api/referrals/track-lead.
 
 type LeadPayload = any
 
@@ -106,6 +107,8 @@ export async function POST(req: NextRequest) {
     }
 
     await transporter.sendMail(mailOptions)
+
+    // (Referral credit, if any, is handled separately via /api/referrals/track-lead.)
 
     return NextResponse.json({ success: true })
   } catch (e: any) {

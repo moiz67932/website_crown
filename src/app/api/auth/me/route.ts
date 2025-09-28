@@ -16,11 +16,21 @@ export async function GET(request: NextRequest) {
 
     // Admin token case has userId 0 and doesn't exist in Supabase; handle gently
     let user = null as any
-    if (currentUser.isAdmin) {
+    if (currentUser.isAdmin || currentUser.userId === 0) {
       user = { created_at: new Date().toISOString(), updated_at: new Date().toISOString(), date_of_birth: null }
     } else {
-      // Get fresh user data from Supabase
-      user = await SupabaseAuthService.getUserById(String(currentUser.userId));
+      // Get fresh user data from Supabase. userId may be a UUID string or number.
+      const id = typeof currentUser.userId === 'number' ? String(currentUser.userId) : currentUser.userId
+      if (!id) {
+        return NextResponse.json(
+          { success: false, message: 'User not found' },
+          { status: 404 }
+        );
+      }
+      user = await SupabaseAuthService.getUserById(id);
+      if (!user && currentUser.email) {
+        user = await SupabaseAuthService.getUserByEmail(currentUser.email)
+      }
       if (!user) {
         return NextResponse.json(
           { success: false, message: 'User not found' },
@@ -32,7 +42,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        userId: currentUser.userId,
+  userId: currentUser.userId,
         name: currentUser.name,
         email: currentUser.email,
         isAdmin: !!currentUser.isAdmin,

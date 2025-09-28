@@ -13,7 +13,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const savedSearches = SavedSearchesService.getUserSavedSearches(currentUser.userId);
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved searches are not available for this account type' },
+        { status: 400 }
+      );
+    }
+    const savedSearches = SavedSearchesService.getUserSavedSearches(userIdNum);
 
     // Parse search criteria for each saved search
     const formattedSearches = savedSearches.map(search => ({
@@ -64,8 +71,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const userIdNum = typeof currentUser.userId === 'number' ? currentUser.userId : null
+    if (!userIdNum) {
+      return NextResponse.json(
+        { success: false, message: 'Saved searches are not available for this account type' },
+        { status: 400 }
+      );
+    }
     const result = SavedSearchesService.saveSearch(
-      currentUser.userId,
+      userIdNum,
       name,
       searchCriteria,
       alertFrequency

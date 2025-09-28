@@ -41,6 +41,14 @@ export function middleware(req: NextRequest) {
   const known = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid']
   const res = NextResponse.next()
   let wrote = false
+  // Ensure cc_session cookie exists (anonymous session tracking)
+  const CC_COOKIE = process.env.CC_SESSION_COOKIE_NAME || 'cc_session'
+  const ccExisting = req.cookies.get(CC_COOKIE)?.value
+  if (!ccExisting) {
+    const uuid = (globalThis as any).crypto?.randomUUID ? (globalThis as any).crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2,10)}`
+    res.cookies.set(CC_COOKIE, uuid, { path: '/', maxAge: 60*60*24*90, sameSite: 'lax' })
+    wrote = true
+  }
   for (const k of known) {
     const v = req.nextUrl.searchParams.get(k)
     if (v) {
@@ -48,12 +56,7 @@ export function middleware(req: NextRequest) {
       wrote = true
     }
   }
-  // referral code capture
-  const ref = req.nextUrl.searchParams.get('ref')
-  if (ref) {
-    res.cookies.set('ref', ref, { path: '/', maxAge: 60*60*24*90 })
-    wrote = true
-  }
+  // (Referrals simplified) Removed legacy ?ref= capture and visit beacon.
 
   // Assign AB test cookie (client-side code can read it)
   if (process.env.AB_TEST_ENABLED === 'true') {
