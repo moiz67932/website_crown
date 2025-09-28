@@ -249,7 +249,7 @@ export default function PropertyStatistics({
             <div className="h-[120px] flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
+                  {/* <Pie
                     data={stats.statusDistribution}
                     dataKey="value"
                     nameKey="name"
@@ -266,7 +266,7 @@ export default function PropertyStatistics({
                     }}
                     labelLine={false}
                     paddingAngle={5}
-                  />
+                  /> */}
 
                   <Tooltip
                     formatter={(value: number, name: string) => [
