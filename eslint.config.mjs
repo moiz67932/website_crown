@@ -1,14 +1,17 @@
-// Flat ESLint config for Next.js 15+
-// Reference: https://nextjs.org/docs/app/building-your-application/configuring/eslint
-import next from 'eslint-config-next';
+// eslint.config.mjs
+import js from "@eslint/js";
+import nextPlugin from "@next/eslint-plugin-next";
+import tseslint from "typescript-eslint";
 
 export default [
-  // Spread Next.js recommended config (includes JS/TS/React rules)
-  ...next,
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  ...nextPlugin.configs["core-web-vitals"],
+
   {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
   },
 ];
