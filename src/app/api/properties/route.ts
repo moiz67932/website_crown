@@ -1,140 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchProperties, PropertySearchParams } from '@/lib/db/property-repo';
+import { getProperties } from '@/lib/db/properties';
 import { deriveDisplayName } from '@/lib/display-name';
-
-// Using Postgres backend now
-
-// Removed legacy Trestle helpers – Postgres is the data source.
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
-  console.log('🏠 Properties API: Fetching from Postgres...');
-    
-    // Extract query parameters
-  const city = searchParams.get('city');
-    const state = searchParams.get('state');
+    const limit = Number(searchParams.get('limit') || '18');
+    const offset = Number(searchParams.get('offset') || '0');
+    const city = searchParams.get('city') || undefined;
+    const state = searchParams.get('state') || undefined;
     const minPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined;
     const maxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined;
     const minBedrooms = searchParams.get('minBedrooms') ? Number(searchParams.get('minBedrooms')) : undefined;
     const maxBedrooms = searchParams.get('maxBedrooms') ? Number(searchParams.get('maxBedrooms')) : undefined;
     const minBathrooms = searchParams.get('minBathrooms') ? Number(searchParams.get('minBathrooms')) : undefined;
     const maxBathrooms = searchParams.get('maxBathrooms') ? Number(searchParams.get('maxBathrooms')) : undefined;
-    const propertyType = searchParams.get('propertyType');
-    const hasPool = searchParams.get('hasPool') === 'true';
-    const hasView = searchParams.get('hasView') === 'true';
-    const keywords = searchParams.get('keywords');
-    const limit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 20;
-    const offset = searchParams.get('offset') ? Number(searchParams.get('offset')) : 0;
+    const propertyType = searchParams.get('propertyType') || undefined;
+    const sortParam = (searchParams.get('sort') || 'updated') as any;
 
-    // If user passes a full state name as 'city' (e.g. california), treat it as state filter to broaden results
-    const knownStates: Record<string, string> = { california: 'CA', 'new york': 'NY', texas: 'TX', florida: 'FL' };
-    const normalizedCity = city?.toLowerCase();
-    const cityLooksLikeState = normalizedCity && knownStates[normalizedCity];
+    const { properties, total } = await getProperties(limit, offset, {
+      city, state, minPrice, maxPrice, minBedrooms, maxBedrooms, minBathrooms, maxBathrooms, propertyType
+    }, sortParam);
 
-    const result = await searchProperties({
-      city: cityLooksLikeState ? undefined : (city || undefined),
-      state: state || (cityLooksLikeState ? knownStates[normalizedCity!] : undefined),
-      minPrice,
-      maxPrice,
-      minBedrooms,
-      maxBedrooms,
-      minBathrooms,
-      maxBathrooms,
-      propertyType: propertyType === 'All' ? undefined : propertyType || undefined,
-      hasPool: hasPool || undefined,
-      hasView: hasView || undefined,
-      limit,
-      offset,
-      sort: 'updated'
-    });
-
-  const data = result.properties.map((p: any) => {
-      // Attempt to derive a better address line (similar to detail endpoint logic) if not present
-      let baseAddress = (p as any).address || (p as any).cleaned_address || '';
-      if (!baseAddress) {
-        const raw = (p as any).raw_json;
-        try {
-          let parsed = raw;
-            if (parsed && typeof parsed === 'string') { try { parsed = JSON.parse(parsed); } catch {} }
-            if (parsed) {
-              baseAddress = parsed.UnparsedAddress || parsed.unparsed_address || '';
-              if (!baseAddress) {
-                const num = parsed.StreetNumber || parsed.street_number || parsed.StreetNumberNumeric || '';
-                const name = parsed.StreetName || parsed.street_name || '';
-                const suffix = parsed.StreetSuffix || parsed.street_suffix || '';
-                const unit = parsed.UnitNumber || parsed.unit_number || '';
-                const pieces = [num, name, suffix].filter(Boolean).join(' ').trim();
-                if (pieces) baseAddress = pieces + (unit ? ` #${unit}` : '');
-              }
-            }
-        } catch {}
-      }
-      const item = {
+    const data = properties.map(p => {
+      const bedrooms = (p as any).bedrooms_total ?? (p as any).bedrooms ?? null;
+      return {
         id: p.listing_key,
         listing_key: p.listing_key,
-        image: p.main_photo_url,
-        property_type: p.property_type,
-        address: baseAddress,
-        location: p.city,
-        county: p.state_or_province,
-        list_price: p.list_price || 0,
-        bedrooms: p.bedrooms_total || 0,
-        bathrooms: p.bathrooms_total || 0,
-        living_area_sqft: p.living_area || 0,
-        lot_size_sqft: p.lot_size_sq_ft || p.lot_size_sqft || 0,
-        status: p.status === 'Active' ? 'FOR SALE' : (p.status || 'UNKNOWN'),
-        statusColor: p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
-        publicRemarks: (p as any).public_remarks || '',
-        favorite: false,
         _id: p.listing_key,
-        images: [],
+        image: p.main_photo_url,
         main_image_url: p.main_photo_url,
-        photosCount: p.photos_count || 0,
+        property_type: p.property_type,
+        list_price: p.list_price ?? 0,
+        bedrooms,
+        bathrooms: p.bathrooms_total ?? 0,
+        living_area_sqft: p.living_area ?? null,
+        lot_size_sqft: (p as any).lot_size_sqft ?? null,
         city: p.city,
-        state: p.state_or_province,
-        zip_code: (p as any).postal_code || '',
-        latitude: p.latitude || 0,
-        longitude: p.longitude || 0,
-        createdAt: p.created_at || new Date().toISOString(),
-        updatedAt: p.updated_at || new Date().toISOString()
+        state: (p as any).state,
+        zip_code: (p as any).postal_code ?? '',
+        status: p.status,
+        photosCount: p.photos_count ?? 0,
+        latitude: p.latitude ?? null,
+        longitude: p.longitude ?? null,
+        display_name: deriveDisplayName({
+          listing_key: p.listing_key,
+          address: (p as any).unparsed_address || (p as any).street_address || '',
+          city: p.city,
+          state: (p as any).state,
+          raw_json: (p as any).raw_json
+        })
       };
-      // Add display_name so frontend can use directly
-      (item as any).display_name = deriveDisplayName({
-        listing_key: p.listing_key,
-        address: item.address,
-        city: item.city,
-        state: item.state,
-        county: item.county,
-        raw_json: (p as any).raw_json
-      });
-      return item;
     });
 
     return NextResponse.json({
       success: true,
       data,
-      pagination: {
-        total: result.total,
-        limit,
-        offset,
-        hasMore: result.hasMore,
-        totalEstimated: (result as any).totalEstimated || false
-      }
+      pagination: { total, limit, offset, hasMore: offset + limit < total }
     });
-
   } catch (error: any) {
-    console.error('❌ Error fetching properties from Postgres:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch properties (database)',
-        message: error.message 
-      },
-      { status: 500 }
-    );
+    console.error('[api/properties] error', error);
+    return NextResponse.json({ success: false, error: 'Failed to fetch properties', message: error.message }, { status: 500 });
   }
 }
-
-// POST handler removed (legacy SQLite / Trestle path). Re-add if needed with PG search.

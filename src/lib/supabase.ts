@@ -20,6 +20,16 @@ export function supaBrowser() {
   return createClient(url, anon)
 }
 
+// SERVER (read-only public): prefer anon key for publicly exposable data (safer than service role)
+export function supaPublic() {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anon) {
+    throw new Error('Missing SUPABASE_URL/NEXT_PUBLIC_SUPABASE_URL or SUPABASE_ANON_KEY/NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  }
+  return createClient(url, anon, { auth: { persistSession: false } })
+}
+
 // Backwards-compatible alias used in other parts of the codebase
 export function getSupabase() {
   return supaServer()
