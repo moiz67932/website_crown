@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 
 // Create a local axios instance for this specific hook
 const apiClient = axios.create({
-  baseURL: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001',
+  // Point directly to Express API service via public env variable
+  baseURL: process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001'),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

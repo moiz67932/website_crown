@@ -1,3 +1,98 @@
+-- ============================================================================
+-- supabase-schema.sql
+-- Purpose: Temporary mirror of Cloud SQL `public.properties` table in Supabase.
+-- Safe to re-run: uses IF NOT EXISTS and creates indexes only if absent.
+-- ============================================================================
+-- NOTE: If re-importing large data sets, you can drop the NON-PK indexes first
+-- (statements provided at bottom in a comment) to speed bulk ingest, then
+-- recreate them by re-running this file.
+-- ============================================================================
+
+begin;
+
+create schema if not exists public;
+
+create table if not exists public.properties (
+    listing_key           text primary key,
+    list_price            numeric,
+    city                  text,
+    state                 text,
+    bedrooms              integer,
+    bathrooms_total       numeric(4,1), -- allows half baths (e.g., 2.5)
+    living_area           integer,      -- square feet
+    lot_size_sqft         integer,
+    property_type         text,
+    status                text,
+    hidden                boolean default false,
+    photos_count          integer,
+    latitude              numeric(9,6),
+    longitude             numeric(9,6),
+    main_photo_url        text,
+    modification_ts       timestamptz not null,
+    first_seen_ts         timestamptz not null,
+    last_seen_ts          timestamptz,
+    year_built            integer,
+    days_on_market        integer,
+    price_change_ts       timestamptz,
+    previous_list_price   numeric,
+    current_price         numeric,
+    pool_features         text,
+    view                  text,
+    view_yn               boolean,
+    waterfront_yn         boolean,
+    heating               text,
+    cooling               text,
+    parking_features      text,
+    garage_spaces         numeric(5,2),
+    public_remarks        text,
+    media_urls            jsonb,
+    raw_json              jsonb
+);
+
+-- ============================================================================
+-- Indexes (ONLY those explicitly requested). All created CONCURRENTLY where
+-- possible in case you run them after data load. Partial indexes optimize
+-- “active, not hidden” queries used by the app.
+-- ============================================================================
+
+-- 1. modification_ts (active, not hidden)
+create index if not exists idx_properties_modification_ts_active
+    on public.properties (modification_ts desc)
+    where status = 'Active' and hidden = false;
+
+-- 2. first_seen_ts (active, not hidden)
+create index if not exists idx_properties_first_seen_ts_active
+    on public.properties (first_seen_ts desc)
+    where status = 'Active' and hidden = false;
+
+-- 3. listing_key DESC (explicit even though PK exists, matches requested)
+create index if not exists idx_properties_listing_key_desc
+    on public.properties (listing_key desc);
+
+-- 4. lower(city)
+create index if not exists idx_properties_city_lower
+    on public.properties (lower(city));
+
+-- 5. lower(state)
+create index if not exists idx_properties_state_lower
+    on public.properties (lower(state));
+
+-- 6. composite (list_price, bedrooms, bathrooms_total)
+create index if not exists idx_properties_price_beds_baths
+    on public.properties (list_price, bedrooms, bathrooms_total);
+
+commit;
+
+-- ============================================================================
+-- Optional: Statements to drop secondary indexes before massive re-import:
+-- (Uncomment & run BEFORE data load if performance needed, then re-run file)
+-- drop index if exists idx_properties_modification_ts_active;
+-- drop index if exists idx_properties_first_seen_ts_active;
+-- drop index if exists idx_properties_listing_key_desc;
+-- drop index if exists idx_properties_city_lower;
+-- drop index if exists idx_properties_state_lower;
+-- drop index if exists idx_properties_price_beds_baths;
+-- ============================================================================
 -- Supabase Database Schema for Authentication
 -- Run this in your Supabase SQL editor to set up the users table
 

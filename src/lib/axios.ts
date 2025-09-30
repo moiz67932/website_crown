@@ -2,7 +2,8 @@ import axios from 'axios'
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.crowncoastalhomes.com', // Set your default API base URL
+  // Use new Express API base URL; fallback to existing default domain if env not set
+  baseURL: process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.crowncoastalhomes.com',
   timeout: 10000, // Optional: request timeout in ms
   headers: {
     'Content-Type': 'application/json',
