@@ -608,6 +608,9 @@ import React, {
   forwardRef,
 } from "react"
 import { PropertyCards } from "@/components/PropertyCards"
+import { ChatMessageRenderer } from "@/components/chat/ChatMessageRenderer"
+import type { ChatUISpec } from "@/lib/ui-spec"
+import { stripBasicMarkdownArtifacts } from "@/lib/sanitize"
 
 type ChatCoreProps = {
   defaultLang?: string
@@ -635,6 +638,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
   const [msg, setMsg] = useState("")
   const [log, setLog] = useState<ChatMsg[]>([])
   const [cards, setCards] = useState<any[]>([])
+  const [uiSpec, setUiSpec] = useState<ChatUISpec | null>(null)
   const [speakEnabledUncontrolled, setSpeakEnabledUncontrolled] = useState(!!props.autoplayVoice)
   const speakEnabled = props.speakEnabled ?? speakEnabledUncontrolled
   const setSpeakEnabled = props.onSpeakEnabledChange ?? setSpeakEnabledUncontrolled
@@ -730,11 +734,66 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-        }).then((r) => r.json())
-        const answer: string = r.answer || ""
-        setLog((l) => [...l, { from: "bot", text: answer }])
-        if (r.result?.items) setCards(r.result.items)
-        if (speakEnabled) speak(answer)
+        })
+        setUiSpec(null)
+
+        const ct = r.headers.get("Content-Type") || ""
+        if (ct.includes("application/json")) {
+          const json = await r.json()
+          if (json && json.version === "1.0" && Array.isArray(json.blocks)) {
+            setUiSpec(json as ChatUISpec)
+            // Optional: add a lightweight confirmation message
+            setLog((l) => [...l, { from: "bot", text: "Here are contact options." }])
+          } else {
+            const answer: string = json.answer || ""
+            setLog((l) => [...l, { from: "bot", text: answer }])
+            if (json.result?.items) setCards(json.result.items)
+            if (speakEnabled) speak(answer)
+          }
+          return
+        }
+
+        // Stream text/plain
+        if (ct.includes("text/plain") && r.body) {
+          const reader = r.body.getReader()
+          const decoder = new TextDecoder()
+          let acc = ""
+          let botIndex = -1
+          setLog((l) => {
+            const next = l.slice()
+            botIndex = next.length
+            next.push({ from: "bot", text: "" })
+            return next
+          })
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            const chunk = decoder.decode(value)
+            acc += chunk
+            const cleaned = stripBasicMarkdownArtifacts(acc)
+            setLog((l) => {
+              const next = l.slice()
+              if (botIndex >= 0 && next[botIndex]) next[botIndex] = { from: "bot", text: cleaned }
+              return next
+            })
+          }
+          if (speakEnabled) speak(acc)
+          return
+        }
+
+        // Fallback: try JSON
+        try {
+          const json = await r.json()
+          const answer: string = json.answer || ""
+          setLog((l) => [...l, { from: "bot", text: answer }])
+          if (json.result?.items) setCards(json.result.items)
+          if (speakEnabled) speak(answer)
+        } catch {
+          const textResp = await r.text()
+          const cleaned = stripBasicMarkdownArtifacts(textResp)
+          setLog((l) => [...l, { from: "bot", text: cleaned }])
+          if (speakEnabled) speak(cleaned)
+        }
       } catch {
         setLog((l) => [...l, { from: "bot", text: "Sorry, something went wrong." }])
       }
@@ -1067,6 +1126,11 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
             </div>
           </div>
         ))}
+        {uiSpec && (
+          <div className="pt-2">
+            <ChatMessageRenderer spec={uiSpec} />
+          </div>
+        )}
         {cards.length > 0 && (
           <div className="pt-2" data-cc-one-col={props.hideHeader ? "1" : undefined}>
             <PropertyCards items={cards} />
@@ -1116,7 +1180,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
             value={msg}
             onChange={(e) => setMsg(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Ask about homes, neighborhoods, or mortgages..."
+            placeholder="Ask about homes, listings, or viewings..."
             aria-label="Chat input"
           />
           <button
