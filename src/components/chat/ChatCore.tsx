@@ -1062,7 +1062,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-white">
         {log.map((m, i) => (
           <div key={i} className={m.from === "user" ? "text-right" : ""}>
-            <div className={`inline-block px-3 py-2 rounded-lg ${m.from === "user" ? "bg-blue-600 text-white" : "bg-gray-100"}`}>
+            <div className={`inline-block px-3 py-2 rounded-lg ${m.from === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"}`}>
               {m.text}
             </div>
           </div>
@@ -1079,7 +1079,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
         ) : null}
       </div>
 
-      <div className="sticky bottom-0 z-10 p-3 border-t bg-white">
+  <div className="sticky bottom-0 z-10 p-3 border-t bg-white text-gray-900">
         {callOn && (
           <div className="mb-2 flex justify-end">
             <button
@@ -1112,7 +1112,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
         )}
         <div className="flex gap-2">
           <input
-            className="flex-1 border rounded-lg px-3 py-2"
+            className="flex-1 border rounded-lg px-3 py-2 bg-white text-gray-900 placeholder:text-gray-500"
             value={msg}
             onChange={(e) => setMsg(e.target.value)}
             onKeyDown={onKeyDown}

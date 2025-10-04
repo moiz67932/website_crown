@@ -1,16 +1,46 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
 import { ensureReferralCode, recordSignup } from '@/lib/referrals'
-import { supaServer, supaBrowser } from '@/lib/supabase'
+import { supaServer, supaBrowser, supaPublic } from '@/lib/supabase'
 
-// Unified server auth client (service role) - never expose to browser
-export function getSupabaseAuth(): SupabaseClient | null {
+// Prefer explicit clients based on need
+// Admin/service-role client (NEVER expose to browser)
+export function getSupabaseAdmin(): SupabaseClient | null {
   try {
     return supaServer() as SupabaseClient
   } catch (e) {
-    console.error('Supabase server init failed', e)
+    console.error('Supabase server (service role) init failed', e)
     return null
   }
+}
+
+// Public/anon client for read-only operations and auth flows
+export function getSupabasePublic(): SupabaseClient | null {
+  try {
+    return supaPublic() as SupabaseClient
+  } catch (e) {
+    console.error('Supabase public (anon) init failed', e)
+    return null
+  }
+}
+
+// Backward compatibility: historical name used across API routes
+export function getSupabaseAuth(): SupabaseClient | null {
+  return getSupabasePublic()
+}
+
+// Reduce repeated noisy logs if keys are invalid
+let loggedInvalidKey = false
+function logIfInvalidKey(error: any, context: string) {
+  const msg = error?.message || ''
+  if (/invalid api key/i.test(msg)) {
+    if (!loggedInvalidKey) {
+      loggedInvalidKey = true
+      console.warn(`[supabase] ${context}: Invalid API key. Check NEXT_PUBLIC_SUPABASE_ANON_KEY and/or SUPABASE_SERVICE_ROLE_KEY match SUPABASE_URL.`)
+    }
+    return true
+  }
+  return false
 }
 
 // User interface matching the existing structure
@@ -52,7 +82,7 @@ export class SupabaseAuthService {
     userData: CreateUserData
   ): Promise<{ success: boolean; message: string; userId?: string }> {
     try {
-      const supabase = getSupabaseAuth()
+      const supabase = getSupabaseAdmin()
       if (!supabase) {
         return { success: false, message: 'Supabase not configured' }
       }
@@ -100,7 +130,9 @@ export class SupabaseAuthService {
 
           userId = existing.id
         } else {
-          console.error('Auth admin createUser error:', adminErr)
+          if (!logIfInvalidKey(adminErr, 'createUser')) {
+            console.error('Auth admin createUser error:', adminErr)
+          }
           return {
             success: false,
             message: adminErr?.message || 'Failed to create user',
@@ -145,7 +177,9 @@ export class SupabaseAuthService {
         )
 
       if (upsertErr) {
-        console.error('Profile upsert error:', upsertErr)
+        if (!logIfInvalidKey(upsertErr, 'createUser upsert profile')) {
+          console.error('Profile upsert error:', upsertErr)
+        }
       }
 
       // 3) Referral attribution
@@ -196,7 +230,8 @@ export class SupabaseAuthService {
     loginData: LoginData
   ): Promise<{ success: boolean; message: string; user?: Omit<User, 'password'> }> {
     try {
-      const supabase = getSupabaseAuth()
+      // Use public client for end-user login
+      const supabase = getSupabasePublic()
       if (!supabase) {
         return { success: false, message: 'Supabase not configured' }
       }
@@ -208,7 +243,9 @@ export class SupabaseAuthService {
         })
 
       if (authError) {
-        console.error('Auth login error:', authError)
+        if (!logIfInvalidKey(authError, 'loginUser')) {
+          console.error('Auth login error:', authError)
+        }
         return { success: false, message: 'Invalid email or password' }
       }
 
@@ -220,10 +257,12 @@ export class SupabaseAuthService {
         .from('users')
         .select('*')
         .eq('id', authData.user.id)
-        .single()
+        .maybeSingle()
 
       if (profileError || !profileData) {
-        console.error('Profile fetch error:', profileError)
+        if (profileError && !logIfInvalidKey(profileError, 'loginUser profile fetch')) {
+          console.error('Profile fetch error:', profileError)
+        }
         return { success: false, message: 'User profile not found' }
       }
 
@@ -246,7 +285,7 @@ export class SupabaseAuthService {
     id: string
   ): Promise<Omit<User, 'password'> | null> {
     try {
-      const supabase = getSupabaseAuth()
+      const supabase = getSupabasePublic()
       if (!supabase) return null
 
       if (!id || id === 'null' || id === 'undefined' || id === 'NaN')
@@ -256,9 +295,11 @@ export class SupabaseAuthService {
         .from('users')
         .select('*')
         .eq('id', id)
-        .single()
+        .maybeSingle()
       if (error || !data) {
-        console.error('Error fetching user:', error)
+        if (error && !logIfInvalidKey(error, 'getUserById')) {
+          console.error('Error fetching user:', error)
+        }
         return null
       }
       return data
@@ -272,15 +313,17 @@ export class SupabaseAuthService {
     email: string
   ): Promise<Omit<User, 'password'> | null> {
     try {
-      const supabase = getSupabaseAuth()
+      const supabase = getSupabasePublic()
       if (!supabase || !email) return null
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
-        .single()
+        .maybeSingle()
       if (error || !data) {
-        if (error) console.error('Error fetching user by email:', error)
+        if (error && !logIfInvalidKey(error, 'getUserByEmail')) {
+          console.error('Error fetching user by email:', error)
+        }
         return null
       }
       return data
@@ -294,7 +337,7 @@ export class SupabaseAuthService {
     request: NextRequest
   ): Promise<{ userId: string; email: string; name: string } | null> {
     try {
-      const supabase = getSupabaseAuth()
+      const supabase = getSupabasePublic()
       if (!supabase) return null
 
       const authHeader = request.headers.get('authorization')
@@ -303,11 +346,11 @@ export class SupabaseAuthService {
         request.cookies.get('supabase-auth-token')?.value
       if (!token) return null
 
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser(token)
-      if (error || !user) return null
+      const { data: { user }, error } = await supabase.auth.getUser(token)
+      if (error || !user) {
+        logIfInvalidKey(error, 'getCurrentUser')
+        return null
+      }
 
       const profile = await this.getUserById(user.id)
       if (!profile) return null
@@ -327,13 +370,15 @@ export class SupabaseAuthService {
     token: string
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const supabase = getSupabaseAuth()
+      const supabase = getSupabasePublic()
       if (!supabase)
         return { success: false, message: 'Supabase not configured' }
 
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error('Logout error:', error)
+        if (!logIfInvalidKey(error, 'logoutUser')) {
+          console.error('Logout error:', error)
+        }
         return { success: false, message: 'Logout failed' }
       }
       return { success: true, message: 'Logged out successfully' }
@@ -391,7 +436,8 @@ export class SupabaseAuthService {
     }
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const supabase = getSupabaseAuth()
+      // Server-side privileged update
+      const supabase = getSupabaseAdmin()
       if (!supabase)
         return { success: false, message: 'Supabase not configured' }
 
