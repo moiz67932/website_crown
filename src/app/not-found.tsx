@@ -1,11 +1,10 @@
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Page Not Found | Real Estate",
+  title: "404 - Page Not Found",
   description: "The page you are looking for does not exist.",
 }
 

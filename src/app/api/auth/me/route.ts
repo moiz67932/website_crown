@@ -31,18 +31,22 @@ export async function GET(request: NextRequest) {
       if (!user && currentUser.email) {
         user = await SupabaseAuthService.getUserByEmail(currentUser.email)
       }
+      // If Supabase misconfigured (e.g., invalid API key), still return a minimal user from token
       if (!user) {
-        return NextResponse.json(
-          { success: false, message: 'User not found' },
-          { status: 404 }
-        );
+        user = {
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          date_of_birth: null,
+          // Optional marker for UI/debugging
+          _fallback: true,
+        }
       }
     }
 
     return NextResponse.json({
       success: true,
       user: {
-  userId: currentUser.userId,
+        userId: currentUser.userId,
         name: currentUser.name,
         email: currentUser.email,
         isAdmin: !!currentUser.isAdmin,
