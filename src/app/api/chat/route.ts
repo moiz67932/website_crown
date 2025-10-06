@@ -4,9 +4,14 @@ export const dynamic = "force-dynamic"
 import { performance } from "node:perf_hooks"
 import { getOpenAI } from "@/lib/singletons"
 import { maybeRetrieveContext } from "@/lib/retrieval"
-import { detectIntent } from "@/lib/intents"
+import { detectIntent, type DialogState } from "@/lib/intents"
 import { getAgentPrimary } from "../../../config/agents"
 import type { ChatUISpec } from "@/lib/ui-spec"
+import { parseSearchFilters, summarizeFilters } from "@/lib/search/parse"
+import { semanticSearchWithFilters } from "@/lib/search/query"
+import { SYSTEM_CHATBOT } from "@/lib/system-prompts"
+import { SupabaseAuthService } from "@/lib/supabase-auth"
+import { ensureSessionForUser, appendMessage, getDialogState, updateDialogState } from "@/lib/chat/store"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 const enc = new TextEncoder()
@@ -52,8 +57,31 @@ export async function POST(req: Request) {
     })
   }
 
-  // FAST PATH: greetings / tiny inputs → no LLM, no DB, return instantly
-  if (isTiny(message)) {
+  // Auth: determine user (Bearer token or cookie) to enable persistence
+  let userId: string | null = null
+  try {
+    // Use SupabaseAuthService which reads bearer/cookie tokens
+    // @ts-ignore - NextRequest not available in this context; emulate minimal object
+    const fakeReq = { headers: req.headers, cookies: { get: () => null } } as any
+    const u = await SupabaseAuthService.getCurrentUser(fakeReq)
+    userId = u?.userId || null
+  } catch {}
+
+  // Load dialog state if logged in
+  let sessionId: string | null = null
+  let dialog: DialogState = { awaiting: "none" }
+  if (userId) {
+    sessionId = await ensureSessionForUser(userId)
+    dialog = (await getDialogState(sessionId)) as DialogState
+  }
+
+  // Intent routing (fast)
+  const tIntent = performance.now()
+  const intent = detectIntent(message)
+  marks.route = performance.now() - tIntent
+
+  // Guard: Greeting fast-path only when empty conversation (no session) or no awaiting confirmation
+  if (isTiny(message) && (!sessionId || dialog.awaiting === "none")) {
     const resp = { answer: "Hi! How can I help?" }
     marks.total = performance.now() - t0
     return new Response(JSON.stringify(resp), {
@@ -65,10 +93,100 @@ export async function POST(req: Request) {
     })
   }
 
-  // Intent routing (fast)
-  const tIntent = performance.now()
-  const intent = detectIntent(message)
-  marks.route = performance.now() - tIntent
+  // Handle confirmations first
+  if (intent.type === "confirm" && dialog.awaiting === "contact_agent_confirm") {
+    const agent = getAgentPrimary()
+    const propertyId = body?.propertyId || body?.property_id
+    const propertySlug = body?.propertySlug || body?.property_slug
+    const propertyTitle = body?.propertyTitle || body?.property_title || body?.property_snapshot?.address || body?.property_snapshot?.title
+    const slugOrId = propertySlug || propertyId
+    const contactForm = slugOrId ? `/properties/${encodeURIComponent(String(slugOrId))}#contact` : "/contact"
+    const scheduleViewing = slugOrId ? `/properties/${encodeURIComponent(String(slugOrId))}#schedule` : "/schedule-viewing"
+    const digits = (s?: string) => String(s || "").replace(/\D+/g, "")
+    const defaultMsg = `Hi ${agent.name.split(" ")[0]}, I'm interested in a property.`
+    const spec: ChatUISpec = {
+      version: "1.0",
+      blocks: [
+        {
+          type: "contact_agent",
+          agent: { name: agent.name, title: agent.title, phone: agent.phone, whatsApp: agent.whatsApp, email: agent.email, photoUrl: agent.photoUrl },
+          context: slugOrId ? { propertyId: propertyId ? String(propertyId) : undefined, propertySlug: propertySlug ? String(propertySlug) : undefined, propertyTitle: propertyTitle ? String(propertyTitle) : undefined } : undefined,
+          cta: { call: `tel:${agent.phone}`, whatsapp: agent.whatsApp ? `https://wa.me/${digits(agent.whatsApp)}?text=${encodeURIComponent(defaultMsg)}` : undefined, email: agent.email ? `mailto:${agent.email}?subject=${encodeURIComponent("Buying Inquiry")}` : undefined, contactForm, scheduleViewing },
+          note: "For buying inquiries, Reza is your primary point of contact.",
+        },
+      ],
+    }
+    if (sessionId) await updateDialogState(sessionId, { awaiting: "none", lastIntent: "contact_agent" })
+    marks.total = performance.now() - t0
+    return new Response(JSON.stringify(spec), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Server-Timing": serverTimingHeader(marks) } })
+  }
+
+  // Property search branch
+  if (intent.type === "property_search") {
+    try {
+      const filters = parseSearchFilters(message)
+      const page = Math.max(1, Number(body?.page || filters.page || 1))
+      const pageSize = Math.min(24, Math.max(1, Number(body?.pageSize || filters.pageSize || 6)))
+      const offset = (page - 1) * pageSize
+      console.log('[vector-search] chat route: property_search start', { message, filters, page, pageSize, offset })
+      const cards = await semanticSearchWithFilters(message, { ...filters, page, pageSize }, pageSize)
+      console.log('[vector-search] chat route: property_search results', { count: cards.length })
+      let spec: ChatUISpec
+      if (cards.length === 0) {
+        const agent = getAgentPrimary()
+        spec = {
+          version: '1.0',
+          blocks: [
+            { type: 'notice', kind: 'info', text: 'No matches found. Try adjusting filters or contact our agent for curated options.' },
+            {
+              type: 'contact_agent',
+              agent: { name: agent.name, title: agent.title, phone: agent.phone, whatsApp: agent.whatsApp, email: agent.email, photoUrl: agent.photoUrl },
+              cta: { call: `tel:${agent.phone}`, whatsapp: agent.whatsApp ? `https://wa.me/${agent.whatsApp.replace(/\D/g, '')}` : undefined, email: agent.email ? `mailto:${agent.email}` : undefined, contactForm: '/contact', scheduleViewing: '/schedule-viewing' },
+            },
+          ],
+        }
+      } else {
+        spec = {
+          version: "1.0",
+          blocks: [
+            {
+              type: "property_results",
+              querySummary: summarizeFilters(filters),
+              totalFound: cards.length,
+              page,
+              pageSize,
+              items: cards,
+              nextPage: false,
+              rawQuery: message,
+            },
+          ],
+        }
+      }
+      if (sessionId) {
+        await appendMessage(sessionId, 'user', { text: message })
+        await appendMessage(sessionId, 'assistant', spec)
+        await updateDialogState(sessionId, { awaiting: 'none', lastSearchFilters: filters, lastIntent: 'property_search' })
+      }
+      marks.total = performance.now() - t0
+      return new Response(JSON.stringify(spec), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Server-Timing": serverTimingHeader(marks) } })
+    } catch (e: any) {
+      console.error('[vector-search] chat route: property_search error', e?.message || e)
+      const agent = getAgentPrimary()
+      const spec: ChatUISpec = {
+        version: '1.0',
+        blocks: [
+          { type: 'notice', kind: 'error', text: 'Search is unavailable right now. You can contact our agent for help.' },
+          {
+            type: 'contact_agent',
+            agent: { name: agent.name, title: agent.title, phone: agent.phone, whatsApp: agent.whatsApp, email: agent.email, photoUrl: agent.photoUrl },
+            cta: { call: `tel:${agent.phone}`, whatsapp: agent.whatsApp ? `https://wa.me/${agent.whatsApp.replace(/\D/g, '')}` : undefined, email: agent.email ? `mailto:${agent.email}` : undefined, contactForm: '/contact', scheduleViewing: '/schedule-viewing' },
+          },
+        ],
+      }
+      marks.total = performance.now() - t0
+      return new Response(JSON.stringify(spec), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Server-Timing": serverTimingHeader(marks) } })
+    }
+  }
 
   if (intent.type === "contact_agent") {
     const agent = getAgentPrimary()
@@ -111,14 +229,13 @@ export async function POST(req: Request) {
       ],
     }
 
+    if (sessionId) {
+      await appendMessage(sessionId, 'user', { text: message })
+      await appendMessage(sessionId, 'assistant', spec)
+      await updateDialogState(sessionId, { awaiting: 'contact_agent_confirm', lastIntent: 'contact_agent' })
+    }
     marks.total = performance.now() - t0
-    return new Response(JSON.stringify(spec), {
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-        "Server-Timing": serverTimingHeader(marks),
-      },
-    })
+    return new Response(JSON.stringify(spec), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Server-Timing": serverTimingHeader(marks) } })
   }
 
   // Optional: cheap heuristic to decide if we should do retrieval
@@ -138,17 +255,8 @@ export async function POST(req: Request) {
   // Streaming LLM for other intents
   const openai = getOpenAI()
 
-  const SYSTEM_PROMPT = [
-    "You are the Majid Real Estate website assistant.",
-    "Be friendly and helpful. Answer user questions about buying, areas, listings, pricing, steps, and next actions.",
-    "Prefer concise, practical answers in plain text (avoid Markdown styling).",
-    "When the user explicitly asks to talk to someone, schedule a tour, or requests contact info, suggest contacting our lead agent Reza and include the available actions.",
-    "Avoid giving long generic vendor lists (mortgage brokers, attorneys, title, inspectors); instead, offer to connect through Reza if needed.",
-    "If unsure or out-of-scope, politely say so and suggest contacting Reza for assistance.",
-  ].join(" ")
-
   const messages: ChatCompletionMessageParam[] = [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: SYSTEM_CHATBOT },
   ]
   if (retrievedContext) messages.push({ role: "system", content: `Context:\n${retrievedContext}` })
   messages.push({ role: "user", content: message })

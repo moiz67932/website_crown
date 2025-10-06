@@ -1,7 +1,8 @@
 "use client"
 import React from "react"
-import type { ChatUISpec, ContactAgentBlock, NoticeBlock, DividerBlock } from "@/lib/ui-spec"
+import type { ChatUISpec, ContactAgentBlock, NoticeBlock, DividerBlock, PropertyResultsBlock } from "@/lib/ui-spec"
 import { ContactAgentCard } from "./blocks/ContactAgentCard"
+import { PropertyResults } from "./blocks/PropertyResults"
 
 function Notice({ kind, text }: { kind: NoticeBlock["kind"]; text: string }) {
   const map: Record<string, string> = {
@@ -21,6 +22,8 @@ export function ChatMessageRenderer({ spec }: { spec: ChatUISpec }) {
     <div className="space-y-3">
       {spec.blocks.map((b, i) => {
         switch (b.type) {
+          case "property_results":
+            return <PropertyResults key={i} {...(b as PropertyResultsBlock)} />
           case "contact_agent":
             return <ContactAgentCard key={i} {...(b as ContactAgentBlock)} />
           case "notice":
