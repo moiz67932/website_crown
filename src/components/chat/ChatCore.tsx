@@ -1084,6 +1084,61 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
     if (callTimerRef.current) window.clearInterval(callTimerRef.current)
   }, [])
 
+  // Load last session (logged-in users only)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch('/api/chat/session', { method: 'GET' })
+        if (!r.ok) return
+        const { messages } = await r.json()
+        if (cancelled || !Array.isArray(messages) || !messages.length) return
+        // Reconstruct a minimal view: show text turns and the last UI spec if any
+        const textTurns: { from: 'user' | 'bot'; text: string }[] = []
+        let lastSpec: any = null
+        for (const m of messages) {
+          const role = m.role
+          const content = m.content
+          if (content && typeof content === 'object' && content.version === '1.0') {
+            lastSpec = content
+          } else if (content && typeof content === 'object' && typeof content.text === 'string') {
+            if (role === 'user' || role === 'assistant') textTurns.push({ from: role === 'user' ? 'user' : 'bot', text: content.text })
+          } else if (typeof content === 'string') {
+            if (role === 'user' || role === 'assistant') textTurns.push({ from: role === 'user' ? 'user' : 'bot', text: content })
+          }
+        }
+        if (textTurns.length) setLog(textTurns)
+        if (lastSpec) setUiSpec(lastSpec)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  // Handle load more requests from PropertyResults
+  useEffect(() => {
+    const handler = (e: any) => {
+      const detail = e?.detail || {}
+      const nextPage = Number(detail.page || 2)
+      const rawQuery = String(detail.rawQuery || '')
+      if (rawQuery) {
+        // Re-send the same query text; server will use page param
+        // Note: we include page in body by embedding it into the message format
+        // The server reads body.page as well if client sets it explicitly.
+        ;(async () => {
+          const body: any = { message: rawQuery, session_id: session, lang: defaultLang, page: nextPage }
+          const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+          const ct = r.headers.get('Content-Type') || ''
+          if (ct.includes('application/json')) {
+            const json = await r.json()
+            if (json?.version === '1.0') setUiSpec(json)
+          }
+        })().catch(() => {})
+      }
+    }
+    window.addEventListener('cc-chat-load-more' as any, handler as any)
+    return () => window.removeEventListener('cc-chat-load-more' as any, handler as any)
+  }, [defaultLang, session])
+
   // ====== UI ======
   return (
     <div className="flex flex-col h-full min-h-0">

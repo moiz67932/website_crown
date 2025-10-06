@@ -1,4 +1,5 @@
-export type DetectedIntent = { type: "contact_agent" | "other"; meta?: Record<string, any> }
+export type IntentType = "greet" | "property_search" | "contact_agent" | "schedule_viewing" | "confirm" | "other"
+export type DetectedIntent = { type: IntentType; meta?: Record<string, any> }
 
 const CONTACT_PATTERNS: RegExp[] = [
   /\b(contact|agent|realtor|broker)\b/i,
@@ -16,8 +17,24 @@ const CONTACT_PATTERNS: RegExp[] = [
 export function detectIntent(message: string): DetectedIntent {
   const t = (message || "").trim().toLowerCase()
   if (!t) return { type: "other" }
-  for (const re of CONTACT_PATTERNS) {
-    if (re.test(t)) return { type: "contact_agent" }
+  if (/^(hi|hello|hey|salam|aoa)$/.test(t)) return { type: "greet" }
+  if (/^(yes|yep|yeah|sure|ok|okay|please do it|do it)$/.test(t)) return { type: "confirm" }
+
+  const searchKeywords = [
+    "show", "find", "list", "top", "best", "properties", "homes", "condos", "listings",
+    "under", "below", "less than", "with pool", "pool", "ocean", "view", "garage", "new", "cheap"
+  ]
+  if (searchKeywords.some(k => t.includes(k)) || /\$?\d+([mk]|\s*million|\s*k)?/.test(t)) {
+    return { type: "property_search" }
   }
+
+  for (const re of CONTACT_PATTERNS) { if (re.test(t)) return { type: "contact_agent" } }
+  if (/(schedule|book|viewing|tour|visit)/.test(t)) return { type: "schedule_viewing" }
   return { type: "other" }
+}
+
+export type DialogState = {
+  awaiting?: "contact_agent_confirm" | "apply_filters_confirm" | "none"
+  lastSearchFilters?: Record<string, any>
+  lastIntent?: IntentType
 }
