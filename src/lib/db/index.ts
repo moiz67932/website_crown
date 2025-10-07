@@ -1,6 +1,2 @@
-// export * from './connection';
-// export * from './property-repo';
-
-
-export { getPgPool } from './connection';
+export { pool } from './connection';
 export * from './property-repo';

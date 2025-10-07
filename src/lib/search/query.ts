@@ -26,7 +26,6 @@ type RawRow = {
   postal_code?: string | null
   list_price?: number | null
   bedrooms?: number | null
-  bedrooms_total?: number | null
   bathrooms_total?: number | null
   living_area?: number | null
   photos?: any | null
@@ -65,12 +64,12 @@ export async function searchProperties(filters: SearchFilters, offset = 0, limit
     dlog('RPC search_properties_basic FAILED. Falling back to direct properties query. Filters:', filters, 'offset:', offset, 'limit:', safeLimit)
     let q = client
       .from('properties')
-      .select('id, slug, address, city, state:state_or_province, postal_code, list_price, bedrooms_total, bathrooms_total, living_area, photos, main_photo_url', { count: 'exact' })
+      .select('id, slug, address, city, state:state_or_province, postal_code, list_price, bedrooms, bathrooms_total, living_area, photos, main_photo_url', { count: 'exact' })
 
     if (filters.city) q = q.ilike('city', filters.city)
     if (filters.maxPrice) q = q.lte('list_price', filters.maxPrice)
     if (filters.minPrice) q = q.gte('list_price', filters.minPrice)
-    if (filters.beds) q = q.gte('bedrooms_total', filters.beds)
+  if (filters.beds) q = q.gte('bedrooms', filters.beds)
     if (filters.baths) q = q.gte('bathrooms_total', filters.baths)
 
     const { data, error, count } = await q.range(offset, offset + safeLimit - 1)
@@ -81,11 +80,11 @@ export async function searchProperties(filters: SearchFilters, offset = 0, limit
         dlog('Retrying direct query without bathrooms filter')
         let q2 = client
           .from('properties')
-          .select('id, slug, address, city, state:state_or_province, postal_code, list_price, bedrooms_total, living_area, photos, main_photo_url', { count: 'exact' })
+          .select('id, slug, address, city, state:state_or_province, postal_code, list_price, bedrooms, living_area, photos, main_photo_url', { count: 'exact' })
         if (filters.city) q2 = q2.ilike('city', filters.city)
         if (filters.maxPrice) q2 = q2.lte('list_price', filters.maxPrice)
         if (filters.minPrice) q2 = q2.gte('list_price', filters.minPrice)
-        if (filters.beds) q2 = q2.gte('bedrooms_total', filters.beds)
+  if (filters.beds) q2 = q2.gte('bedrooms', filters.beds)
         const { data: d2, error: e2, count: c2 } = await q2.range(offset, offset + safeLimit - 1)
         if (e2) throw e2
         const cards = (d2 || []).map(toCard)
@@ -119,7 +118,7 @@ export function toCard(r: RawRow): PropertyCard {
     state: r.state ?? undefined,
     postalCode: r.postal_code ?? undefined,
     price: r.list_price ?? undefined,
-    bedrooms: r.bedrooms_total ?? r.bedrooms ?? undefined,
+  bedrooms: r.bedrooms ?? undefined,
     bathrooms: r.bathrooms_total ?? undefined,
     livingArea: r.living_area ?? undefined,
     photoUrl,
@@ -187,7 +186,7 @@ export async function semanticSearchWithFilters(
             state: p.state ?? undefined,
             postalCode: p.postal_code ?? undefined,
             price: p.list_price ?? p.price ?? undefined,
-            bedrooms: p.bedrooms ?? p.bedrooms_total ?? undefined,
+            bedrooms: p.bedrooms ?? undefined,
             bathrooms: p.bathrooms_total ?? p.bathrooms ?? undefined,
             livingArea: p.living_area ?? undefined,
             photoUrl: p.photo_url ?? p.photoUrl ?? p.main_photo_url ?? p.hero_image_url ?? null,

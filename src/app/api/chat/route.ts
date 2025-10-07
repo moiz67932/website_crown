@@ -12,6 +12,7 @@ import { semanticSearchWithFilters } from "@/lib/search/query"
 import { SYSTEM_CHATBOT } from "@/lib/system-prompts"
 import { SupabaseAuthService } from "@/lib/supabase-auth"
 import { ensureSessionForUser, appendMessage, getDialogState, updateDialogState } from "@/lib/chat/store"
+import { getPropertyByListingKey } from "@/lib/db/properties"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 const enc = new TextEncoder()
@@ -258,6 +259,37 @@ export async function POST(req: Request) {
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: SYSTEM_CHATBOT },
   ]
+  // Property-aware context injection
+  try {
+    const pid = body?.property_id || body?.propertyId
+    const psnap = body?.property_snapshot || body?.propertySnapshot
+    let ctx: any = null
+    if (psnap && typeof psnap === 'object') ctx = psnap
+    else if (pid) {
+      const row = await getPropertyByListingKey(String(pid))
+      if (row) ctx = row
+    }
+    if (ctx) {
+      const fields: string[] = []
+      const push = (k: string, v: any) => {
+        if (v === null || v === undefined || v === '' || (typeof v === 'number' && !isFinite(v))) return
+        fields.push(`${k}: ${typeof v === 'number' ? v.toLocaleString?.() ?? String(v) : String(v)}`)
+      }
+      push('Listing Key', ctx.listing_key || ctx.id)
+      push('Address', ctx.address || ctx.title)
+      push('City', ctx.city)
+      push('State', ctx.state || ctx.county)
+      push('Price', ctx.list_price || ctx.price)
+      push('Bedrooms', ctx.bedrooms)
+      push('Bathrooms', ctx.bathrooms_total || ctx.bathrooms)
+      push('Living Area (sqft)', ctx.living_area_sqft || ctx.living_area)
+      push('Lot Size (sqft)', ctx.lot_size_sqft)
+      push('Year Built', ctx.year_built)
+      if (ctx.public_remarks) push('Description', String(ctx.public_remarks).slice(0, 600))
+      const summary = `Current Property Context:\n${fields.join('\n')}`
+      messages.push({ role: 'system', content: summary })
+    }
+  } catch {}
   if (retrievedContext) messages.push({ role: "system", content: `Context:\n${retrievedContext}` })
   messages.push({ role: "user", content: message })
 

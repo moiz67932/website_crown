@@ -1,8 +1,7 @@
 // lib/properties.ts
-import { getPgPool } from "@/lib/db/connection"
+import { pool } from "@/lib/db/connection"
 
 export async function getPropertyByListingKey(listingKey: string) {
-  const pool = await getPgPool()
   const { rows } = await pool.query(
     `SELECT listing_key,
             unparsed_address,

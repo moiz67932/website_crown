@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { ChatCore, ChatCoreHandle } from "./ChatCore"
+import type { ChatOpenAndSendPayload } from "@/contexts/chat-bus"
 
 type Snapshot = {
   id?: string
@@ -62,6 +63,8 @@ export function ChatWidget() {
   const chatRef = useRef<ChatCoreHandle | null>(null)
   const [callOn, setCallOn] = useState(false)
   const [callSeconds, setCallSeconds] = useState(0)
+  // Track dynamic property context overrides sent via bus
+  const [propContext, setPropContext] = useState<{ propertyId?: string; snapshot?: Snapshot }>({})
 
   // prepare portal container
   const container = useMemo(() => {
@@ -85,6 +88,44 @@ export function ChatWidget() {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
+  // Bridge: listen to global chat-bus events
+  useEffect(() => {
+    const onOpenOnly = () => setOpen(true)
+    const onCloseOnly = () => setOpen(false)
+    const onSetContext = (e: Event) => {
+      const detail = (e as CustomEvent<any>).detail || {}
+      const id = detail.listing_key || detail.id
+      setPropContext({ propertyId: id, snapshot: detail })
+    }
+    const onOpenAndSend = async (e: Event) => {
+      const detail = (e as CustomEvent<ChatOpenAndSendPayload>).detail
+      if (!detail) return
+      // Optional context override
+      if (detail.propertyContext) {
+        const id = detail.propertyContext.listing_key || detail.propertyContext.id
+        setPropContext({ propertyId: id, snapshot: detail.propertyContext as any })
+      }
+      // Open widget and send via ChatCore input by programmatic value set
+      setOpen(true)
+      // Send message by invoking ChatCore's internal input handler
+      try {
+        // ChatCore exposes no direct sendMessage; simulate by dispatching a custom event it listens to
+        window.dispatchEvent(new CustomEvent("cc-chatcore-send", { detail: { text: detail.message } }))
+      } catch {}
+    }
+
+    window.addEventListener("cc-open-chat", onOpenOnly as any)
+    window.addEventListener("cc-close-chat", onCloseOnly as any)
+    window.addEventListener("cc-set-property-context", onSetContext as any)
+    window.addEventListener("cc-open-chat-and-send", onOpenAndSend as any)
+    return () => {
+      window.removeEventListener("cc-open-chat", onOpenOnly as any)
+      window.removeEventListener("cc-close-chat", onCloseOnly as any)
+      window.removeEventListener("cc-set-property-context", onSetContext as any)
+      window.removeEventListener("cc-open-chat-and-send", onOpenAndSend as any)
+    }
   }, [])
 
   // Focus management: when open, focus first input found within
@@ -172,8 +213,8 @@ export function ChatWidget() {
         <ChatCore
           ref={chatRef}
           defaultLang="en"
-          propertyId={propertyId}
-          propertySnapshot={snapshot}
+          propertyId={propContext.propertyId || propertyId}
+          propertySnapshot={propContext.snapshot || snapshot}
           hideHeader
           speakEnabled={speakEnabled}
           onSpeakEnabledChange={setSpeakEnabled}

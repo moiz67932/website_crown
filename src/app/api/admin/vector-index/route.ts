@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const normalized = properties.map((p: any) => ({
       ListingKey: p.ListingKey || p.listing_key || p.id,
       ListPrice: p.ListPrice || p.list_price,
-      BedroomsTotal: p.BedroomsTotal || p.bedrooms || p.bedrooms_total,
+      BedroomsTotal: p.BedroomsTotal || p.bedrooms,
       BathroomsTotalInteger: p.BathroomsTotalInteger || p.bathrooms || p.bathrooms_total,
       LivingArea: p.LivingArea || p.living_area || p.living_area_sqft || p.living_area_sq_ft,
       LotSizeSquareFeet: p.LotSizeSquareFeet || p.lot_size_sq_ft || p.lot_size_sqft,

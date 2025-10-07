@@ -188,7 +188,15 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     })()}
                     <div className="flex items-center gap-3 mb-4">
                       <Badge className={`px-4 py-2 rounded-2xl font-bold text-white border-none shadow-lg ${propertyData.property_type === 'ResidentialLease' ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-emerald-500 to-emerald-600'}`}>{propertyData.property_type === 'ResidentialLease' ? 'FOR RENT' : 'FOR SALE'}</Badge>
-                      <span className="text-white/80 text-sm font-medium">{propertyData.days_on_market} days on market</span>
+                      {(() => {
+                        const daysOnMarket = Number((propertyData as any).days_on_market ?? 0);
+                        const formattedDOM = Number.isFinite(daysOnMarket) && daysOnMarket > 0 ? `${daysOnMarket} days` : 'N/A';
+                        return (
+                          <span className="text-white/80 text-sm font-medium" title={daysOnMarket > 0 && daysOnMarket < 7 ? 'recently listed' : undefined}>
+                            {formattedDOM}
+                          </span>
+                        )
+                      })()}
                     </div>
                     <h1 className="text-3xl lg:text-4xl xl:text-5xl font-display font-bold text-white mb-3 leading-tight">
                       {(propertyData.address || '').replace(/^0+\s+/, '').trim()}
@@ -348,8 +356,17 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
                     <TrendingUp className="h-8 w-8 text-orange-500 mx-auto mb-3" />
                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">Days on Market</div>
-                    <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">{propertyData.days_on_market || 'N/A'}</div>
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{propertyData.days_on_market < 30 ? 'recently listed' : 'established listing'}</div>
+                    {(() => {
+                      const daysOnMarket = Number((propertyData as any).days_on_market ?? 0);
+                      const formattedDOM = Number.isFinite(daysOnMarket) && daysOnMarket > 0 ? `${daysOnMarket}` : 'N/A';
+                      const label = Number.isFinite(daysOnMarket) && daysOnMarket > 0 ? (daysOnMarket < 7 ? 'recently listed' : 'established listing') : 'N/A';
+                      return (
+                        <>
+                          <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">{formattedDOM}</div>
+                          <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{label}</div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -362,10 +379,33 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                   <div className="glass-card p-6 rounded-2xl hover-lift">
                     <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2 mb-4"><Building className="h-5 w-5 text-accent-500" />Listing Details</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span className="text-neutral-600 dark:text-neutral-400">MLS Status:</span><span className="font-semibold text-neutral-900 dark:text-neutral-100">{propertyData.mls_status}</span></div>
-                      <div className="flex justify-between"><span className="text-neutral-600 dark:text-neutral-400">Days on Market:</span><span className="font-semibold text-neutral-900 dark:text-neutral-100">{(() => { const now = new Date(); const onMarket = new Date(propertyData.on_market_timestamp); const diff = now.getTime() - onMarket.getTime(); const days = Math.floor(diff / (1000*3600*24)); return days < 1 ? `${Math.floor(diff / (1000*3600))} hours` : `${days} days`; })()}</span></div>
-                    </div>
+                    {(() => {
+                      const mlsStatusRaw = (propertyData as any).mls_status as string | null | undefined;
+                      const mlsStatus = (mlsStatusRaw && String(mlsStatusRaw).trim()) || 'N/A';
+                      const statusLc = (mlsStatusRaw || '').toLowerCase();
+                      const statusClass = statusLc.includes('active')
+                        ? 'text-green-500'
+                        : statusLc.includes('pending')
+                          ? 'text-orange-500'
+                          : statusLc.includes('closed') || statusLc.includes('sold')
+                            ? 'text-gray-400'
+                            : 'text-white';
+                      const daysOnMarket = Number((propertyData as any).days_on_market ?? 0);
+                      const formattedDOM = Number.isFinite(daysOnMarket) && daysOnMarket > 0 ? `${daysOnMarket} days` : 'N/A';
+                      const isRecent = Number.isFinite(daysOnMarket) && daysOnMarket > 0 && daysOnMarket < 7;
+                      return (
+                        <div className="space-y-4">
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">MLS Status:</p>
+                            <p className={`font-medium ${statusClass}`}>{mlsStatus}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">Days on Market:</p>
+                            <p className="font-medium text-white" title={isRecent ? 'recently listed' : undefined}>{formattedDOM}{isRecent ? <span className="ml-2 inline-block text-xs text-emerald-300 align-middle">recently listed</span> : null}</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="glass-card p-6 rounded-2xl hover-lift">
                     <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2 mb-4"><Square className="h-5 w-5 text-gold-500" />Utilities & Systems</h3>

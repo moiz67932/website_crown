@@ -345,7 +345,7 @@
 
 
 
-import { getPgPool } from "./connection";
+import { pool } from "./connection";
 
 export interface PropertyListItem {
   listing_key: string;
@@ -442,7 +442,7 @@ function withTimeout<T>(
 export async function getPropertyByListingKey(
   listingKey: string
 ): Promise<PropertyDetailRow | null> {
-  const pool = getPgPool();
+  
   const { rows } = await pool.query(
     `SELECT * FROM properties WHERE listing_key = $1`,
     [listingKey]
@@ -461,7 +461,7 @@ export async function getPropertyByListingKey(
 export async function searchProperties(params: PropertySearchParams) {
   const limit = Math.min(Math.max(params.limit ?? 20, 1), 50);
   const offset = Math.max(params.offset ?? 0, 0);
-  const pool = getPgPool();
+  
 
   const values: any[] = [];
   const where: string[] = ["status = 'Active'", "(hidden IS NULL OR hidden = false)"];
