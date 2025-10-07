@@ -1,6 +1,7 @@
 "use client"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { PropertyCards } from "@/components/PropertyCards"
+import { openChatAndSend, setPropertyContext } from "@/contexts/chat-bus"
 
 type Msg = { from: "user" | "bot"; text: string }
 
@@ -18,23 +19,37 @@ export function PropertyChat({
   const [cards, setCards] = useState<any[]>([])
   const session = useMemo(() => crypto.randomUUID(), [])
 
+  // Keep the floating chat property context in sync on mount and when property changes
+  useEffect(() => {
+    try { setPropertyContext({ listing_key: propertyId, ...(snapshot || {}) }) } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyId])
+
   async function send() {
-    if (!msg.trim()) return
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: msg,
-        session_id: session,
-        lang,
-        property_id: propertyId,
-        property_snapshot: snapshot,
-      }),
-    })
-    const r = await res.json()
-    setLog((l) => [...l, { from: "user", text: msg }, { from: "bot", text: r.answer }])
+    const text = msg.trim()
+    if (!text) return
+    // 1) Dispatch to floating chat: open and send; include property context
+    openChatAndSend(text, { listing_key: propertyId, ...(snapshot || {}) })
+    // 2) Also show a local echo in this mini box so user sees immediate feedback
+    setLog((l) => [...l, { from: "user", text }])
     setMsg("")
-    if (r.result?.items) setCards(r.result.items)
+    // 3) Optionally also call API here to keep this mini log alive with bot reply (non-blocking)
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          session_id: session,
+          lang,
+          property_id: propertyId,
+          property_snapshot: snapshot,
+        }),
+      })
+      const r = await res.json()
+      if (r?.answer) setLog((l) => [...l, { from: "bot", text: r.answer }])
+      if (r?.result?.items) setCards(r.result.items)
+    } catch {}
   }
 
   return (

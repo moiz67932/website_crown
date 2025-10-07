@@ -639,6 +639,10 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
   const [log, setLog] = useState<ChatMsg[]>([])
   const [cards, setCards] = useState<any[]>([])
   const [uiSpec, setUiSpec] = useState<ChatUISpec | null>(null)
+  const [isThinking, setIsThinking] = useState(false)
+  const [showIndicator, setShowIndicator] = useState(false) // delayed mount + min visible
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const indicatorTimers = useRef<{ delay?: number; min?: number }>({})
   const [speakEnabledUncontrolled, setSpeakEnabledUncontrolled] = useState(!!props.autoplayVoice)
   const speakEnabled = props.speakEnabled ?? speakEnabledUncontrolled
   const setSpeakEnabled = props.onSpeakEnabledChange ?? setSpeakEnabledUncontrolled
@@ -722,6 +726,13 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
       const t = (text || "").trim()
       if (!t) return
       setLog((l) => [...l, { from: "user", text: t }])
+      // Begin thinking with delay and minimum visible time
+      try {
+        setIsThinking(true)
+        // show after 200ms
+        indicatorTimers.current.delay && clearTimeout(indicatorTimers.current.delay)
+        indicatorTimers.current.delay = window.setTimeout(() => setShowIndicator(true), 200)
+      } catch {}
       try {
         const body: any = {
           message: t,
@@ -740,6 +751,8 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
         const ct = r.headers.get("Content-Type") || ""
         if (ct.includes("application/json")) {
           const json = await r.json()
+          // complete
+          setIsThinking(false)
           if (json && json.version === "1.0" && Array.isArray(json.blocks)) {
             setUiSpec(json as ChatUISpec)
             // Optional: add a lightweight confirmation message
@@ -755,6 +768,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
 
         // Stream text/plain
         if (ct.includes("text/plain") && r.body) {
+          // while streaming, keep thinking on; it will stop after stream ends
           const reader = r.body.getReader()
           const decoder = new TextDecoder()
           let acc = ""
@@ -777,6 +791,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
               return next
             })
           }
+          setIsThinking(false)
           if (speakEnabled) speak(acc)
           return
         }
@@ -784,18 +799,21 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
         // Fallback: try JSON
         try {
           const json = await r.json()
+          setIsThinking(false)
           const answer: string = json.answer || ""
           setLog((l) => [...l, { from: "bot", text: answer }])
           if (json.result?.items) setCards(json.result.items)
           if (speakEnabled) speak(answer)
         } catch {
           const textResp = await r.text()
+          setIsThinking(false)
           const cleaned = stripBasicMarkdownArtifacts(textResp)
           setLog((l) => [...l, { from: "bot", text: cleaned }])
           if (speakEnabled) speak(cleaned)
         }
       } catch {
         setLog((l) => [...l, { from: "bot", text: "Sorry, something went wrong." }])
+        setIsThinking(false)
       }
     },
     [defaultLang, props.propertyId, props.propertySnapshot, session, speakEnabled]
@@ -813,12 +831,68 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
     }
   }, [msg, isSending, sendToChat])
 
+  // Programmatic send hook: listen for app-wide event used by ChatWidget bus
+  useEffect(() => {
+    const onExternalSend = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text ?? ""
+      const t = String(text || "").trim()
+      if (!t) return
+      // Enqueue without touching local input state
+      ;(async () => {
+        try { await sendToChat(t) } catch {}
+      })()
+    }
+    window.addEventListener("cc-chatcore-send" as any, onExternalSend as any)
+    return () => window.removeEventListener("cc-chatcore-send" as any, onExternalSend as any)
+  }, [sendToChat])
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault()
       send()
     }
   }
+
+  // Manage delayed show and minimum 1s visibility, with smooth fade-out
+  useEffect(() => {
+    if (isThinking) {
+      // ensure we keep min visible once shown
+      if (showIndicator) {
+        indicatorTimers.current.min && clearTimeout(indicatorTimers.current.min)
+        indicatorTimers.current.min = window.setTimeout(() => {
+          // allow hide after 1s
+        }, 1000)
+      }
+    } else {
+      // thinking finished; if indicator is visible, keep for >=1s
+      if (showIndicator) {
+        // If no min timer exists, create one for 1s before hiding
+        const hide = () => setShowIndicator(false)
+        if (indicatorTimers.current.min) {
+          const t = window.setTimeout(hide, 150) // small fade buffer
+          indicatorTimers.current.min = undefined
+          indicatorTimers.current.delay && clearTimeout(indicatorTimers.current.delay)
+          indicatorTimers.current.delay = undefined
+          return () => clearTimeout(t)
+        } else {
+          const t = window.setTimeout(() => setShowIndicator(false), 1000)
+          return () => clearTimeout(t)
+        }
+      } else {
+        // not visible yet; cancel pending delay
+        indicatorTimers.current.delay && clearTimeout(indicatorTimers.current.delay)
+        indicatorTimers.current.delay = undefined
+      }
+    }
+    return () => {}
+  }, [isThinking, showIndicator])
+
+  // Auto-scroll to bottom when thinking or new messages
+  useEffect(() => {
+    const el = listRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [log, showIndicator])
 
   // ====== Call mode (mic + STT) ======
   const [callOn, setCallOn] = useState(false)
@@ -1173,7 +1247,7 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
         </div>
       )}
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-white">
+      <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-white">
         {log.map((m, i) => (
           <div key={i} className={m.from === "user" ? "text-right" : ""}>
             <div className={`inline-block px-3 py-2 rounded-lg ${m.from === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"}`}>
@@ -1181,6 +1255,18 @@ export const ChatCore = forwardRef<ChatCoreHandle, ChatCoreProps>(function ChatC
             </div>
           </div>
         ))}
+        {showIndicator && (
+          <div className="flex items-start">
+            <div className="inline-block px-3 py-2 rounded-2xl bg-gray-100 text-gray-900 dark:bg-gray-800/80 dark:text-gray-100 transition-opacity duration-200">
+              {/* three dots */}
+              <div className="flex items-center space-x-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-600 dark:bg-gray-300 animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-600 dark:bg-gray-300 animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-600 dark:bg-gray-300 animate-bounce" />
+              </div>
+            </div>
+          </div>
+        )}
         {uiSpec && (
           <div className="pt-2">
             <ChatMessageRenderer spec={uiSpec} />

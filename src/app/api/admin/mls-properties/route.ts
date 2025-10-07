@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPgPool } from '@/lib/db/connection'
+import { pool } from '@/lib/db/connection'
+export const runtime = 'nodejs'
 
 // Admin API for properties managed in Postgres (MLS import).
 // Supports: PATCH { listing_key | id, hidden?: boolean } to hide/unhide
@@ -21,7 +22,7 @@ export async function PATCH(req: NextRequest) {
     const updates: Record<string, any> = {}
     if (typeof body.hidden === 'boolean') updates.hidden = body.hidden
     if (!Object.keys(updates).length) return NextResponse.json({ ok: false, error: 'no updates provided' }, { status: 400 })
-    const pool = await getPgPool()
+    
     const whereCol = idInfo.by === 'listing_key' ? 'listing_key' : 'id'
     const sql = `UPDATE properties SET ${Object.keys(updates).map((k, i) => `${k} = $${i+1}`).join(', ')} WHERE ${whereCol} = $${Object.keys(updates).length + 1}`
     const values = [...Object.values(updates), idInfo.value]
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       const id = (form.get('id') || form.get('listing_key') || '').toString()
       if (!id) return NextResponse.json({ ok: false, error: 'id or listing_key required' }, { status: 400 })
       try {
-        const pool = await getPgPool()
+        
         // Try delete by listing_key first then id
         const res = await pool.query('DELETE FROM properties WHERE listing_key = $1 OR id::text = $1', [id])
         return NextResponse.json({ ok: true, deleted: res.rowCount })
@@ -59,7 +60,7 @@ export async function DELETE(req: NextRequest) {
     const body = await req.json().catch(() => ({}))
     const idInfo = normalizeId(body)
     if (!idInfo) return NextResponse.json({ ok: false, error: 'listing_key or id required' }, { status: 400 })
-    const pool = await getPgPool()
+    
     const whereCol = idInfo.by === 'listing_key' ? 'listing_key' : 'id'
     const sql = `DELETE FROM properties WHERE ${whereCol} = $1`
     await pool.query(sql, [idInfo.value])

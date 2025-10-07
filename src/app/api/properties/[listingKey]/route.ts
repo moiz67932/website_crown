@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPropertyByListingKey } from '@/lib/db/properties';
 import { deriveDisplayName } from '@/lib/display-name';
+export const runtime = "nodejs";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ listingKey: string }> }) {
   try {
@@ -34,12 +35,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ lis
       latitude: row.latitude,
       longitude: row.longitude,
       property_type: row.property_type,
-      bedrooms: (row as any).bedrooms_total ?? (row as any).bedrooms ?? 0,
+      bedrooms: (row as any).bedrooms ?? 0,
       bathrooms: row.bathrooms_total ?? 0,
       living_area_sqft: row.living_area ?? null,
       lot_size_sqft: (row as any).lot_size_sqft ?? null,
       year_built: (row as any).year_built ?? null,
       status: row.status,
+      mls_status: (row as any).mls_status ?? null,
       days_on_market: (row as any).days_on_market ?? null,
       public_remarks: (row as any).public_remarks ?? (row as any).raw_json?.PublicRemarks ?? '',
       main_photo_url: images[0] || null,

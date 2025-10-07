@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProperties } from '@/lib/db/properties';
 import { deriveDisplayName } from '@/lib/display-name';
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     }, sortParam);
 
     const data = properties.map(p => {
-      const bedrooms = (p as any).bedrooms_total ?? (p as any).bedrooms ?? null;
+      const bedrooms = (p as any).bedrooms ?? null;
       return {
         id: p.listing_key,
         listing_key: p.listing_key,
@@ -32,6 +33,8 @@ export async function GET(request: NextRequest) {
         main_image_url: p.main_photo_url,
         property_type: p.property_type,
         list_price: p.list_price ?? 0,
+        days_on_market: (p as any).days_on_market ?? null,
+        mls_status: (p as any).mls_status ?? null,
         bedrooms,
         bathrooms: p.bathrooms_total ?? 0,
         living_area_sqft: p.living_area ?? null,

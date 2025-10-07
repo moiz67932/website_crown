@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { supaPublic } from '@/lib/supabase';
+import { z } from "zod";
+import { pool } from "@/lib/db/connection";
 
 // ---------------- Types ----------------
 export const PropertySchema = z.object({
@@ -8,13 +8,13 @@ export const PropertySchema = z.object({
   city: z.string().nullable(),
   state: z.string().nullable(),
   postal_code: z.string().nullable().optional(),
-  bedrooms: z.number().nullable().optional(), // some rows use bedrooms vs bedrooms_total
-  bedrooms_total: z.number().nullable().optional(),
+  bedrooms: z.number().nullable().optional(),
   bathrooms_total: z.number().nullable(),
   living_area: z.number().nullable(),
   lot_size_sqft: z.number().nullable().optional(),
   property_type: z.string().nullable(),
   status: z.string().nullable(),
+  mls_status: z.string().nullable().optional(),
   hidden: z.boolean().nullable().optional(),
   photos_count: z.number().nullable().optional(),
   latitude: z.number().nullable().optional(),
@@ -25,8 +25,12 @@ export const PropertySchema = z.object({
   last_seen_ts: z.string().nullable().optional(),
   year_built: z.number().nullable().optional(),
   public_remarks: z.string().nullable().optional(),
+  // NEW: days on market fields
+  days_on_market: z.number().nullable().optional(),
+  cumulative_days_on_market: z.number().nullable().optional(),
+  // misc
   media_urls: z.any().optional(),
-  raw_json: z.any().optional()
+  raw_json: z.any().optional(),
 });
 
 export type Property = z.infer<typeof PropertySchema>;
@@ -43,87 +47,185 @@ export interface PropertyFilters {
   propertyType?: string;
 }
 
-export type PropertySort = 'price_asc' | 'price_desc' | 'newest' | 'updated';
-
-// ---------------- Helpers ----------------
-// We intentionally keep the builder typing loose (any) because Supabase's postgrest
-// generic types are verbose and the exact chain changes (select returns a FilterBuilder
-// while from() returns a QueryBuilder). Using `any` here avoids incorrect narrowing
-// that caused TS errors (ilike/gte/lte/order not found) while preserving runtime safety.
-function applyFilters<T>(query: T, filters: PropertyFilters): T {
-  const q: any = query;
-  if (filters.city) q.ilike('city', `%${filters.city}%`);
-  if (filters.state) q.ilike('state', filters.state);
-  if (filters.minPrice != null) q.gte('list_price', filters.minPrice);
-  if (filters.maxPrice != null) q.lte('list_price', filters.maxPrice);
-  if (filters.minBedrooms != null) q.gte('bedrooms_total', filters.minBedrooms);
-  if (filters.maxBedrooms != null) q.lte('bedrooms_total', filters.maxBedrooms);
-  if (filters.minBathrooms != null) q.gte('bathrooms_total', filters.minBathrooms);
-  if (filters.maxBathrooms != null) q.lte('bathrooms_total', filters.maxBathrooms);
-  if (filters.propertyType) q.ilike('property_type', `%${filters.propertyType}%`);
-  return q;
-}
-
-function applySort<T>(query: T, sort?: PropertySort): T {
-  const q: any = query;
-  switch (sort) {
-    case 'price_asc':
-      return q.order('list_price', { ascending: true, nullsFirst: false });
-    case 'price_desc':
-      return q.order('list_price', { ascending: false, nullsFirst: false });
-    case 'newest':
-      return q.order('first_seen_ts', { ascending: false, nullsFirst: false });
-    case 'updated':
-    default:
-      return q.order('modification_ts', { ascending: false, nullsFirst: false });
-  }
-}
+export type PropertySort = "price_asc" | "price_desc" | "newest" | "updated";
 
 // ---------------- Public API ----------------
-export async function getProperties(limit = 18, offset = 0, filters: PropertyFilters = {}, sort: PropertySort = 'updated') {
-  const supabase = supaPublic();
-
+export async function getProperties(
+  limit = 18,
+  offset = 0,
+  filters: PropertyFilters = {},
+  sort: PropertySort = "updated"
+) {
   const safeLimit = Math.min(Math.max(limit, 1), 100);
-  const rangeFrom = offset;
-  const rangeTo = offset + safeLimit - 1;
+  const values: any[] = [];
+  const where: string[] = [
+    "status = 'Active'",
+    "(hidden IS NULL OR hidden = false)",
+  ];
 
-  let base = supabase
-    .from('properties')
-    .select('*', { count: 'exact' })
-    // Always enforce public visibility constraints
-    .eq('status', 'Active')
-    .or('hidden.is.null,hidden.eq.false');
+  const add = (cond: string, val?: any) => {
+    if (val === undefined || val === null || val === "") return;
+    values.push(val);
+    where.push(cond.replace("$IDX", "$" + values.length));
+  };
 
-  base = applyFilters(base, filters);
-  base = applySort(base, sort);
+  add(
+    "LOWER(city) LIKE LOWER($IDX)",
+    filters.city ? `%${filters.city}%` : undefined
+  );
+  add("LOWER(state) = LOWER($IDX)", filters.state);
+  add("list_price::float8 >= $IDX", filters.minPrice);
+  add("list_price::float8 <= $IDX", filters.maxPrice);
+  add("bedrooms >= $IDX", filters.minBedrooms);
+  add("bedrooms <= $IDX", filters.maxBedrooms);
+  add("bathrooms_total::float8 >= $IDX", filters.minBathrooms);
+  add("bathrooms_total::float8 <= $IDX", filters.maxBathrooms);
+  add(
+    "LOWER(property_type) LIKE LOWER($IDX)",
+    filters.propertyType ? `%${filters.propertyType}%` : undefined
+  );
 
-  const { data, error, count } = await base.range(rangeFrom, rangeTo);
-  if (error) throw error;
-
-  const parsed: Property[] = [];
-  for (const row of data || []) {
-    const result = PropertySchema.safeParse(row);
-    if (result.success) parsed.push(result.data);
-    else {
-      // eslint-disable-next-line no-console
-      console.warn('[properties] row validation failed', result.error.issues);
-    }
+  const whereSql = where.length ? "WHERE " + where.join(" AND ") : "";
+  let orderBy = "modification_ts DESC NULLS LAST";
+  switch (sort) {
+    case "price_asc":
+      orderBy = "list_price::float8 ASC NULLS LAST";
+      break;
+    case "price_desc":
+      orderBy = "list_price::float8 DESC NULLS LAST";
+      break;
+    case "newest":
+      orderBy = "first_seen_ts DESC NULLS LAST";
+      break;
+    case "updated":
+    default:
+      orderBy = "modification_ts DESC NULLS LAST";
   }
+  values.push(safeLimit, offset);
 
-  return { properties: parsed, total: count ?? parsed.length };
+  // Compute days_on_market if null using on_market_date/listing_contract_date/first_seen_ts
+  const domExpr = `
+    COALESCE(
+      days_on_market,
+      CASE
+        WHEN on_market_date IS NOT NULL THEN GREATEST(0, (CURRENT_DATE - on_market_date)::int)
+        WHEN listing_contract_date IS NOT NULL THEN GREATEST(0, (CURRENT_DATE - listing_contract_date)::int)
+        WHEN first_seen_ts IS NOT NULL THEN GREATEST(0, (CURRENT_DATE - (first_seen_ts AT TIME ZONE 'UTC')::date)::int)
+        ELSE NULL
+      END
+    )::int
+  `;
+
+  const sql = `
+    SELECT 
+      listing_key,
+      list_price::float8 AS list_price,
+      city,
+      state,
+      postal_code,
+      bedrooms,
+      bathrooms_total::float8 AS bathrooms_total,
+      living_area::float8 AS living_area,
+      lot_size_sqft::float8 AS lot_size_sqft,
+      property_type,
+      status,
+      mls_status,
+      hidden,
+      photos_count,
+      latitude,
+      longitude,
+      main_photo_url,
+      ${domExpr} AS days_on_market,
+      cumulative_days_on_market::int AS cumulative_days_on_market,
+      modification_ts::text AS modification_ts,
+      first_seen_ts::text AS first_seen_ts,
+      last_seen_ts::text AS last_seen_ts,
+      raw_json
+    FROM properties
+    ${whereSql}
+    ORDER BY ${orderBy}
+    LIMIT $${values.length - 1} OFFSET $${values.length};
+  `;
+
+  const countSql = `SELECT COUNT(*)::int AS cnt FROM properties ${whereSql}`;
+  const countVals = values.slice(0, -2);
+
+  try {
+    const [listRes, countRes] = await Promise.all([
+      pool.query(sql, values),
+      pool.query(countSql, countVals),
+    ]);
+
+    const rows = listRes.rows || [];
+    const parsed: Property[] = [];
+
+    for (const row of rows) {
+      const result = PropertySchema.safeParse(row);
+      if (result.success) parsed.push(result.data);
+      else console.warn("[properties] row validation failed", result.error.issues);
+    }
+
+    const total = countRes.rows?.[0]?.cnt ?? parsed.length;
+    console.log("[properties]", {
+      source: "cloudsql",
+      count: parsed.length,
+      offset,
+      limit: safeLimit,
+    });
+    return { properties: parsed, total };
+  } catch (e) {
+    console.error("[properties] query failed:", e);
+    throw e;
+  }
 }
 
 export async function getPropertyByListingKey(listingKey: string) {
-  const supabase = supaPublic();
-  const { data, error } = await supabase
-    .from('properties')
-    .select('*')
-    .eq('listing_key', listingKey)
-    .eq('status', 'Active')
-    .or('hidden.is.null,hidden.eq.false')
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  const parsed = PropertySchema.safeParse(data);
+  // same DOM logic
+  const domExpr = `
+    COALESCE(
+      days_on_market,
+      CASE
+        WHEN on_market_date IS NOT NULL THEN GREATEST(0, (CURRENT_DATE - on_market_date)::int)
+        WHEN listing_contract_date IS NOT NULL THEN GREATEST(0, (CURRENT_DATE - listing_contract_date)::int)
+        WHEN first_seen_ts IS NOT NULL THEN GREATEST(0, (CURRENT_DATE - (first_seen_ts AT TIME ZONE 'UTC')::date)::int)
+        ELSE NULL
+      END
+    )::int
+  `;
+  const sql = `
+    SELECT 
+      listing_key,
+      list_price::float8 AS list_price,
+      city,
+      state,
+      postal_code,
+      bedrooms,
+      bathrooms_total::float8 AS bathrooms_total,
+      living_area::float8 AS living_area,
+      lot_size_sqft::float8 AS lot_size_sqft,
+      property_type,
+      status,
+      mls_status,
+      hidden,
+      photos_count,
+      latitude,
+      longitude,
+      main_photo_url,
+      ${domExpr} AS days_on_market,
+      cumulative_days_on_market::int AS cumulative_days_on_market,
+      modification_ts::text AS modification_ts,
+      first_seen_ts::text AS first_seen_ts,
+      last_seen_ts::text AS last_seen_ts,
+      raw_json
+    FROM properties
+    WHERE listing_key = $1 
+      AND status='Active' 
+      AND (hidden IS NULL OR hidden = false)
+    LIMIT 1;
+  `;
+  const { rows } = await pool.query(sql, [listingKey]);
+  const row = rows[0];
+  if (!row) return null;
+  const parsed = PropertySchema.safeParse(row);
   return parsed.success ? parsed.data : null;
 }

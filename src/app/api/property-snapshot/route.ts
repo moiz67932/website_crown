@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { getPgPool } from "@/lib/db/connection"
+import { pool } from "@/lib/db/connection"
 import { guardRateLimit } from "@/lib/rate-limit"
 
 // Node runtime (DB access)
@@ -21,7 +21,6 @@ export async function GET(req: NextRequest) {
       return Response.json({ error: "listing_key required" }, { status: 400 })
     }
 
-    const pool = await getPgPool()
     // Select only lightweight columns; avoid large blobs
     // Some deployments may not have certain columns (e.g., living_area_sqft). We select flexible set and coalesce in JS.
     const { rows } = await pool.query(
