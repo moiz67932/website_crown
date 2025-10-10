@@ -611,9 +611,10 @@ function PropertyMapContent({ filteredPropertyIds, initialLocationQuery = null, 
                 <div className="property-popup-content w-64">
                   <div className="relative h-32 w-full mb-2">
                     <img
-                      src={property.images[0] || "/placeholder.svg"}
+                      src={property.images?.[0] || (property as any).main_photo_url || (property as any).main_image_url || "/placeholder-image.jpg"}
                       alt={property.address}
                       className="h-full w-full object-cover rounded-md"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' }}
                     />
                     <div
                       className={`absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-medium text-white ${

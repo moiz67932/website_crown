@@ -56,7 +56,7 @@ const generatePropertyJsonLd = (property: PropertyDetail | undefined) => {
     "@type": "RealEstateListing",
     name: property?.seo_title,
     description: property?.public_remarks,
-    image: property?.images.map((img) => `${siteUrl}${img}`),
+  image: property?.images,
     url: `${siteUrl}/properties/${property?.address.replace(/ /g, "-")}/${property?.listing_key}`,
     datePosted: property?.on_market_timestamp,
     availability: "A",
@@ -106,12 +106,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const unwrappedParams = React.use(params)
   const { data: propertyData, isLoading, isError } = usePropertyDetail(unwrappedParams.id)
   const faqs = propertyData?.faq_content ? JSON.parse(propertyData.faq_content) : []
-  // Normalize images with graceful fallback: media_urls -> main_photo_url -> none
+  // Normalize images with graceful fallback: images -> main_photo_url -> placeholder
   const imagesNormalized = React.useMemo(() => {
-    const images = (propertyData?.images || []).filter(Boolean)
-    if (images.length > 0) return images
+    const imgs = (propertyData?.images || []).filter(Boolean)
+    if (imgs.length > 0) return imgs
+    if ((propertyData as any)?.main_photo_url) return [(propertyData as any).main_photo_url as string]
     if (propertyData?.main_image_url) return [propertyData.main_image_url]
-    return [] as string[]
+    return ["/placeholder-image.jpg"] as string[]
   }, [propertyData])
 
   const propertyJsonLd = generatePropertyJsonLd(
@@ -157,6 +158,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                       fill
                       className="object-cover transition-transform duration-700 hover:scale-105"
                       priority={index === 0}
+                      onError={(e) => {
+                        try { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg'; } catch {}
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
@@ -166,9 +170,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               {imagesNormalized.length === 0 && (
                 <CarouselItem>
                   <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh] p-6">
-                    <div className="rounded-2xl bg-gray-100 text-gray-500 h-80 w-full flex items-center justify-center">
-                      No Image Available
-                    </div>
+                    <Image src="/placeholder-image.jpg" alt="No image" fill className="object-cover rounded-2xl" />
                   </div>
                 </CarouselItem>
               )}

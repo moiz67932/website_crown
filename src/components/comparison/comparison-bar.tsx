@@ -47,11 +47,12 @@ export default function ComparisonBar() {
   }
 
   const getImageSrc = (property: any) => {
-    return property.images?.[0] || 
-           property.image || 
-           property.main_image_url || 
-           property.main_image || 
-           property.photo_url || 
+    return property.images?.[0] ||
+           property.media_urls?.[0] ||
+           property.main_photo_url ||
+           property.main_image_url ||
+           property.main_image ||
+           property.photo_url ||
            property.listing_photos?.[0] ||
            getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key)
   }
@@ -89,6 +90,7 @@ export default function ComparisonBar() {
                   alt={property.address}
                   fill
                   className="object-cover"
+                  onError={(e) => { try { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' } catch {} }}
                 />
               </div>
               <Button

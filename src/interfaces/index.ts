@@ -17,8 +17,12 @@ export interface Property {
   publicRemarks: string;
   favorite: boolean;
   _id: string;
-  images: string[];
-  main_image_url?: string; // Add optional fields for different image sources
+  // Normalized primary images for the property (new source of truth)
+  images?: string[];
+  // New unified main photo field from API
+  main_photo_url?: string | null;
+  // Legacy/alternate fields kept for compatibility during transition
+  main_image_url?: string; // legacy
   main_image?: string;
   photo_url?: string;
   listing_photos?: string[];

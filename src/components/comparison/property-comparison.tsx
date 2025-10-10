@@ -282,13 +282,14 @@ function SortablePropertySlot({
       return propertyImages[imageIndex] || "/california-coastal-sunset.png"
     }
 
-    return property.images?.[0] || 
-           property.image || 
-           property.main_image_url || 
-           property.main_image || 
-           property.photo_url || 
-           property.listing_photos?.[0] ||
-           getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key)
+    return property.images?.[0] ||
+      (property as any).media_urls?.[0] ||
+      (property as any).main_photo_url ||
+      property.main_image_url ||
+      property.main_image ||
+      property.photo_url ||
+      property.listing_photos?.[0] ||
+      getPropertyFallbackImage(property.property_type, property.list_price, property.listing_key)
   }
 
   return (

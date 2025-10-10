@@ -167,7 +167,7 @@ export default async function PropertiesAdmin({ searchParams }: { searchParams?:
                 <td className="p-3">
                   <div className="flex items-center gap-3">
                     <img
-                      src={p.main_photo_url || p.hero_image_url || "/placeholder.jpg"}
+                      src={p.images?.[0] || p.main_photo_url || p.main_image_url || p.hero_image_url || "/placeholder-image.jpg"}
                       alt=""
                       className="h-14 w-24 rounded-md object-cover bg-slate-100"
                       loading="lazy"

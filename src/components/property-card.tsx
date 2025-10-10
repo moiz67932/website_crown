@@ -134,15 +134,12 @@ export function PropertyCard({
 
     if (imageError) return fallback;
 
-    // NEW: Prefer dynamic media resolution via listingKey so we always fetch a fresh, valid MediaURL.
-    if (property.listing_key) {
-      // Use object=1 (primary photo). Could make this smarter later.
-      return `/api/media?listingKey=${encodeURIComponent(property.listing_key)}&object=1`;
-    }
-
+    // Primary source: normalized images[]
     const candidate =
       property.images?.[0] ||
+      // Legacy chain (kept for compatibility)
       property.image ||
+      (property as any).media_urls?.[0] ||
       (property as any).main_photo_url ||
       property.main_image_url ||
       (property as any).main_photo ||
@@ -182,8 +179,7 @@ export function PropertyCard({
   }, [property, imageError]);
 
   const raw = getImageSrc();
-  // If raw already starts with /api/media we do NOT proxify; it's already our internal dynamic endpoint.
-  const proxied = raw.startsWith('/api/media') ? raw : (proxify(raw) || raw || '');
+  const proxied = proxify(raw) || raw || '';
   // console.log("Image src going into <Image>:", proxied); // /api/media?listingKey=... path expected now
 
   const displayName = (property as any).display_name || deriveDisplayName(property as any);
@@ -275,15 +271,16 @@ export function PropertyCard({
       {/* Enhanced Property image (Next/Image with unoptimized to avoid /_next/image) */}
       <div className="relative h-64 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center rounded-t-3xl overflow-hidden theme-transition">
         <Image
-          src={proxied} // ALWAYS /api/media?url=...
+          src={proxied}
           alt={property.address || "Property"}
           fill
           unoptimized
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
-          onError={() => {
-            // console.log(`🚨 Image failed for ${property.address}, using fallback`);
+          onError={(e) => {
             setImageError(true);
+            // Ensure visible placeholder if URL is broken
+            try { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg'; } catch {}
           }}
           onLoad={(e) => {
             const imgEl = e.currentTarget as HTMLImageElement;

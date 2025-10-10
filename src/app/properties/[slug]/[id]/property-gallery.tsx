@@ -40,6 +40,7 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
               loading={currentIndex === 0 ? "eager" : "lazy"}
               priority={currentIndex === 0}
+              onError={(e) => { try { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' } catch {} }}
             />
             <div className="absolute inset-0 bg-black/10" />
           </>
@@ -89,6 +90,7 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
                   className="object-contain"
                   sizes="100vw"
                   loading="lazy"
+                  onError={(e) => { try { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' } catch {} }}
                 />
               ) : (
                 <div className="rounded-2xl bg-gray-100 text-gray-500 h-80 w-full flex items-center justify-center">
@@ -125,6 +127,7 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
                 className="object-cover"
                 sizes="(max-width: 768px) 33vw, 200px"
                 loading="lazy"
+                onError={(e) => { try { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' } catch {} }}
               />
             </button>
           ))}

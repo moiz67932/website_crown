@@ -199,14 +199,12 @@ export async function toolSearchProperties(entities: any) {
 
     // ---- image selection ----
     const image =
+      (Array.isArray(meta.images) && meta.images[0]) ||
       meta.image_url ||
       meta.hero_image_url ||
       meta.main_image_url ||
       meta.primary_image_url ||
-      meta.image ||
-      (meta.images && Array.isArray(meta.images)
-        ? meta.images[0]
-        : undefined)
+      meta.image
 
     // ---- address/title derivation ----
     const line1 =

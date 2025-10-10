@@ -126,21 +126,20 @@ export default function PropertyListPanel({
                   <div className="relative h-24 w-40 flex-shrink-0">
                     <Image
                       src={
-                        // Try multiple possible image field names from API
-                        property.images?.[0] || 
-                        property.image || 
-                        property.main_image || 
-                        property.photo_url || 
+                        property.images?.[0] ||
+                        (property as any).media_urls?.[0] ||
+                        (property as any).main_photo_url ||
+                        property.main_image_url ||
+                        property.image ||
+                        property.main_image ||
+                        property.photo_url ||
                         property.listing_photos?.[0] ||
-                        "/placeholder.svg"
+                        "/placeholder-image.jpg"
                       }
                       alt={property.address || 'Property'}
                       fill
                       className="object-cover rounded-md"
-                      onError={(e) => {
-                        // Fallback to placeholder if image fails to load
-                        e.currentTarget.src = "/placeholder.svg"
-                      }}
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' }}
                     />
                     <Badge
                       className={`absolute top-1 left-1 text-xs bg-green-600` }
