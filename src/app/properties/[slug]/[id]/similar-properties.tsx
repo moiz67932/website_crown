@@ -104,7 +104,7 @@ export default function SimilarProperties({ currentPropertyId }: SimilarProperti
         <Link href={`/properties/${property.id}`} key={property.id}>
           <Card className="overflow-hidden h-full hover:shadow-md transition-shadow">
             <div className="relative h-48">
-              <Image src={property.image || "/placeholder.svg"} alt={property.title} fill className="object-cover" />
+              <Image src={property.image || "/placeholder-image.jpg"} alt={property.title} fill className="object-cover" onError={(e) => { try { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' } catch {} }} />
               <Badge className="absolute top-2 left-2 bg-primary">{property.status}</Badge>
             </div>
             <CardContent className="p-4">

@@ -32,6 +32,8 @@ type RawRow = {
   main_photo_url?: string | null
   has_pool?: boolean | null
   features?: any | null
+  // Non-table payloads may include images array; keep optional for type safety
+  images?: string[] | null
 }
 
 export async function searchProperties(filters: SearchFilters, offset = 0, limit = 6): Promise<{ rows: PropertyCard[]; total: number }>{
@@ -128,6 +130,7 @@ export function toCard(r: RawRow): PropertyCard {
 }
 
 function firstPhoto(r: RawRow): string | null {
+  if (Array.isArray(r.images) && r.images[0]) return r.images[0]
   if (r.main_photo_url) return r.main_photo_url
   const photos = r.photos
   if (!photos) return null
@@ -189,7 +192,7 @@ export async function semanticSearchWithFilters(
             bedrooms: p.bedrooms ?? undefined,
             bathrooms: p.bathrooms_total ?? p.bathrooms ?? undefined,
             livingArea: p.living_area ?? undefined,
-            photoUrl: p.photo_url ?? p.photoUrl ?? p.main_photo_url ?? p.hero_image_url ?? null,
+            photoUrl: (Array.isArray(p.images) && p.images[0]) ? p.images[0] : (p.photo_url ?? p.photoUrl ?? p.main_photo_url ?? p.hero_image_url ?? null),
             url: p.slug ? `/properties/${p.slug}` : (pid ? `/properties/${pid}` : undefined),
             highlights: (() => {
               try {

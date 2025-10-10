@@ -14,7 +14,7 @@ export default async function RelatedPosts({ postId, city }: { postId: string; c
             <div className="aspect-video bg-slate-200">
               {p.hero_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.hero_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                <img src={p.images?.[0] || p.hero_image_url || '/placeholder-image.jpg'} alt="" className="w-full h-full object-cover" loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' }} />
               ) : null}
             </div>
             <div className="p-3">

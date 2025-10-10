@@ -54,7 +54,7 @@ export default async function FeaturedProperties({ postId, city, limit = 6 }: { 
             <div className="aspect-video bg-slate-200">
               {p.hero_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.hero_image_url} alt="" className="w-full h-full object-cover" />
+                <img src={p.images?.[0] || p.hero_image_url || '/placeholder-image.jpg'} alt="" className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' }} />
               ) : null}
             </div>
             <div className="p-3">

@@ -38,7 +38,7 @@ function convertTrestleToProperty(apiProperty: any): Property {
   const base: any = {
     id: apiProperty.id || apiProperty.listing_key,
     listing_key: apiProperty.listing_key || apiProperty.id,
-    image: apiProperty.image || "/placeholder.svg",
+  image: apiProperty.image,
     property_type: apiProperty.property_type || "Unknown",
   // Avoid forcing generic placeholder; allow downstream UI logic to build a better display name.
   address: apiProperty.address || apiProperty.cleaned_address || "",
@@ -54,8 +54,9 @@ function convertTrestleToProperty(apiProperty: any): Property {
     publicRemarks: apiProperty.publicRemarks || "",
     favorite: false,
     _id: apiProperty._id || apiProperty.listing_key || apiProperty.id,
-    images: apiProperty.images || ["/placeholder.svg"],
-    main_image_url: apiProperty.main_image_url || "/placeholder.svg",
+  images: apiProperty.images || undefined,
+  main_photo_url: apiProperty.main_photo_url ?? undefined,
+  main_image_url: apiProperty.main_image_url || undefined,
     city: apiProperty.city || "",
     state: apiProperty.state || "",
     zip_code: apiProperty.zip_code || "",

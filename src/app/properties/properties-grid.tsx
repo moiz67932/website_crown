@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 interface Property {
   _id: string
   listing_key: string
-  main_image_url: string
+  main_image_url?: string
+  main_photo_url?: string | null
   title: string
   status: string
   statusColor: string
@@ -24,7 +25,7 @@ interface Property {
   lot_size_sqft: number | string
   city: string
   address: string
-  images: string[]
+  images?: string[]
   property_type: string
 }
 
@@ -49,7 +50,12 @@ export default function PropertiesGrid({ properties }: { properties: Property[] 
             <Card className="overflow-hidden h-full hover:shadow-md transition-all group">
               <div className="relative">
                 <div className="relative h-48 sm:h-56 md:h-64">
-                  <img src={property.images[0]} alt={property.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  <img
+                    src={property.images?.[0] || property.main_photo_url || property.main_image_url || "/placeholder-image.jpg"}
+                    alt={property.title}
+                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder-image.jpg' }}
                   />
                   <Badge className={`absolute top-2 left-2 md:top-3 md:left-3 text-xs bg-green-600`}>
                     {property.property_type}

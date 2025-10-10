@@ -48,6 +48,7 @@ export interface PropertyDetail {
   public_remarks: string
   subdivision_name: string
   main_image_url: string
+  main_photo_url?: string | null
   list_agent_full_name: string
   list_office_name: string
   list_agent_email: string
@@ -70,7 +71,7 @@ export interface PropertyDetail {
   LotFeatures: string[] | null
   ShowingContactName: string | null
   current_price: number
-  images: string[]
+  images?: string[]
   seo_title: string | null
   faq_content: string | null
   h1_heading: string | null
