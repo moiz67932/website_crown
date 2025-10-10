@@ -106,7 +106,17 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const unwrappedParams = React.use(params)
   const { data: propertyData, isLoading, isError } = usePropertyDetail(unwrappedParams.id)
   const faqs = propertyData?.faq_content ? JSON.parse(propertyData.faq_content) : []
-  const propertyJsonLd = generatePropertyJsonLd(propertyData)
+  // Normalize images with graceful fallback: media_urls -> main_photo_url -> none
+  const imagesNormalized = React.useMemo(() => {
+    const images = (propertyData?.images || []).filter(Boolean)
+    if (images.length > 0) return images
+    if (propertyData?.main_image_url) return [propertyData.main_image_url]
+    return [] as string[]
+  }, [propertyData])
+
+  const propertyJsonLd = generatePropertyJsonLd(
+    propertyData ? { ...propertyData, images: imagesNormalized } as PropertyDetail : propertyData
+  )
 
   if (isLoading) return <Loading />
   if (isError) return <div className="flex justify-center items-center h-64"><span className="text-red-500 text-lg">Error loading property</span></div>
@@ -129,7 +139,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               property_tax_annual: (propertyData as any).property_tax_annual ?? undefined,
               hoa: (propertyData as any).hoa ?? (propertyData as any).hoa_monthly ?? undefined,
               home_insurance_annual: (propertyData as any).home_insurance_annual ?? undefined,
-              image: (propertyData.images && propertyData.images[0]) || undefined,
+              image: (imagesNormalized && imagesNormalized[0]) || undefined,
             })};`,
           }}
         />
@@ -138,11 +148,11 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         <section className="relative overflow-hidden">
           <Carousel className="w-full" data-carousel="main" opts={{ loop: true }}>
             <CarouselContent>
-              {propertyData.images.map((src, index) => (
+              {imagesNormalized.map((src, index) => (
                 <CarouselItem key={index}>
                   <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh]">
                     <Image
-                      src={src || "/luxury-modern-house-exterior.png"}
+                      src={src}
                       alt={`${propertyData.title || propertyData.address} - View ${index + 1}`}
                       fill
                       className="object-cover transition-transform duration-700 hover:scale-105"
@@ -153,11 +163,12 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </CarouselItem>
               ))}
-              {propertyData.images.length === 0 && (
+              {imagesNormalized.length === 0 && (
                 <CarouselItem>
-                  <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh]">
-                    <Image src="/luxury-modern-house-exterior.png" alt="Property Image" fill className="object-cover transition-transform duration-700 hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh] p-6">
+                    <div className="rounded-2xl bg-gray-100 text-gray-500 h-80 w-full flex items-center justify-center">
+                      No Image Available
+                    </div>
                   </div>
                 </CarouselItem>
               )}

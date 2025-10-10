@@ -12,15 +12,16 @@ interface PropertyGalleryProps {
 
 export default function PropertyGallery({ images }: PropertyGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const safeImages = (images || []).filter(Boolean)
 
   const goToPrevious = () => {
     const isFirstImage = currentIndex === 0
-    const newIndex = isFirstImage ? images.length - 1 : currentIndex - 1
+    const newIndex = isFirstImage ? Math.max(safeImages.length - 1, 0) : currentIndex - 1
     setCurrentIndex(newIndex)
   }
 
   const goToNext = () => {
-    const isLastImage = currentIndex === images.length - 1
+    const isLastImage = currentIndex === Math.max(safeImages.length - 1, 0)
     const newIndex = isLastImage ? 0 : currentIndex + 1
     setCurrentIndex(newIndex)
   }
@@ -28,19 +29,25 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
   return (
     <div className="relative">
       {/* Main Gallery View */}
-      <div className="relative h-[400px] md:h-[500px] rounded-xl overflow-hidden">
-        {images[currentIndex] ? (
-          <img
-            src={images[currentIndex]}
-            alt={`Property image ${currentIndex + 1}`}
-            className="object-cover w-full h-full"
-          />
+      <div className="relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden">
+        {safeImages.length > 0 ? (
+          <>
+            <Image
+              src={safeImages[currentIndex]}
+              alt={`Property image ${currentIndex + 1}`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+              loading={currentIndex === 0 ? "eager" : "lazy"}
+              priority={currentIndex === 0}
+            />
+            <div className="absolute inset-0 bg-black/10" />
+          </>
         ) : (
-          <div className="flex items-center justify-center w-full h-full bg-gray-200">
-            <span className="text-gray-500">Image not available</span>
+          <div className="rounded-2xl bg-gray-100 text-gray-500 h-80 w-full flex items-center justify-center">
+            No Image Available
           </div>
         )}
-        <div className="absolute inset-0 bg-black/10"></div>
 
         {/* Navigation Buttons */}
         <Button
@@ -74,39 +81,55 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
           </DialogTrigger>
           <DialogContent className="max-w-5xl">
             <div className="relative h-[80vh]">
-              <img
-                src={images[currentIndex] || "/placeholder.svg"}
-                alt={`Property image ${currentIndex + 1}`}
-                className="object-contain"
-              />
+              {safeImages.length > 0 ? (
+                <Image
+                  src={safeImages[currentIndex]}
+                  alt={`Property image ${currentIndex + 1}`}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="rounded-2xl bg-gray-100 text-gray-500 h-80 w-full flex items-center justify-center">
+                  No Image Available
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
 
         {/* Image Counter */}
-        <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
-          {currentIndex + 1} / {images.length}
-        </div>
+        {safeImages.length > 0 && (
+          <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+            {currentIndex + 1} / {safeImages.length}
+          </div>
+        )}
       </div>
 
       {/* Thumbnail Gallery */}
-      <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
-        {images.map((image, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`relative h-20 w-32 rounded-md overflow-hidden flex-shrink-0 transition ${
-              index === currentIndex ? "ring-2 ring-primary" : "opacity-70"
-            }`}
-          >
-            <img
-              src={image || "/placeholder.svg"}
-              alt={`Property thumbnail ${index + 1}`}
-              className="object-cover"
-            />
-          </button>
-        ))}
-      </div>
+      {safeImages.length > 0 ? (
+        <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
+          {safeImages.map((image, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`relative h-20 w-32 rounded-md overflow-hidden flex-shrink-0 transition ${
+                index === currentIndex ? "ring-2 ring-primary" : "opacity-70"
+              }`}
+            >
+              <Image
+                src={image}
+                alt={`Property thumbnail ${index + 1}`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 33vw, 200px"
+                loading="lazy"
+              />
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
