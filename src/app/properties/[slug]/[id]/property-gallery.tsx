@@ -12,7 +12,14 @@ interface PropertyGalleryProps {
 
 export default function PropertyGallery({ images }: PropertyGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const safeImages = (images || []).filter(Boolean)
+  const proxify = (url?: string | null) => {
+    if (!url) return undefined
+    if (url.startsWith('/')) return url
+    if (url.includes('/api/media?')) return url
+    try { if (/^https?:/i.test(url)) return `/api/media?url=${encodeURIComponent(url)}` } catch {}
+    return url
+  }
+  const safeImages = (images || []).filter(Boolean).map(u => proxify(u) || u)
 
   const goToPrevious = () => {
     const isFirstImage = currentIndex === 0
