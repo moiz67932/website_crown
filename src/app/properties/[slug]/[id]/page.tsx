@@ -115,6 +115,21 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     return ["/placeholder-image.jpg"] as string[]
   }, [propertyData])
 
+  // Ensure external image URLs are fetched through our media proxy for reliability (auth/CORS)
+  const proxify = (url?: string | null) => {
+    if (!url) return undefined
+    if (url.startsWith('/')) return url // local assets untouched
+    if (url.includes('/api/media?')) return url // already proxied
+    try {
+      if (/^https?:/i.test(url)) {
+        return `/api/media?url=${encodeURIComponent(url)}`
+      }
+    } catch {}
+    return url
+  }
+
+  const imagesProxied = React.useMemo(() => imagesNormalized.map((u) => proxify(u) || u), [imagesNormalized])
+
   const propertyJsonLd = generatePropertyJsonLd(
     propertyData ? { ...propertyData, images: imagesNormalized } as PropertyDetail : propertyData
   )
@@ -149,7 +164,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         <section className="relative overflow-hidden">
           <Carousel className="w-full" data-carousel="main" opts={{ loop: true }}>
             <CarouselContent>
-              {imagesNormalized.map((src, index) => (
+              {imagesProxied.map((src, index) => (
                 <CarouselItem key={index}>
                   <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh]">
                     <Image
