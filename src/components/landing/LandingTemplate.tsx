@@ -204,7 +204,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
   const citySlug = city.toLowerCase().replace(/\s+/g, '-')
 
   return (
-    <div className="flex flex-col pb-24 pt-14">
+    <div className="flex flex-col pb-24 pt-14 bg-[#F6EFE9] min-h-screen">
       {city && (
         <CitySchema
           city={city}
@@ -215,19 +215,28 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
       )}
 
       {/* Main constrained container */}
-      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12 -mt-2">
         <Hero city={city} kind={kind} />
 
-        {/* Short intro stays compact */}
-        <Intro html={data.introHtml} />
+        {/* Welcome heading centered; intro line removed per request */}
+        <section className="py-2 text-center">
+          <h2 className="text-[#1E3557] text-4xl md:text-5xl font-bold tracking-tight">Welcome to {city}</h2>
+        </section>
 
         {/* Bigger, nicer text + inline images */}
-        <AIDescription city={city} kind={kind} html={data.aiDescriptionHtml} />
+        <section className="bg-white/95 rounded-2xl shadow-2xl ring-1 ring-black/5 p-6 md:p-8">
+          <AIDescription city={city} kind={kind} html={data.aiDescriptionHtml} />
+        </section>
 
-        <StatsSection stats={data.stats} />
+        <section className="bg-white/95 rounded-2xl shadow-2xl ring-1 ring-black/5 p-6 md:p-8">
+          <h2 className="text-center text-[#1E3557] text-3xl md:text-4xl mb-6 font-bold">
+            {city} Real Estate Market Snapshot
+          </h2>
+          <StatsSection stats={data.stats} />
+        </section>
 
         {/* Featured */}
-        <section className="pt-2">
+                <section className="pt-2">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-brand-midnightCove">Featured Listings</h2>
           </div>
@@ -275,7 +284,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
       </div>
 
       {/* Bottom stack */}
-      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12 mt-12">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12 mt-12">
         <FAQSection
           items={(faqItems && faqItems.length
             ? faqItems.map(f => ({ q: f.question, a: f.answer }))
@@ -289,13 +298,13 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
         <RelatedVariants citySlug={citySlug} currentSlug={kind} />
 
         <section className="mt-4">
-          <h3 className="text-lg font-semibold mb-4">Related California Cities</h3>
+          <h3 className="text-lg font-semibold mb-4 text-[#1E3557]">Related California Cities</h3>
           <div className="flex flex-wrap gap-2">
             {CA_CITIES.slice(0, 12).map(c => (
               <Link
                 key={c}
                 href={`/california/${c}/homes-for-sale`}
-                className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-accent transition-colors"
+                className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-accent transition-colors bg-white/95 shadow-sm ring-1 ring-black/5"
               >
                 {cityToTitle(c)}
               </Link>

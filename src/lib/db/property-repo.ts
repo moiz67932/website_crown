@@ -404,6 +404,8 @@ export interface PropertySearchParams {
   limit?: number;
   offset?: number;
   sort?: "price_asc" | "price_desc" | "newest" | "updated";
+  // Hint to force exact city match (index-friendly) instead of OR/LIKE
+  exactCity?: boolean;
 }
 
 function isTransient(err: any): boolean {
@@ -487,7 +489,16 @@ export async function searchProperties(params: PropertySearchParams) {
     !!params.isWaterfront ||
     (params.keywords && params.keywords.length > 0);
 
-  add("LOWER(city) LIKE LOWER($IDX)", params.city ? `%${params.city}%` : undefined);
+  // Prefer exact city match when flagged; otherwise allow LIKE fallback
+  if (params.city) {
+    if (params.exactCity) {
+      add("LOWER(city) = LOWER($IDX)", params.city);
+    } else {
+      const exactRef = '$' + (values.push(params.city));
+      const likeRef = '$' + (values.push(`%${params.city}%`));
+      where.push(`(LOWER(city) = LOWER(${exactRef}) OR LOWER(city) LIKE LOWER(${likeRef}))`);
+    }
+  }
   add("LOWER(state) = LOWER($IDX)", params.state);
   add("list_price >= $IDX", params.minPrice);
   add("list_price <= $IDX", params.maxPrice);
@@ -559,8 +570,8 @@ export async function searchProperties(params: PropertySearchParams) {
 
   while (true) {
     try {
-      const LIST_TIMEOUT_MS = Number(process.env.PROPERTY_LIST_TIMEOUT_MS || 60_000);
-      const COUNT_TIMEOUT_MS = Number(process.env.PROPERTY_COUNT_TIMEOUT_MS || 8_000);
+  const LIST_TIMEOUT_MS = Number(process.env.PROPERTY_LIST_TIMEOUT_MS || 12_000);
+  const COUNT_TIMEOUT_MS = Number(process.env.PROPERTY_COUNT_TIMEOUT_MS || 8_000);
 
       let listRes: any;
 
@@ -568,10 +579,24 @@ export async function searchProperties(params: PropertySearchParams) {
       try {
         listRes = await withTimeout(pool.query(listSqlFiltered, values), LIST_TIMEOUT_MS, new Error("list-timeout"), true);
       } catch (e: any) {
-        // If there are no filters and we timed out, retry once with the cheap order
-        const looksLikeOrderCost = String(e?.message || "").toLowerCase().includes("timeout") && !hasAnyFilter;
-        if (looksLikeOrderCost) {
-          listRes = await withTimeout(pool.query(listSqlFast, values), LIST_TIMEOUT_MS, new Error("list-timeout"), true);
+        // On timeout, retry once with the cheap order regardless of filters to avoid page stalls
+        const isTimeout = String(e?.message || "").toLowerCase().includes("timeout");
+        if (isTimeout) {
+          try {
+            listRes = await withTimeout(pool.query(listSqlFast, values), LIST_TIMEOUT_MS, new Error("list-timeout"), true);
+          } catch (e2: any) {
+            // If the fast path also times out, bail out quickly with an empty result to keep the page responsive
+            const isTimeout2 = String(e2?.message || "").toLowerCase().includes("timeout");
+            if (isTimeout2) {
+              return {
+                properties: [],
+                total: 0,
+                hasMore: false,
+                totalEstimated: true,
+              };
+            }
+            throw e2;
+          }
         } else {
           throw e;
         }

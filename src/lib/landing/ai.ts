@@ -1,6 +1,6 @@
 import { pool } from '@/lib/db/connection'
 import type { LandingKind } from '@/types/landing'
-import { getSupabase } from '@/lib/supabase'
+import { supaPublic, supaServer } from '@/lib/supabase'
 import OpenAI from 'openai'
 
 // Memory cache (runtime only)
@@ -239,7 +239,8 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
 
   // 1. Supabase lookup (preferred)
   try {
-    const sb = getSupabase()
+    let sb: any = null
+    try { sb = supaPublic() } catch { sb = null }
     if (sb) {
       const { data, error } = await sb
         .from('landing_pages')
@@ -286,7 +287,8 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
           if (trace) console.log('[ai.desc] legacy pg hit', key)
           // Best effort: sync to Supabase if possible (skip if placeholder)
           try {
-            const sb2 = getSupabase()
+            let sb2: any = null
+            try { sb2 = supaServer() } catch { sb2 = null }
             if (sb2) {
               if (trace) console.log('[ai.desc] syncing legacy -> supabase', { key })
               await sb2.from('landing_pages').upsert({
@@ -317,7 +319,8 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
       console.warn('[ai.desc] cached value is placeholder; proceeding to regenerate', { key })
     } else {
       try {
-        const sb3 = getSupabase()
+        let sb3: any = null
+        try { sb3 = supaServer() } catch { sb3 = null }
         if (sb3 && cached) {
           await sb3.from('landing_pages').upsert({
             city: loweredCity,
@@ -431,7 +434,8 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
 
     // 4. Persist to Supabase
     try {
-      const sb = getSupabase()
+      let sb: any = null
+      try { sb = supaServer() } catch { sb = null }
       if (sb) {
         if (trace) console.log('[ai.desc] persisting supabase', { key, willPersist: !isPlaceholderHtml(html) })
         const usingService = !!process.env.SUPABASE_SERVICE_ROLE_KEY

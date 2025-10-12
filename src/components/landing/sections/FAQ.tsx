@@ -6,13 +6,13 @@ interface Props { items?: LandingFAQ[] }
 export default function FAQSection({ items }: Props) {
   if (!items || items.length === 0) return null
   return (
-    <section>
-      <h2 className="text-lg font-semibold mb-4">FAQ</h2>
-      <Accordion type="single" collapsible className="w-full">
+    <section className="bg-white/95 rounded-2xl shadow-2xl ring-1 ring-black/5 p-6 md:p-8">
+      <h2 className="text-center text-[#1E3557] text-3xl md:text-4xl mb-4 font-bold">Frequently Asked Questions</h2>
+      <Accordion type="single" collapsible className="w-full divide-y divide-slate-200">
         {items.map((f, i) => (
           <AccordionItem key={i} value={`item-${i}`}>
-            <AccordionTrigger className="text-left">{f.q}</AccordionTrigger>
-            <AccordionContent>{f.a}</AccordionContent>
+            <AccordionTrigger className="text-left text-slate-800 text-lg">{f.q}</AccordionTrigger>
+            <AccordionContent className="text-slate-600">{f.a}</AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
