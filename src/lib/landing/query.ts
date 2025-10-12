@@ -257,9 +257,16 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
     aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
   }
 
+  // Robust fetching: avoid whole-page failures if one source times out.
+  const disableFeatured = process.env.DISABLE_LANDING_FEATURED === '1'
+  const statsP = getLandingStats(cityOrState, kind).catch((e) => { console.warn('landing.stats failed', e); return {} as LandingStats })
+  const featuredP = (disableFeatured
+    ? Promise.resolve([])
+    : getFeaturedProperties(cityOrState, kind, 12, extraFilters)
+  ).catch((e) => { console.warn('landing.featured failed', e); return [] as LandingPropertyCard[] })
   const [stats, featured, aiDescriptionHtml] = await Promise.all([
-    getLandingStats(cityOrState, kind),
-    getFeaturedProperties(cityOrState, kind, 12, extraFilters),
+    statsP,
+    featuredP,
     aiDescriptionPromise
   ])
 
