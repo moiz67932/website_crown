@@ -10,7 +10,7 @@ import type { Metadata } from "next"
 import { PropertyCard } from "@/components/property-card"
 import { cn } from "@/lib/utils"
 import { Property } from "@/interfaces"
-import CityMapWrapper from "@/components/city-map"
+import CityMapWrapper from "@/components/map/CityMapWrapper"
 import { cityPageStyles, citySearchWidgetStyles } from "./page.styles"
 import ScrollButton from "./_components/ScrollButton"
 
