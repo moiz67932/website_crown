@@ -1,0 +1,14 @@
+name: followups-cron
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call follow-ups endpoint
+        run: |
+          curl -s -X POST "https://YOUR_DOMAIN/api/cron/followups" \
+            -H "Authorization: Bearer ${CRON_SECRET}" || true
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

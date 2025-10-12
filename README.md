@@ -61,6 +61,60 @@ Batch size is 48 and uses `text-embedding-3-small` (1536-dim). Collections:
 - Multilingual replies based on user language.
 - Uses max_output_tokens only.
 
+## CRM Integration (Lofty v1.0 + Email Fallback)
+
+This project ships a production-ready lead pipeline:
+
+- Automatic scoring and agent assignment
+- Lofty CRM push (v1.0 base URL, Authorization: `token <JWT>`, camelCase payload)
+- Free email fallback via SMTP/Nodemailer (always sends an internal email)
+- Follow-up automation via a secured cron endpoint and GitHub Actions scheduler
+- Lead source tracking (UTM/referrer/property/city)
+
+### 1) Environment
+
+Copy `.env.local.example` to `.env.local` and fill the values:
+
+- LOFTY_BASE_URL, LOFTY_API_KEY
+- EMAIL_* (SMTP config)
+- AGENT_ROUTING_JSON (see example in the file)
+- CRON_SECRET (random string)
+
+Do not expose these as NEXT_PUBLIC_*.
+
+### 2) Database
+
+Apply migration `db/migrations/20251011_add_lead_crm_columns.sql` to your Postgres/Supabase database. This creates a `leads` table with CRM state, score, assigned agent, and follow-up state.
+
+### 3) API Routes
+
+- POST `/api/leads` — Validates, dedupes, scores, assigns agent, pushes to Lofty, sends internal email, schedules follow-ups. Always returns `{ ok: true }` to the client even if Lofty fails (see logs and DB for crm_error).
+- POST `/api/cron/followups` — Secured with `Authorization: Bearer ${CRON_SECRET}`; sends T+1h and T+24h follow-up emails and updates `followup_state`.
+- POST `/api/send-lead-email` — Legacy utility still present; the form no longer calls this directly since email is sent server-side inside `/api/leads`.
+
+### 4) How to test Lofty
+
+Use PowerShell to send a test lead (replace YOUR_TOKEN):
+
+```powershell
+Invoke-RestMethod -Method Post "http://localhost:3000/api/leads" -ContentType 'application/json' -Body (
+  @{ firstName='Test'; lastName='Lead'; email='test@example.com'; phone='555-1234'; message='Hello'; city='San Diego'; state='CA'; propertyId='123'; pageUrl='http://localhost:3000/landing/123'; __top=25000; tags=@('pdp','prop:123') } | ConvertTo-Json
+)
+```
+
+Check server logs for `[leads]` lines and confirm an email arrives at `EMAIL_TO`. In Lofty UI (People → Pipeline), search by email.
+
+### 5) GitHub Actions Cron
+
+Workflow `.github/workflows/followups.yml` pings `/api/cron/followups` every 30 minutes. Set `CRON_SECRET` in your repository secrets. Replace `YOUR_DOMAIN` in the workflow with your production domain.
+
+### 6) Runbook
+
+- Lofty failures: Inspect logs for `[leads] lofty.error`. The API still returns success to users and emails are still sent. DB column `crm_error` stores the last error.
+- Email issues: Verify SMTP credentials and `EMAIL_*` envs. See `[leads] email.error` logs.
+- Follow-ups: Hit the cron endpoint manually with the secret or wait for GitHub Actions. DB `followup_state` moves entries from `scheduled` to `sent`.
+
+
 # Real Estate Property Management System
 
 A modern Next.js application for real estate property management with Trestle API integration, advanced search capabilities, and interactive maps.
