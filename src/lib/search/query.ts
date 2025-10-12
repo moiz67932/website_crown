@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { getSupabase } from '@/lib/supabase'
 import type { SearchFilters } from './parse'
 import type { PropertyCard } from '@/lib/ui-spec'
 import { embedText } from '@/lib/embeddings'
@@ -6,12 +6,7 @@ import { vectorSearch, resolveVectorSpec, dlog as vLog, strictModeBlocksUnindexe
 import { buildQdrantFilter } from '@/lib/qdrantFilter'
 import { getPropertyVectorSearch } from '@/lib/vector-search'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-const publicClient = anonKey ? createClient(supabaseUrl, anonKey, { auth: { persistSession: false } }) : null
-const adminClient = serviceKey ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } }) : null
+const client = getSupabase()
 
 // Debug logging control: prefer DEBUG_VECTOR (shared with qdrant.ts)
 const DEBUG = (process.env.DEBUG_VECTOR_SEARCH ?? '').toLowerCase() !== '0' || !!process.env.DEBUG_VECTOR
@@ -49,17 +44,16 @@ export async function searchProperties(filters: SearchFilters, offset = 0, limit
     p_limit: safeLimit,
   }
 
-  const client = adminClient || publicClient
   if (!client) throw new Error('Supabase client not configured')
 
   try {
     dlog('RPC search_properties_basic payload:', payload)
-    const { data, error } = await client.rpc('search_properties_basic', payload)
+    const { data, error, status } = await client.rpc('search_properties_basic', payload)
     if (error) throw error
     const rows: RawRow[] = (data?.rows as any) || data || []
     const total: number = (data?.total as any) ?? (Array.isArray(rows) ? rows.length : 0)
     const cards: PropertyCard[] = (rows || []).map(toCard)
-    dlog('RPC search_properties_basic OK -> rows:', cards.length, 'total:', total)
+    dlog('RPC search_properties_basic OK -> rows:', cards.length, 'total:', total, 'status:', status)
     return { rows: cards, total }
   } catch {
     // Fallback: direct query on properties table
@@ -74,7 +68,7 @@ export async function searchProperties(filters: SearchFilters, offset = 0, limit
   if (filters.beds) q = q.gte('bedrooms', filters.beds)
     if (filters.baths) q = q.gte('bathrooms_total', filters.baths)
 
-    const { data, error, count } = await q.range(offset, offset + safeLimit - 1)
+    const { data, error, count, status } = await q.range(offset, offset + safeLimit - 1)
     if (error) {
       // If bathrooms_total not present, retry without baths filter
       dlog('Direct query error:', (error as any)?.message || error)
@@ -87,16 +81,16 @@ export async function searchProperties(filters: SearchFilters, offset = 0, limit
         if (filters.maxPrice) q2 = q2.lte('list_price', filters.maxPrice)
         if (filters.minPrice) q2 = q2.gte('list_price', filters.minPrice)
   if (filters.beds) q2 = q2.gte('bedrooms', filters.beds)
-        const { data: d2, error: e2, count: c2 } = await q2.range(offset, offset + safeLimit - 1)
+        const { data: d2, error: e2, count: c2, status: s2 } = await q2.range(offset, offset + safeLimit - 1)
         if (e2) throw e2
         const cards = (d2 || []).map(toCard)
-        dlog('Direct query (no baths) OK -> rows:', cards.length, 'total:', c2 ?? cards.length)
+        dlog('Direct query (no baths) OK -> rows:', cards.length, 'total:', c2 ?? cards.length, 'status:', s2)
         return { rows: cards, total: c2 ?? cards.length }
       }
       throw error
     }
     const cards = (data || []).map(toCard)
-    dlog('Direct query OK -> rows:', cards.length, 'total:', count ?? cards.length)
+    dlog('Direct query OK -> rows:', cards.length, 'total:', count ?? cards.length, 'status:', status)
     return { rows: cards, total: count ?? cards.length }
   }
 }
@@ -149,7 +143,7 @@ export async function semanticSearchWithFilters(
   filters: SearchFilters,
   limit = 12
 ): Promise<PropertyCard[]> {
-  const client = adminClient || publicClient
+  const client = getSupabase()
   dlog('semanticSearchWithFilters:start', { query, filters, limit, qdrant: !!process.env.QDRANT_URL })
 
   // 1) Qdrant (primary path)

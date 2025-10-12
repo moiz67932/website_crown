@@ -1,14 +1,12 @@
 import { QdrantClient } from "@qdrant/js-client-rest"
-import { createClient } from "@supabase/supabase-js"
+import { getSupabase } from '@/lib/supabase'
 
 // Env
 const QURL = process.env.QDRANT_URL
 const QKEY = process.env.QDRANT_API_KEY || undefined
 export const QCOL = process.env.QDRANT_PROPERTY_COLLECTION || "properties_seo_v1"
 
-const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!
-const SUPA_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supa = createClient(SUPA_URL, SUPA_SERVICE, { auth: { persistSession: false } })
+const supa = getSupabase()
 
 // Qdrant client singleton
 let _qdrant: QdrantClient | null = null
@@ -103,13 +101,29 @@ export async function vectorSearch(collection: string, vector: number[], limit =
 
 /** Fallback to Supabase table if Qdrant payload is partial */
 export async function getPropertyById(id: string) {
-  const { data, error } = await supa
-    .from("properties")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle()
-  if (error) throw error
-  return data
+  // eslint-disable-next-line no-console
+  console.log('🧠 [Supabase Query Start]', { table: 'properties', id })
+  try {
+    const { data, error, status } = await supa
+      .from("properties")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle()
+    if (error) throw error
+    // eslint-disable-next-line no-console
+    console.log('✅ [Supabase Query Success]', { table: 'properties', status, row: data ? 1 : 0 })
+    return data
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    console.error('❌ [Supabase Query Failed]', {
+      message: err?.message,
+      code: err?.code,
+      details: err?.details,
+      hint: err?.hint,
+      stack: err?.stack,
+    })
+    throw err
+  }
 }
 
 /*

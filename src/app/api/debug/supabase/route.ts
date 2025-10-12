@@ -1,17 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { assertSameProjectOrThrow } from '@/lib/supabase-check'
+import { NextResponse } from 'next/server'
+import { initSupabaseClient } from '@/lib/db/supabase-debug'
 
-export async function GET(_req: NextRequest) {
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'disabled' }, { status: 404 })
+// Self-test endpoint: verifies Supabase connectivity and counts rows from 'properties' using a HEAD count
+export async function GET() {
+  // Cyan log for visibility on start
+  // eslint-disable-next-line no-console
+  console.log('\x1b[36m%s\x1b[0m', '[Supabase] Connecting...')
+  const supabase = initSupabaseClient()
+  if (!supabase) {
+    return NextResponse.json({ ok: false, msg: 'Missing env vars' }, { status: 500 })
   }
-  try { await assertSameProjectOrThrow() } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }) }
-  const a = process.env.SUPABASE_URL || ''
-  const b = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const mask = (v: string) => v ? v.replace(/https:\/\//,'').replace(/([a-z0-9]{6})[a-z0-9-]+(\.supabase\.co)/i,'$1***$2') : ''
-  return NextResponse.json({
-    SUPABASE_URL: mask(a),
-    NEXT_PUBLIC_SUPABASE_URL: mask(b),
-    sameProject: !!a && !!b && a === b
-  })
+  try {
+    // We just want to check basic read; count via head() to avoid large payloads
+    const { count, error } = await supabase.from('properties').select('*', { count: 'exact', head: true })
+    if (error) throw error
+    return NextResponse.json({ ok: true, count: count ?? 0 })
+  } catch (e: any) {
+    // eslint-disable-next-line no-console
+    console.error('\x1b[31m%s\x1b[0m', '[Supabase Error]', e?.message || String(e))
+    return NextResponse.json({ ok: false, msg: e?.message || 'Unknown error', code: e?.code }, { status: 500 })
+  }
 }
