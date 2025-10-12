@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: {params: Promise<{ city: stri
     }
   }
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
     title: cityData.metaTitle,
     description: cityData.metaDescription,
     openGraph: {
@@ -85,23 +86,46 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
     notFound()
   }
 
-  // Fetch properties using server-side data fetching
-  const response = await fetch(`${process.env.API_BASE_URL}/api/listings?skip=0&limit=100&county=${MappingCityIdToCityName(city)}`, { 
-    cache: 'no-store'
+  // Helper to safely parse JSON without throwing when HTML/error is returned
+  const safeJson = async (res: Response) => {
+    try {
+      const ct = res.headers.get('content-type') || ''
+      if (!ct.includes('application/json')) {
+        // Try to parse anyway but guard against HTML responses
+        const text = await res.text()
+        try { return JSON.parse(text) } catch { return null }
+      }
+      return await res.json()
+    } catch {
+      return null
+    }
+  }
+
+  // Build request to existing properties API (listings API does not exist in this codebase)
+  const cityName = MappingCityIdToCityName(city) || ''
+  const propertiesUrl = `${process.env.API_BASE_URL ?? ''}/api/properties?limit=24&offset=0&city=${encodeURIComponent(cityName)}`
+
+  const response = await fetch(propertiesUrl, { 
+    cache: 'no-store',
+    headers: { accept: 'application/json' }
   });
 
-  const featuredPropertiesRaw = await response.json();
-  const responseImage = await fetch(`${process.env.API_BASE_URL}/api/counties-images?county=${MappingCityIdToCityName(city)} County`, { 
-    cache: 'no-store'
-  });
-  const imageData = await responseImage.json();
+  const propertiesJson = response.ok ? await safeJson(response) : null
+  const featuredProperties = Array.isArray(propertiesJson?.data)
+    ? propertiesJson.data
+    : Array.isArray(propertiesJson?.listings)
+      ? propertiesJson.listings
+      : []
+
+  // Use local hero/neighborhood images from cityData instead of hitting a missing endpoint
+  const heroImageSrc = cityData.heroImage
 
   return (
     <div className={cityPageStyles.pageContainer}>
       {/* Hero Section */}
       <section className={cityPageStyles.heroSection}>
         <Image
-          src={imageData[0].image_url}
+          src={heroImageSrc}
           alt={`Panoramic view of ${cityData.name}`}
           fill
           className={cityPageStyles.heroImage}
@@ -135,7 +159,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
             Explore {cityData.name} on the Map
           </h2>
           {cityData.osmBoundingBox && (
-            <CityMapWrapper bounds={cityData.osmBoundingBox} properties={featuredPropertiesRaw.listings} />
+            <CityMapWrapper bounds={cityData.osmBoundingBox} properties={featuredProperties} />
           )}
         </section>
 
@@ -155,7 +179,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
                     <div className={cityPageStyles.neighborhoodCard}>
                       <div className={cityPageStyles.neighborhoodImageContainer}>
                         <Image
-                          src={imageData[Math.floor(Math.random() * imageData.length)].image_url}
+                          src={hood.image || heroImageSrc}
                           alt={`View of ${hood.name}, ${cityData.name}`}
                           fill
                           className={cityPageStyles.neighborhoodImage}
@@ -272,7 +296,7 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
           </h2>
           <div className="relative">
             <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
-              {featuredPropertiesRaw.listings.map((property: any) => (
+              {featuredProperties.map((property: any) => (
                 <div
                   key={property.listing_key}
                   className="min-w-[320px] max-w-xs flex-shrink-0"

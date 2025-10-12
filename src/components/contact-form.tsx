@@ -105,21 +105,7 @@ export default function ContactForm({
         } catch {}
       }
 
-      // Fire-and-handle email notification in parallel to keep Lofty integration intact.
-      try {
-        const emailRes = await fetch('/api/send-lead-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const emailJson = await emailRes.json().catch(() => ({}));
-        if (!emailRes.ok) {
-          // don't block user, but surface a friendly error for admins
-          setError(`Email failed to send: ${emailJson?.error || emailRes.statusText}`);
-        }
-      } catch (emailErr: any) {
-        setError(`Email failed to send: ${emailErr?.message || String(emailErr)}`);
-      }
+      // Email is now sent server-side inside /api/leads as a fallback; no separate client call needed.
     } catch (err: any) {
       setError(err?.message || "Submission failed");
     } finally {

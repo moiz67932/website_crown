@@ -1,7 +1,7 @@
 import { CRMProvider } from "../provider";
 import { LeadPayload } from "../types";
 
-const BASE = process.env.LOFTY_API_BASE || "https://api.lofty.com/v1";
+const BASE = process.env.LOFTY_BASE_URL || process.env.LOFTY_API_BASE || "https://api.lofty.com/v1.0";
 const KEY = process.env.LOFTY_API_KEY || "";
 const TEST_MODE = process.env.LOFTY_TEST_MODE === 'true';
 
@@ -16,38 +16,24 @@ const TEST_MODE = process.env.LOFTY_TEST_MODE === 'true';
  *   X-API-Key: <token>                     (set header to X-API-Key and scheme to "")
  */
 const AUTH_HEADER = process.env.LOFTY_AUTH_HEADER || "Authorization";
-const AUTH_SCHEME = process.env.LOFTY_AUTH_SCHEME ?? "Bearer";
+const AUTH_SCHEME = process.env.LOFTY_AUTH_SCHEME ?? "token";
 const LEADS_PATH = process.env.LOFTY_LEADS_PATH || "/leads";
 
 function mapToLofty(lead: LeadPayload) {
   return {
-    first_name: lead.firstName ?? lead.fullName?.split(" ")?.[0] ?? "",
-    last_name: lead.lastName ?? lead.fullName?.split(" ")?.slice(1).join(" ") ?? "",
-    email: lead.email || "",
-    phone: lead.phone || "",
-    message: lead.message || "",
-    source: lead.source || "website",
+    firstName: lead.firstName ?? lead.fullName?.split(" ")?.[0] ?? "",
+    lastName: lead.lastName ?? lead.fullName?.split(" ")?.slice(1).join(" ") ?? "",
+    emails: lead.email ? [lead.email] : [],
+    phones: lead.phone ? [lead.phone] : [],
+    notes: lead.message || "",
+    source: lead.source || lead.utm_source || "Crown Coastal Homes Website",
+    sourceUrl: lead.pageUrl || null,
     tags: lead.tags || [],
     city: lead.city || "",
     state: lead.state || "",
     county: lead.county || "",
-    budget_min: lead.budgetMin ?? null,
-    budget_max: lead.budgetMax ?? null,
-    beds: typeof lead.beds === "string" ? lead.beds : lead.beds ?? null,
-    baths: typeof lead.baths === "string" ? lead.baths : lead.baths ?? null,
-    property_type: lead.propertyType || null,
-    utm_source: lead.source ?? null,
-    utm_medium: lead.medium ?? null,
-    utm_campaign: lead.campaign ?? null,
-    utm_content: lead.content ?? null,
-    utm_term: lead.term ?? null,
-    gclid: lead.gclid ?? null,
-    fbclid: lead.fbclid ?? null,
-    page_url: lead.pageUrl ?? null,
-    referer: lead.referer ?? null,
-    user_agent: lead.userAgent ?? null,
-    ip: lead.ip ?? null,
-    score: lead.score ?? null,
+    streetAddress: (lead as any).streetAddress || undefined,
+    zipCode: (lead as any).zipCode || undefined,
   };
 }
 
@@ -57,10 +43,9 @@ export function loftyProvider(): CRMProvider {
   if (!KEY) throw new Error("Missing LOFTY_API_KEY env var");
 
       const mapped = mapToLofty(lead);
-      const headers: Record<string, string> = {
-          'X-API-Key': KEY, 
-          'Content-Type': 'application/json'
-      };
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
 
       // Choose auth style
       if (AUTH_HEADER) {
@@ -106,8 +91,8 @@ export function loftyProvider(): CRMProvider {
         throw new Error(`Lofty push failed: ${r.status} ${r.statusText} :: ${text || 'no body'}`);
       }
 
-      const json: any = await r.json().catch(() => ({}));
-      return { id: String(json?.id ?? json?.lead?.id ?? "unknown"), raw: json };
+  const json: any = await r.json().catch(() => ({}));
+  return { id: String(json?.leadId ?? json?.id ?? json?.lead?.id ?? "unknown"), raw: json };
     },
 
     // Real signature verification can be added once Lofty shares their scheme
