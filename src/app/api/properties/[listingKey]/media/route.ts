@@ -1,17 +1,18 @@
 // src/app/api/properties/[listingKey]/media/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPropertyMediaCached } from "@/lib/db/media-repo";
 
 export const runtime = "nodejs"; // We use pg; ensure Node runtime
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { listingKey: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ listingKey: string }> }
 ) {
-  const images = await getPropertyMediaCached(params.listingKey);
+  const { listingKey } = await params;
+  const images = await getPropertyMediaCached(listingKey);
 
   return new NextResponse(
-    JSON.stringify({ listingKey: params.listingKey, images }),
+  JSON.stringify({ listingKey, images }),
     {
       headers: {
         "Content-Type": "application/json",
