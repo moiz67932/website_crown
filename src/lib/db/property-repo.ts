@@ -404,8 +404,6 @@ export interface PropertySearchParams {
   limit?: number;
   offset?: number;
   sort?: "price_asc" | "price_desc" | "newest" | "updated";
-  // Hint to force exact city match (index-friendly) instead of OR/LIKE
-  exactCity?: boolean;
 }
 
 function isTransient(err: any): boolean {
@@ -489,15 +487,11 @@ export async function searchProperties(params: PropertySearchParams) {
     !!params.isWaterfront ||
     (params.keywords && params.keywords.length > 0);
 
-  // Prefer exact city match when flagged; otherwise allow LIKE fallback
+  // Prefer exact city match to leverage index; fall back to LIKE for flexible matches
   if (params.city) {
-    if (params.exactCity) {
-      add("LOWER(city) = LOWER($IDX)", params.city);
-    } else {
-      const exactRef = '$' + (values.push(params.city));
-      const likeRef = '$' + (values.push(`%${params.city}%`));
-      where.push(`(LOWER(city) = LOWER(${exactRef}) OR LOWER(city) LIKE LOWER(${likeRef}))`);
-    }
+    const exactRef = '$' + (values.push(params.city));
+    const likeRef = '$' + (values.push(`%${params.city}%`));
+    where.push(`(LOWER(city) = LOWER(${exactRef}) OR LOWER(city) LIKE LOWER(${likeRef}))`);
   }
   add("LOWER(state) = LOWER($IDX)", params.state);
   add("list_price >= $IDX", params.minPrice);

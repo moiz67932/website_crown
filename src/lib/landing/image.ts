@@ -47,7 +47,7 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
           .from('landing_pages')
           .select('hero_image_url')
           .eq('city', loweredCity)
-          .eq('kind', kind)
+          .eq('page_name', kind)
           .maybeSingle()
         if (!error && data?.hero_image_url) {
           memCache.set(key, data.hero_image_url)
@@ -113,10 +113,11 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
           .from('landing_pages')
           .upsert({
             city: loweredCity,
+            page_name: kind,
             kind,
             hero_image_url: imageUrl,
             updated_at: new Date().toISOString()
-          }, { onConflict: 'city,kind' })
+          }, { onConflict: 'city,page_name' })
           .select('id')
           .maybeSingle()
         if (error && trace) console.warn('[landing.hero] supabase upsert failed', { key, msg: error.message, code: error.code })
@@ -156,7 +157,7 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
           .from('landing_pages')
           .select('inline_images_json')
           .eq('city', loweredCity)
-          .eq('kind', kind)
+          .eq('page_name', kind)
           .maybeSingle()
         if (data?.inline_images_json && Array.isArray(data.inline_images_json) && data.inline_images_json.length) {
           memInline.set(key, data.inline_images_json as InlineImg[])
@@ -186,7 +187,7 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
     const results = await Promise.all(qs.map(fetchOne))
     const imgs: InlineImg[] = results
       .filter(Boolean)
-      .slice(0, 2)
+      .slice(0, 4)
       .map((r, i) => ({ url: (r as any).url, alt: (r as any).alt, position: (`inline_${i + 1}` as InlineImg['position']) }))
 
     // 3) Persist best-effort
@@ -196,10 +197,11 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
       if (sb2) {
         await sb2.from('landing_pages').upsert({
           city: loweredCity,
+          page_name: kind,
           kind,
           inline_images_json: imgs,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'city,kind' })
+        }, { onConflict: 'city,page_name' })
       }
     } catch { /* ignore */ }
 
