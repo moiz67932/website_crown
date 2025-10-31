@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
-import OpenAI from 'openai'
+import { getOpenAI } from '@/lib/singletons'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' })
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   const supa = getSupabase()
   if (!supa) return NextResponse.json({ ok:false, error:'Supabase not configured' }, { status: 500 })
   try {
+    if (!process.env.OPENAI_API_KEY) return NextResponse.json({ ok:false, error:'OpenAI not configured' }, { status: 500 })
+    const openai = getOpenAI()
     const { postId } = await req.json()
     if (!postId) return NextResponse.json({ ok:false, error:'postId required' }, { status: 400 })
     const { data: post } = await supa.from('posts').select('id,title_primary,city,content_md').eq('id', postId).single()

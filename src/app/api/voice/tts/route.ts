@@ -1,4 +1,4 @@
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 
 export const runtime = "edge"
 
@@ -7,7 +7,8 @@ export async function POST(req: Request) {
   const { text, voice = "alloy" } = await req.json()
   if (!text) return new Response(JSON.stringify({ error: "No text" }), { status: 400 })
 
-  const speech: any = await openai.audio.speech.create({
+  const client = getOpenAI()
+  const speech: any = await client.audio.speech.create({
     model: "gpt-4o-mini-tts",
     voice,
     input: text,

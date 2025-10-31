@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+import { getOpenAI } from '@/lib/singletons'
 import { getSupabase } from '@/lib/supabase'
 import { pool } from '@/lib/db/connection'
 import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
@@ -7,7 +7,7 @@ export type FAQItem = { question: string; answer: string }
 type RichFAQItem = { q: string; longAnswer: string; shortAnswer?: string }
 export type SEOMeta = { title?: string; description?: string; keywords?: string[]; jsonLd?: any }
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
+// Lazily create an OpenAI client only when needed to avoid build-time env requirements
 
 async function fetchCitySqlContext(city: string): Promise<string> {
   try {
@@ -122,7 +122,8 @@ export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ f
   const generationPrompt = buildFaqGenerationPrompt(city, slug, sqlContext)
   // Use the OpenAI client to create a chat completion. Keep messages as valid single-line strings
   // to avoid TypeScript parsing issues from embedded newlines in template literals.
-  const res = await openai.chat.completions.create({
+  const client = getOpenAI()
+  const res = await client.chat.completions.create({
     model: process.env.LLM_MODEL || 'gpt-5-mini',
     response_format: { type: 'json_object' },
     messages: [

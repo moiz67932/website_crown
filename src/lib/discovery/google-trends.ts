@@ -1,8 +1,8 @@
 // src/lib/discovery/google-trends.ts
 import * as googleTrends from 'google-trends-api'
-import OpenAI from 'openai'
+import { getOpenAI } from '@/lib/singletons'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+// Lazily acquire OpenAI client when enriching topics
 
 export type TrendTopic = {
   title: string        // raw query
@@ -57,7 +57,8 @@ Rewrite each of these Google Trends queries into a compelling blog-ready title:
 ${topics.map(t => `- ${t.title}`).join('\n')}
 `;
 
-      const res = await openai.chat.completions.create({
+  const client = getOpenAI()
+  const res = await client.chat.completions.create({
         model: 'gpt-5-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 1

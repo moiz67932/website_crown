@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import OpenAI from 'openai';
+import { getOpenAI } from '@/lib/singletons';
 
 import { buildCityContext, retrieveCityBlurbs } from '@/lib/blog/context';
 import BLOG_PROMPT_VIA_FILE from '@/lib/blog-prompt';
@@ -8,7 +8,8 @@ import { interpolate } from '@/lib/string-utils';
 import { getSupabase } from '@/lib/supabase';
 import { attachImagesToPost } from '@/lib/unsplash';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 const Payload = z.object({
   type: z.enum(['top10', 'moving', 'predictions', 'schools', 'why_demographic']),
@@ -109,6 +110,10 @@ export async function POST(req: NextRequest) {
   if (!supa) return NextResponse.json({ ok: false, error: 'Supabase not configured' }, { status: 500 });
 
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({ ok: false, error: 'OpenAI not configured' }, { status: 500 });
+    }
+    const openai = getOpenAI();
     const bodyText = await req.text();
     let body: any;
     try {
@@ -150,7 +155,7 @@ export async function POST(req: NextRequest) {
       retrievedBlurbs: JSON.stringify(blurbs || []),
     });
 
-    const res = await openai.chat.completions.create({
+  const res = await openai.chat.completions.create({
       model: process.env.LLM_MODEL || 'gpt-4o-mini',
       response_format: { type: 'json_object' },
       messages: [
@@ -171,7 +176,7 @@ export async function POST(req: NextRequest) {
 
     if (!validated.success) {
       const errMsg = validated.error.message.slice(0, 800);
-      const fix = await openai.chat.completions.create({
+  const fix = await openai.chat.completions.create({
         model: process.env.LLM_MODEL || 'gpt-4o-mini',
         response_format: { type: 'json_object' },
         messages: [

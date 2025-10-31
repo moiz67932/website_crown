@@ -1,8 +1,7 @@
 import { supaServer } from '@/lib/supabase'
-import OpenAI from 'openai'
+import { getOpenAI } from '@/lib/singletons'
 import { qdrant, COLLECTION_CONTEXT } from '@/lib/vec/qdrant'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 const supa = supaServer()
 
 export type CityContext = {
@@ -73,7 +72,8 @@ export async function retrieveCityBlurbs(city: string, k = 12) {
 }
 
 export async function embed(text: string) {
-  const emb = await openai.embeddings.create({
+  const client = getOpenAI()
+  const emb = await client.embeddings.create({
     model: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
     input: text
   })

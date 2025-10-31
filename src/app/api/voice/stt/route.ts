@@ -10,7 +10,7 @@
 //   return Response.json({ text: tr.text || "" })
 // }
 
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 import { toFile } from "openai/uploads"
 import { guardRateLimit } from "@/lib/rate-limit"
 
@@ -81,7 +81,8 @@ export async function POST(req: Request) {
     let lastErr: any
     for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
       try {
-        const tr: any = await openai.audio.transcriptions.create({
+        const client = getOpenAI()
+        const tr: any = await client.audio.transcriptions.create({
           model: "whisper-1",
           file: uploadFile,
           ...(lang ? { language: lang } : {}),

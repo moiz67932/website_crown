@@ -1,7 +1,4 @@
-import OpenAI from "openai"
-
-// Central OpenAI client configured from server env
-export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
+import { getOpenAI } from "./singletons"
 
 export type Block = { role: "system" | "user" | "developer"; content: string }
 
@@ -12,7 +9,8 @@ export async function chatText(
 ) {
   const model = opts?.model ?? (process.env.CHAT_MODEL || "gpt-5-mini")
   const max_output_tokens = opts?.max ?? 650
-  const res = await openai.responses.create({
+  const client = getOpenAI()
+  const res = await client.responses.create({
     model,
     // Cast to any to accommodate developer role and simplified Block type
     input: blocks as any,
@@ -31,7 +29,8 @@ export async function chatJSON<T = any>(
   const hint = opts?.schemaHint
     ? [{ role: "developer", content: `Return ONLY strict JSON. Schema hint: ${opts.schemaHint}` as const }]
     : []
-  const res = await openai.responses.create({
+  const client = getOpenAI()
+  const res = await client.responses.create({
     model,
     input: ([...blocks, ...hint] as any),
     max_output_tokens,
@@ -84,3 +83,7 @@ export async function chatJSON<T = any>(
   const snippet = text.slice(0, 180)
   throw new SyntaxError(`Failed to parse JSON from model output. Snippet: ${snippet}`)
 }
+
+// Re-export getters for direct usage in routes/helpers
+export { getOpenAI } from "./singletons"
+export { getOpenAI as openaiClient } from "./singletons"

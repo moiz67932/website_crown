@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import OpenAI from 'openai'
+import { getOpenAI } from '@/lib/singletons'
 import { getSupabase } from '@/lib/supabase'
 import { attachTopPropertiesToPost } from '@/lib/attach-properties'
 import { upsertPostEmbedding } from '@/lib/embeddings'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const Payload = z.object({
   city: z.string().min(2),
@@ -24,6 +25,8 @@ export async function POST(req: NextRequest) {
   const supa = getSupabase()
   if (!supa) return NextResponse.json({ ok:false, error:'Supabase not configured' }, { status: 500 })
   try {
+    if (!process.env.OPENAI_API_KEY) return NextResponse.json({ ok:false, error:'OpenAI not configured' }, { status: 500 })
+    const openai = getOpenAI()
     const input = Payload.parse(await req.json())
   const sys = 'You are an expert real estate content writer. Output valid markdown only.'
   const chosenTemplate = chooseTemplate(input)
