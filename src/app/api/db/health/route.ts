@@ -1,9 +1,10 @@
 // src/app/api/db/health/route.ts
 export const runtime = "nodejs";
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/db/connection";
+import { getPgPool } from "@/lib/db/connection";
 
 export async function GET() {
+  const pool = await getPgPool();
   const sql = `
     WITH c AS (SELECT COUNT(*)::int AS properties_count FROM properties)
     SELECT current_database() AS db,

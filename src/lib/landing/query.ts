@@ -3,7 +3,7 @@
 
 import { LandingKind, LandingData, LandingStats, LandingPropertyCard } from '@/types/landing'
 import { searchProperties } from '@/lib/db'
-import { pool } from '@/lib/db/connection'
+import { getPgPool } from '@/lib/db/connection'
 import { getAIDescription } from './ai'
 import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
 import type { LandingDef } from './defs'
@@ -65,6 +65,7 @@ let hasDaysOnMarketColumn: boolean | null = null
 async function ensureSchemaIntrospection() {
   if (hasDaysOnMarketColumn !== null) return
   try {
+    const pool = await getPgPool()
     const { rows } = await pool.query(
       `SELECT 1 FROM information_schema.columns WHERE table_name = 'properties' AND column_name = 'days_on_market' LIMIT 1`
     )
@@ -129,6 +130,7 @@ export async function getLandingStats(cityOrState: string, kind: LandingKind): P
   }
 
   try {
+    const pool = await getPgPool()
     let { rows } = await pool.query(sql, baseParams)
     let r = rows[0]
     // Fallback: if not state token and zero results, try city OR state match.
@@ -371,6 +373,7 @@ function titleCase(str: string) {
 
 // Helper to debug available cities (not used in production rendering)
 export async function listActiveCities(limit = 25): Promise<Array<{ city: string; count: number }>> {
+  const pool = await getPgPool()
   const { rows } = await pool.query(
     `SELECT LOWER(city) AS city, COUNT(*)::int AS count FROM properties WHERE status='Active' AND city IS NOT NULL GROUP BY 1 ORDER BY count DESC LIMIT $1`,
     [limit]

@@ -1,4 +1,4 @@
-import { pool } from '@/lib/db/connection'
+import { getPgPool } from '@/lib/db/connection'
 import type { LandingKind } from '@/types/landing'
 import { supaPublic, supaServer } from '@/lib/supabase'
 import OpenAI from 'openai'
@@ -9,10 +9,11 @@ const memCache = new Map<string, string>()
 const pending = new Map<string, Promise<string | undefined>>()
 let attemptedInit = false
 
-async function ensureLegacyTable(pool: any) {
+async function ensureLegacyTable() {
   if (attemptedInit) return
   attemptedInit = true
   try {
+    const pool = await getPgPool()
     await pool.query(`CREATE TABLE IF NOT EXISTS landing_ai_descriptions (
       city text NOT NULL,
       kind text NOT NULL,
@@ -276,7 +277,8 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
   // 2. Legacy PG lookup
   if (!opts.forceRegenerate && !process.env.FORCE_AI_REGEN) {
     try {
-      await ensureLegacyTable(pool)
+      await ensureLegacyTable()
+      const pool = await getPgPool()
       const { rows } = await pool.query('SELECT html FROM landing_ai_descriptions WHERE city=$1 AND kind=$2', [loweredCity, kind])
       if (rows[0]?.html) {
         const legacyHtml = rows[0].html as string
@@ -466,8 +468,9 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
 
     // 5. Legacy PG persistence
     try {
-      await ensureLegacyTable(pool)
+      await ensureLegacyTable()
       if (!isPlaceholderHtml(html) && html) {
+        const pool = await getPgPool()
         await pool.query('INSERT INTO landing_ai_descriptions(city,kind,html) VALUES($1,$2,$3) ON CONFLICT (city,kind) DO UPDATE SET html=EXCLUDED.html, generated_at=now()', [loweredCity, kind, html])
       } else if (trace) {
         console.log('[ai.desc] skipping legacy pg persist due to placeholder', { key })

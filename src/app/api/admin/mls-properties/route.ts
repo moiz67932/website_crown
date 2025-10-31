@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { pool } from '@/lib/db/connection'
+import { getPgPool } from '@/lib/db/connection'
 export const runtime = 'nodejs'
 
 // Admin API for properties managed in Postgres (MLS import).
@@ -25,8 +25,9 @@ export async function PATCH(req: NextRequest) {
     
     const whereCol = idInfo.by === 'listing_key' ? 'listing_key' : 'id'
     const sql = `UPDATE properties SET ${Object.keys(updates).map((k, i) => `${k} = $${i+1}`).join(', ')} WHERE ${whereCol} = $${Object.keys(updates).length + 1}`
-    const values = [...Object.values(updates), idInfo.value]
-    await pool.query(sql, values)
+  const values = [...Object.values(updates), idInfo.value]
+  const pool = await getPgPool()
+  await pool.query(sql, values)
     return NextResponse.json({ ok: true })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || String(err) }, { status: 500 })
@@ -45,7 +46,8 @@ export async function POST(req: NextRequest) {
       try {
         
         // Try delete by listing_key first then id
-        const res = await pool.query('DELETE FROM properties WHERE listing_key = $1 OR id::text = $1', [id])
+  const pool = await getPgPool()
+  const res = await pool.query('DELETE FROM properties WHERE listing_key = $1 OR id::text = $1', [id])
         return NextResponse.json({ ok: true, deleted: res.rowCount })
       } catch (err: any) {
         return NextResponse.json({ ok: false, error: err?.message || String(err) }, { status: 500 })
@@ -63,7 +65,8 @@ export async function DELETE(req: NextRequest) {
     
     const whereCol = idInfo.by === 'listing_key' ? 'listing_key' : 'id'
     const sql = `DELETE FROM properties WHERE ${whereCol} = $1`
-    await pool.query(sql, [idInfo.value])
+  const pool = await getPgPool()
+  await pool.query(sql, [idInfo.value])
     return NextResponse.json({ ok: true })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || String(err) }, { status: 500 })

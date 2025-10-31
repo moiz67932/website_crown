@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { pool } from '@/lib/db/connection'
+import { getPgPool } from '@/lib/db/connection'
 export const runtime = 'nodejs'
 
 export async function PATCH(req: Request) {
@@ -13,6 +13,7 @@ export async function PATCH(req: Request) {
   const setSql = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
   const sql = `UPDATE properties SET ${setSql} WHERE id = $${keys.length + 1}`
   const values = [...Object.values(updates), id]
+  const pool = await getPgPool()
   await pool.query(sql, values)
     return NextResponse.json({ ok: true })
   } catch (err: any) {
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
       const id = form.get('id')?.toString()
       if (!id) return NextResponse.json({ ok: false, error: 'id required' }, { status: 400 })
   // Try to delete by id (text cast) or listing_key
+  const pool = await getPgPool()
   await pool.query('DELETE FROM properties WHERE id::text = $1 OR listing_key = $1', [id])
       return NextResponse.json({ ok: true })
     }
@@ -42,6 +44,7 @@ export async function DELETE(req: Request) {
     const body = await req.json().catch(() => ({}))
     const id = body.id
     if (!id) return NextResponse.json({ ok: false, error: 'id required' }, { status: 400 })
+  const pool = await getPgPool()
   await pool.query('DELETE FROM properties WHERE id::text = $1 OR listing_key = $1', [id])
     return NextResponse.json({ ok: true })
   } catch (err: any) {

@@ -3,7 +3,7 @@ FROM node:20-slim AS build
 WORKDIR /app
 # install deps (adjust if you use pnpm/yarn)
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* .npmrc* ./
-RUN npm install --no-audit --no-fund
+RUN npm install --no-audit --no-fund --legacy-peer-deps
 # copy source & build
 COPY . .
 RUN npm run build
