@@ -159,18 +159,6 @@ function loadServiceAccountCredentials():
 }
 
 async function initPool(): Promise<Pool> {
-  // Avoid initializing Cloud SQL during static build to prevent connector calls in Vercel build step
-  const argv = Array.isArray(process.argv) ? process.argv.join(" ") : "";
-  const likelyNextBuild = argv.includes("next") && argv.includes("build");
-  if (
-    process.env.NEXT_PHASE === "phase-production-build" ||
-    process.env.VERCEL_BUILD === "1" ||
-    process.env.NEXT_BUILD === "1" ||
-    likelyNextBuild
-  ) {
-    throw new Error("Cloud SQL pool initialization blocked during build phase");
-  }
-
   const instance = process.env.CLOUDSQL_INSTANCE_CONNECTION_NAME;
   const dbName = process.env.DB_NAME;
   const dbUser = process.env.DB_USER;
@@ -225,21 +213,5 @@ async function initPool(): Promise<Pool> {
   return pool;
 }
 
-/**
- * Lazily acquire a singleton pg.Pool connected via Cloud SQL Connector.
- * Never runs during Next.js/Vercel build time; only on runtime invocation.
- */
-export async function getPgPool(): Promise<Pool> {
-  if (!global.__cloudsqlPool) {
-    global.__cloudsqlPool = await initPool();
-  }
-  return global.__cloudsqlPool;
-}
-
-/** End the shared pool (mainly for tests/scripts) */
-export async function endPgPool() {
-  if (global.__cloudsqlPool) {
-    try { await global.__cloudsqlPool.end(); } catch {}
-    global.__cloudsqlPool = undefined;
-  }
-}
+export const pool: Pool =
+  global.__cloudsqlPool ?? (global.__cloudsqlPool = await initPool());

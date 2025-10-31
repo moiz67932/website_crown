@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { getSupabase } from '@/lib/supabase'
-import { getPgPool } from '@/lib/db/connection'
+import { pool } from '@/lib/db/connection'
 import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
 
 export type FAQItem = { question: string; answer: string }
@@ -11,7 +11,6 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
 async function fetchCitySqlContext(city: string): Promise<string> {
   try {
-    const pool = await getPgPool()
     const base = await pool.query(
       `SELECT COUNT(*)::int AS total_active,
               ROUND(AVG(list_price))::int AS avg_price,

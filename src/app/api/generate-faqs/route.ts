@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getOrGenerateFaqs } from '@/lib/faqs'
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
 const Payload = z.object({ city: z.string(), slug: z.string() })
 
 export async function POST(req: NextRequest) {
