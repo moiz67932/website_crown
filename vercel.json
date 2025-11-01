@@ -1,4 +1,7 @@
 {
+  "version": 2,
+  "installCommand": "npm ci --legacy-peer-deps || npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
   "rewrites": [
     {
       "source": "/api/(.*)",
