@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import SearchBar from '@/components/home/search-bar'
-import LocationAutocomplete from '@/components/filters/location-autocomplete'
-import EnhancedSearchInput from '@/components/search/enhanced-search-input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import SearchBar from '../../components/home/search-bar'
+import LocationAutocomplete from '../../components/filters/location-autocomplete'
+import EnhancedSearchInput from '../../components/search/enhanced-search-input'
 import { Search, CheckCircle, Zap, MapPin } from 'lucide-react'
 
 interface SearchSuggestion {

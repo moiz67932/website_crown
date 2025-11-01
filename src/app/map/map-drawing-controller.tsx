@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "../../components/ui/button"
 import { MapPin, Trash2 } from "lucide-react"
 
 interface MapDrawingControlsProps {

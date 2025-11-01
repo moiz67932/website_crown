@@ -1,6 +1,6 @@
 import { FC } from "react";
 import Image from "next/image";
-import Notices from "@/components/legal/Notices";
+import Notices from "../legal/Notices";
 
 const Footer: FC = () => {
   return (

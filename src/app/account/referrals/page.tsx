@@ -1,4 +1,4 @@
-import ReferralDashboard from '@/components/referrals/ReferralDashboard'
+import ReferralDashboard from '../../../components/referrals/ReferralDashboard'
 
 export const metadata = {
   title: 'Referrals',

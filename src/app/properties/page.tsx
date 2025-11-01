@@ -4,9 +4,9 @@ import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import PropertiesGrid from "./properties-grid"
 import PropertyListingHeader from "./property-header"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Skeleton } from "../../components/ui/skeleton"
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
 import { Search, Loader2 } from "lucide-react"
 import {
   Pagination,
@@ -15,16 +15,16 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "../../components/ui/pagination"
 import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated"
 import { useSearchParams, usePathname } from "next/navigation"
-import { PropertyCard } from "@/components/property-card"
+import { PropertyCard } from "../../components/property-card"
 import { Property } from "@/interfaces"
 import { PropertyFilters } from "@/types/filters"
 import { generateSEOURL, parseURLToFilters } from "@/utils/url-filters"
 
 // Import the new enhanced components
-import AdvancedSearch from "@/components/filters/advanced-search"
+import AdvancedSearch from "../../components/filters/advanced-search"
 
 // Property Grid Skeleton
 const PropertyGridSkeleton = () => (

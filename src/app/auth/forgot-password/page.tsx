@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import ForgotPasswordForm from "./forgot-password-form"
-import LogoDisplay from "@/components/auth/logo-display"
+import LogoDisplay from "../../../components/auth/logo-display"
 
 export const metadata: Metadata = {
   title: "Forgot Password | Real Estate",

@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "../../../../components/ui/button"
 import { ViewIcon as StreetView } from "lucide-react"
-import StreetViewModal from "@/components/shared/street-view-model"
+import StreetViewModal from "../../../../components/shared/street-view-model"
 
 interface StreetViewButtonProps {
   property: {

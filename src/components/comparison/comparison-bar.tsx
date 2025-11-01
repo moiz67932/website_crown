@@ -2,8 +2,8 @@
 
 import React from 'react'
 import { useComparison } from '@/contexts/comparison-context'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
 import { X, Scale, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'

@@ -1,8 +1,8 @@
 // "use client"
 
 // import Image from "next/image"
-// import { Button } from "@/components/ui/button"
-// import { Badge } from "@/components/ui/badge"
+// import { Button } from "../../../../components/ui/button"
+// import { Badge } from "../../../../components/ui/badge"
 // import {
 //   Bed,
 //   Bath,
@@ -22,16 +22,16 @@
 //   Car,
 //   Eye,
 // } from "lucide-react"
-// import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+// import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel"
 // import { PropertyDetail, usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
 // import React from "react"
-// import Loading from "@/components/shared/loading"
-// import ContactForm from "@/components/contact-form"
-// import { Card, CardContent } from "@/components/ui/card"
+// import Loading from "../../../../components/shared/loading"
+// import ContactForm from "../../../../components/contact-form"
+// import { Card, CardContent } from "../../../../components/ui/card"
 // import MortgageCalculatorModal from "./mortage-calculator-modal"
 // import PropertyFAQ from "./property-faq"
 // import dynamic from "next/dynamic"
-// import { PropertyChat } from "@/components/PropertyChat"
+// import { PropertyChat } from "../../../../components/PropertyChat"
 
 // // Dynamic import for PropertyMap to avoid SSR issues with Leaflet
 // const PropertyMap = dynamic(() => import("./property-map"), {
@@ -600,8 +600,8 @@
 "use client"
 
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "../../../../components/ui/button"
+import { Badge } from "../../../../components/ui/badge"
 import {
   Bed,
   Bath,
@@ -621,16 +621,16 @@ import {
   Car,
   Eye,
 } from "lucide-react"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel"
 import { PropertyDetail, usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
 import React from "react"
-import Loading from "@/components/shared/loading"
-import ContactForm from "@/components/contact-form"
-import { Card, CardContent } from "@/components/ui/card"
+import Loading from "../../../../components/shared/loading"
+import ContactForm from "../../../../components/contact-form"
+import { Card, CardContent } from "../../../../components/ui/card"
 import MortgageCalculatorModal from "./mortage-calculator-modal"
 import PropertyFAQ from "./property-faq"
 import dynamic from "next/dynamic"
-import { PropertyChat } from "@/components/PropertyChat"
+import { PropertyChat } from "../../../../components/PropertyChat"
 
 // Dynamic import for PropertyMap to avoid SSR issues with Leaflet
 const PropertyMap = dynamic(() => import("./property-map"), {

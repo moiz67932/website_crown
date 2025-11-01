@@ -1,14 +1,14 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "../../components/ui/badge"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Button } from "../../components/ui/button"
+import { Slider } from "../../components/ui/slider"
+import { Checkbox } from "../../components/ui/checkbox"
+import { Input } from "../../components/ui/input"
+import { Label } from "../../components/ui/label"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../components/ui/accordion"
 import { Home, Building, MapPin, Wifi, Car, Waves, Trees, Utensils, Dumbbell } from "lucide-react"
 import type { FilterValues } from "./map-view-header"
 

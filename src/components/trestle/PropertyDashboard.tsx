@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useTrestleProperties, useTrestleSync } from '@/hooks/useTrestleProperties';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Badge } from '../ui/badge';
 import { Loader2, Search, Home, DollarSign, MapPin, Bed, Bath, Calendar } from 'lucide-react';
 
 export function PropertyDashboard() {

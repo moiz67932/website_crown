@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "../../components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { GridIcon, LayoutList } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useMemo } from "react"
@@ -7,7 +7,7 @@ import dynamic from "next/dynamic"
 
 // Load the client-only CountyHighlightMap dynamically with SSR disabled so
 // Leaflet (which depends on window) isn't evaluated during server builds.
-const CountyHighlightMap = dynamic(() => import("@/components/county-highlight-map"), { ssr: false })
+const CountyHighlightMap = dynamic(() => import("../../components/county-highlight-map"), { ssr: false })
 
 interface IPropertyListingHeaderProps {
   totalProperties: number

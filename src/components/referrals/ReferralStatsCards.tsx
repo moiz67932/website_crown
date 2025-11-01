@@ -1,7 +1,7 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Users, TrendingUp, Gift } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '../ui/skeleton'
 
 export interface ReferralTotals {
   visits: number

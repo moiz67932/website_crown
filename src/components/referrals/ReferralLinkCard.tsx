@@ -1,7 +1,7 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
 import { Share2, Copy, QrCode } from 'lucide-react'
 import { useState } from 'react'
 

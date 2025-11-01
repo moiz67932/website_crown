@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import LandingTemplate from '@/components/landing/LandingTemplate'
+import LandingTemplate from '../../../components/landing/LandingTemplate'
 import { getLandingData } from '@/lib/landing/query'
 import { LandingKind } from '@/types/landing'
 

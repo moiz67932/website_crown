@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Search, Home, Building, MapPin, Users, Settings, FileText, Calculator, Eye } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Input } from "../../components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
+import { Badge } from "../../components/ui/badge"
 
 export const metadata: Metadata = {
   title: "Sitemap | Real Estate",

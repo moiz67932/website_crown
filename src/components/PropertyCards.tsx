@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { PropertyCard } from "@/components/property-card"
+import { PropertyCard } from "./property-card"
 import type { Property } from "@/interfaces"
 import { deriveDisplayName } from "@/lib/display-name"
 

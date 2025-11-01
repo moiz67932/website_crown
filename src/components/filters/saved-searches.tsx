@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import { Label } from "../ui/label"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card"
+import { Badge } from "../ui/badge"
 // Using basic HTML inputs instead of complex UI components
 import { 
   Save, Search, Bell, BellOff, Edit, Trash2, MoreVertical, 

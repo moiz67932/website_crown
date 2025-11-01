@@ -6,11 +6,11 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Menu, X, ChevronDown, User, LogOut, Settings } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Button } from "../ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "../ui/dropdown-menu"
 import { navStyles } from "./navbar.styles"
 import { useAuth } from "@/hooks/use-auth"
-import ThemeToggle from "@/components/theme-toggle"
+import ThemeToggle from "../theme-toggle"
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)

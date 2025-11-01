@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { PropertyCards } from "@/components/PropertyCards"
+import { PropertyCards } from "../../components/PropertyCards"
 
 export default function ChatPage() {
   const [msg, setMsg] = useState("")

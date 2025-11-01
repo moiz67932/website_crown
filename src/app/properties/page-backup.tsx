@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from "react"
 import dynamic from "next/dynamic"
 import PropertiesGrid from "./properties-grid"
 import PropertyListingHeader from "./property-header"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "../../components/ui/skeleton"
 import {
   Pagination,
   PaginationContent,
@@ -11,10 +11,10 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "../../components/ui/pagination"
 import useListProperties from "@/hooks/queries/useGetListProperties"
 import { useSearchParams } from "next/navigation"
-import { PropertyCard } from "@/components/property-card"
+import { PropertyCard } from "../../components/property-card"
 import { Property } from "@/interfaces"
 
 // Dynamically import FilterSidebar and MobileFilterDrawer with SSR disabled

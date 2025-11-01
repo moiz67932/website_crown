@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Property } from '@/interfaces'
-import PropertyComparison from '@/components/comparison/property-comparison'
-import { Button } from '@/components/ui/button'
+import PropertyComparison from '../../components/comparison/property-comparison'
+import { Button } from '../../components/ui/button'
 import { ArrowLeft, Search } from 'lucide-react'
 import Link from 'next/link'
 import useListProperties from '@/hooks/queries/useGetListProperties'

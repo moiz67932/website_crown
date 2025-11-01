@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "../../../components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
+import { Badge } from "../../../components/ui/badge"
 import {
   CheckCircle,
   Star,
@@ -19,7 +19,7 @@ import {
   Target,
   Heart,
 } from "lucide-react"
-import CustomerReview from "@/components/customer-review"
+import CustomerReview from "../../../components/customer-review"
 
 export const metadata: Metadata = {
   title: "Concierge Home Buying Services | Crown Coastal Homes",

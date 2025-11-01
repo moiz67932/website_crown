@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight, Expand, Maximize2, Minimize2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "../../../../components/ui/button"
+import { Dialog, DialogContent, DialogTrigger } from "../../../../components/ui/dialog"
 
 interface PropertyGalleryProps {
   images: string[]

@@ -10,11 +10,11 @@ import {
   useSearchHistory,
   useViewedProperties
 } from '@/hooks/use-user-management'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
+import { Badge } from '../../components/ui/badge'
+import { Skeleton } from '../../components/ui/skeleton'
 import { 
   User, 
   Heart, 

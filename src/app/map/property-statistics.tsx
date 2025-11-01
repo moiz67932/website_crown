@@ -1,9 +1,9 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "../../components/ui/card";
+import { Progress } from "../../components/ui/progress";
+import { Separator } from "../../components/ui/separator";
+import { Badge } from "../../components/ui/badge";
 
 // Kept props interface optional so existing callers passing `properties` don't break.
 interface PropertyStatisticsProps {

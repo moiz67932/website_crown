@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "../ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Badge } from "../ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { 
   Search, Map, List, Filter, Save, History, 
   TrendingUp, MapPin, Settings, BarChart3

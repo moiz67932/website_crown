@@ -1,7 +1,7 @@
 import { FC } from "react";
 import Navbar from "./navbar";
 import Footer from "./footer";
-import ComparisonBar from "@/components/comparison/comparison-bar";
+import ComparisonBar from "../comparison/comparison-bar";
 
 const Layout: FC<{ children: React.ReactNode }> = ({ children }) => {
   return (

@@ -1,6 +1,6 @@
 "use client"
 import { useMemo, useState, useEffect } from "react"
-import { PropertyCards } from "@/components/PropertyCards"
+import { PropertyCards } from "./PropertyCards"
 import { openChatAndSend, setPropertyContext } from "@/contexts/chat-bus"
 
 type Msg = { from: "user" | "bot"; text: string }

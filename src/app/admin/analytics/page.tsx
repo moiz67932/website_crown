@@ -1,6 +1,6 @@
 import { getSupabase } from '@/lib/supabase'
-import ChartCard from '@/components/admin/ChartCard'
-import { ViewsLine, CTRBar } from '@/components/admin/charts/AnalyticsCharts'
+import ChartCard from '../../../components/admin/ChartCard'
+import { ViewsLine, CTRBar } from '../../../components/admin/charts/AnalyticsCharts'
 
 export const dynamic = 'force-dynamic'
 

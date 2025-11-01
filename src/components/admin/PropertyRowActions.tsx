@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Button } from '../ui/button';
 
 export default function PropertyRowActions({ id, listingKey, hidden }: { id?: string; listingKey?: string; hidden?: boolean | null }) {
   const [pending, start] = useTransition();

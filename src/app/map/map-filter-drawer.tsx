@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "../../components/ui/button"
 import { SlidersHorizontal, X, Check } from "lucide-react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "../../components/ui/sheet"
 import MapFilterSidebar from "./map-filter-sidebar"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "../../components/ui/badge"
 import type { FilterValues } from "./map-view-header"
 
 interface MapFilterDrawerProps {

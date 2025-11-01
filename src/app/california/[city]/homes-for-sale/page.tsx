@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import LandingTemplate from '@/components/landing/LandingTemplate'
+import LandingTemplate from '../../../../components/landing/LandingTemplate'
 import { getLandingData } from '@/lib/landing/query'
 import { CA_CITIES, cityToTitle, slugToCity } from '@/lib/seo/cities'
 import { getOrGenerateFaqs } from '@/lib/faqs'

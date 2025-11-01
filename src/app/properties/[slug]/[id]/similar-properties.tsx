@@ -4,8 +4,8 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Bed, Bath, Maximize, MapPin } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "../../../../components/ui/card"
+import { Badge } from "../../../../components/ui/badge"
 
 interface Property {
   id: string

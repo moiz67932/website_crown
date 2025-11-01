@@ -7,11 +7,11 @@
 // import Script from "next/script"
 // import React, { useState } from "react"
 
-// import { Button } from "@/components/ui/button"
-// import { Card, CardContent } from "@/components/ui/card"
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-// import { Badge } from "@/components/ui/badge"
-// import { Separator } from "@/components/ui/separator"
+// import { Button } from "../../../../components/ui/button"
+// import { Card, CardContent } from "../../../../components/ui/card"
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs"
+// import { Badge } from "../../../../components/ui/badge"
+// import { Separator } from "../../../../components/ui/separator"
 // import PropertyGallery from "./property-gallery"
 // import PropertyMap from "./property-map"
 // import ContactForm from "../../../../components/contact-form"
@@ -20,7 +20,7 @@
 // import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
 // import PropertyFAQ from "./property-faq"
 // import MortgageCalculatorModal from "./mortage-calculator-modal"
-// import Loading from "@/components/shared/loading"
+// import Loading from "../../../../components/shared/loading"
 // import { feature } from "@turf/turf";
 
 // export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {

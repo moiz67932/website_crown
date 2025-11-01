@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { MapPin, Clock, Phone, Mail, ExternalLink, AlertCircle } from "lucide-react"
 
 // Removed duplicate global declaration for window.google to avoid TS conflict

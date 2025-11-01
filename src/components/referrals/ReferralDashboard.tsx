@@ -1,14 +1,14 @@
 "use client"
 import useSWR from 'swr'
 import { useEffect, useState } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import ReferralStatsCards from './ReferralStatsCards'
 import ReferralLinkCard from './ReferralLinkCard'
 import ReferralChart from './ReferralChart'
 import RecentReferralsTable from './RecentReferralsTable'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
 
 type Stats = {
   visits: number

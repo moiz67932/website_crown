@@ -2,8 +2,8 @@
 
 import { FormEvent, useState, useRef, useEffect } from "react"
 import { Search, MapPin, Home, DollarSign, Map, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
 import { useRouter } from "next/navigation"
 import { useAutoComplete } from "@/hooks/queries/useAutoComplete"
 

@@ -57,5 +57,5 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
 
 // Client component placed in same file for convenience
 // It will be shipped to client; keep it minimal and use fetch to PATCH the status
-import StatusEditor from '@/components/admin/StatusEditor'
+import StatusEditor from '../../../../components/admin/StatusEditor'
 

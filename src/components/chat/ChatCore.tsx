@@ -8,8 +8,8 @@
 //   useState,
 //   forwardRef,
 // } from "react"
-// import { PropertyCards } from "@/components/PropertyCards"
-// import { ChatMessageRenderer } from "@/components/chat/ChatMessageRenderer"
+// import { PropertyCards } from "../PropertyCards"
+// import { ChatMessageRenderer } from "../chat/ChatMessageRenderer"
 // import type { ChatUISpec } from "@/lib/ui-spec"
 // import { stripBasicMarkdownArtifacts } from "@/lib/sanitize"
 
@@ -807,8 +807,8 @@
 //   useState,
 //   forwardRef,
 // } from "react"
-// import { PropertyCards } from "@/components/PropertyCards"
-// import { ChatMessageRenderer } from "@/components/chat/ChatMessageRenderer"
+// import { PropertyCards } from "../PropertyCards"
+// import { ChatMessageRenderer } from "../chat/ChatMessageRenderer"
 // import type { ChatUISpec } from "@/lib/ui-spec"
 // import { stripBasicMarkdownArtifacts } from "@/lib/sanitize"
 
@@ -1707,11 +1707,11 @@ import React, {
   useState,
   forwardRef,
 } from "react"
-import { PropertyCards } from "@/components/PropertyCards"
-import { ChatMessageRenderer } from "@/components/chat/ChatMessageRenderer"
+import { PropertyCards } from "../PropertyCards"
+import { ChatMessageRenderer } from "../chat/ChatMessageRenderer"
 import type { ChatUISpec } from "@/lib/ui-spec"
 import { stripBasicMarkdownArtifacts } from "@/lib/sanitize"
-import { IconSend, IconMic, IconMicOff } from "@/components/icons/CcIcons"
+import { IconSend, IconMic, IconMicOff } from "../icons/CcIcons"
 
 type ChatCoreProps = {
   defaultLang?: string

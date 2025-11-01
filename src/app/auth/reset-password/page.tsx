@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import ResetPasswordClient from "./reset-password-client"
-import LogoDisplay from "@/components/auth/logo-display"
+import LogoDisplay from "../../../components/auth/logo-display"
 
 export const metadata: Metadata = {
   title: "Reset Password | Real Estate",

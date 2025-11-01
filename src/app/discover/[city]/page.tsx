@@ -3,14 +3,14 @@ import { getCityData, MappingCityIdToCityName } from "@/lib/city-data";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "../../../components/ui/accordion";
 import {
   ArrowRight,
   Search,
@@ -21,15 +21,15 @@ import {
   ChevronRightIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
-import { PropertyCard } from "@/components/property-card";
+import { PropertyCard } from "../../../components/property-card";
 import { cn } from "@/lib/utils";
 import { Property } from "@/interfaces";
 import { cityPageStyles, citySearchWidgetStyles } from "./page.styles";
 import ScrollButton from "./_components/ScrollButton";
-import CityMapWrapper from "@/components/map/CityMapWrapper";
+import CityMapWrapper from "../../../components/map/CityMapWrapper";
 
 // const CityMapWrapper = dynamic(
-//   () => import("@/components/map/CityMapWrapper"),
+//   () => import("../../../components/map/CityMapWrapper"),
 //   { ssr: false }
 // );
 

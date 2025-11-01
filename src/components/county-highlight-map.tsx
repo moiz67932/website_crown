@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapPin, Loader2, AlertCircle } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from './ui/badge'
 
 // Fix for default marker icons in Leaflet with Next.js
 const DefaultIcon = L.icon({

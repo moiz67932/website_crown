@@ -1,9 +1,9 @@
 // src/app/admin/properties/page.tsx
 import Link from "next/link";
-import SyncControls from "@/components/admin/SyncControls";
+import SyncControls from "../../../components/admin/SyncControls";
 import { searchProperties } from "@/lib/db/property-repo";
-import PropertyRowActions from "@/components/admin/PropertyRowActions";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import PropertyRowActions from "../../../components/admin/PropertyRowActions";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "../../../components/ui/pagination";
 import { getPropertyVectorSearch } from "@/lib/vector-search";
 
 export const dynamic = "force-dynamic";

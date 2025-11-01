@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import AnalyticsMount from '@/components/analytics/AnalyticsMount'
+import AnalyticsMount from '../components/analytics/AnalyticsMount'
 import "@/styles/globals.css";
-import Layout from "@/components/layout";
-import Providers from "@/components/providers";
-import { ChatWidgetProvider } from "@/components/chat/ChatWidgetProvider";
+import Layout from "../components/layout";
+import Providers from "../components/providers";
+import { ChatWidgetProvider } from "../components/chat/ChatWidgetProvider";
 
 // Avoid using next/font/google to prevent Turbopack internal font loader errors in dev.
 // Provide sensible CSS variable fallbacks to common system/local fonts instead.

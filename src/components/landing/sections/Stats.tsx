@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '../../ui/card';
 import { formatPrice, formatPriceWithCommas } from '@/lib/utils';
 import { LandingStats } from '@/types/landing';
 import { Home, Ruler, Timer, Building2 } from 'lucide-react'

@@ -9,12 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+} from "../../../../components/ui/dialog"
+import { Button } from "../../../../components/ui/button"
+import { Slider } from "../../../../components/ui/slider"
+import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select"
+import { Separator } from "../../../../components/ui/separator"
 
 interface MortgageCalculatorModalProps {
   propertyPrice: number

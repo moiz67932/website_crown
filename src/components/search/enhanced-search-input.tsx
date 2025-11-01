@@ -2,9 +2,9 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Search, MapPin, X, Loader2, Clock, Zap } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '../ui/input'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
 import { highlightMatches } from '@/utils/search-utils'
 
 interface SearchSuggestion {

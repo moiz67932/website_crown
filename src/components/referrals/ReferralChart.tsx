@@ -1,6 +1,6 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Skeleton } from '../ui/skeleton'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
 
 type Point = { date: string; signups: number; leads: number }

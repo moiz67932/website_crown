@@ -570,7 +570,7 @@ import {
   IconPhoneEnd,
   IconSpeaker,
   IconSpeakerOff,
-} from "@/components/icons/CcIcons"
+} from "../icons/CcIcons"
 
 type Snapshot = {
   id?: string

@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Input } from "../ui/input"
+import { Button } from "../ui/button"
+import { Badge } from "../ui/badge"
 // Using basic dropdown instead of Popover/Command components
 import { 
   MapPin, Search, Navigation, Clock, Star, X, Building, 

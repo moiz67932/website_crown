@@ -26,7 +26,7 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { ArrowUpRight, FilePlus2, RefreshCw, Server, Database } from "lucide-react";
-import SyncControls from "@/components/admin/SyncControls";
+import SyncControls from "../../../components/admin/SyncControls";
 
 export const dynamic = "force-dynamic";
 
