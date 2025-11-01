@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPropertySyncService } from '@/lib/property-sync';
+import { getPropertySyncService } from '../../../../lib/property-sync';
 
 export async function GET(request: NextRequest) {
   try {

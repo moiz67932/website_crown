@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPropertyVectorSearch } from '@/lib/vector-search';
+import { getPropertyVectorSearch } from '../../../../lib/vector-search';
 import crypto from 'crypto';
-import { PropertyDataValidator } from '@/lib/data-validation';
+import { PropertyDataValidator } from '../../../../lib/data-validation';
 
 const vectorSearch = getPropertyVectorSearch();
 

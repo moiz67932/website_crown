@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { getSupabaseAuth } from '@/lib/supabase-auth'
+import { getSupabaseAuth } from '../../../../lib/supabase-auth'
 import { AuthService } from '../../../../lib/auth'
-import { getMyReferralOverview } from '@/lib/referrals'
+import { getMyReferralOverview } from '../../../../lib/referrals'
 
 export async function GET(req: NextRequest) {
   try {

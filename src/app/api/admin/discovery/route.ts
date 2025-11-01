@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
-import { fetchRealEstateTrends } from '@/lib/discovery/google-trends'
+import { getSupabase } from '../../../../lib/supabase'
+import { fetchRealEstateTrends } from '../../../../lib/discovery/google-trends'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

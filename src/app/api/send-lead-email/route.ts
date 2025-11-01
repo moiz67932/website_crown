@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { guardRateLimit } from '@/lib/rate-limit'
+import { guardRateLimit } from '../../../lib/rate-limit'
 // Legacy cookie-based referral lead awarding removed. Lead referral now explicit via /api/referrals/track-lead.
 
 type LeadPayload = any

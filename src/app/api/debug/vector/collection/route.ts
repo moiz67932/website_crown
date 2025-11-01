@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getCollectionInfo, resolveVectorSpec } from "@/lib/qdrant"
+import { getCollectionInfo, resolveVectorSpec } from "../../../../../lib/qdrant"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

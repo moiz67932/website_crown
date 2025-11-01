@@ -1,7 +1,7 @@
 // src/app/api/comments/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../lib/supabase'
 
 // Validation schema
 const PostSchema = z.object({

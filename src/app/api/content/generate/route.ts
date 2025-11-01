@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getOpenAI } from '@/lib/singletons'
-import { getSupabase } from '@/lib/supabase'
-import { attachTopPropertiesToPost } from '@/lib/attach-properties'
-import { upsertPostEmbedding } from '@/lib/embeddings'
+import { getOpenAI } from '../../../../lib/singletons'
+import { getSupabase } from '../../../../lib/supabase'
+import { attachTopPropertiesToPost } from '../../../../lib/attach-properties'
+import { upsertPostEmbedding } from '../../../../lib/embeddings'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

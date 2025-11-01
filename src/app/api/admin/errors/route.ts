@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../../lib/supabase'
 
 export async function GET(_req: NextRequest) {
   const supa = getSupabase()

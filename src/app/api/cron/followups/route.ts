@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supaServer } from '@/lib/supabase'
-import { dueFollowups, followupTemplate } from '@/lib/crm/followups'
-import { sendLeadEmail } from '@/lib/crm/email'
+import { supaServer } from '../../../../lib/supabase'
+import { dueFollowups, followupTemplate } from '../../../../lib/crm/followups'
+import { sendLeadEmail } from '../../../../lib/crm/email'
 
 export async function POST(req: NextRequest) {
   const auth = req.headers.get('authorization') || ''

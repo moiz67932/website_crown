@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getOrGenerateFaqs } from '@/lib/faqs'
+import { getOrGenerateFaqs } from '../../../lib/faqs'
 
 const Payload = z.object({ city: z.string(), slug: z.string() })
 

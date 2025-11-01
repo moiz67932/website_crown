@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getOpenAI } from '@/lib/singletons';
+import { getOpenAI } from '../../../../lib/singletons';
 
-import { buildCityContext, retrieveCityBlurbs } from '@/lib/blog/context';
-import BLOG_PROMPT_VIA_FILE from '@/lib/blog-prompt';
-import { interpolate } from '@/lib/string-utils';
-import { getSupabase } from '@/lib/supabase';
-import { attachImagesToPost } from '@/lib/unsplash';
+import { buildCityContext, retrieveCityBlurbs } from '../../../../lib/blog/context';
+import BLOG_PROMPT_VIA_FILE from '../../../../lib/blog-prompt';
+import { interpolate } from '../../../../lib/string-utils';
+import { getSupabase } from '../../../../lib/supabase';
+import { attachImagesToPost } from '../../../../lib/unsplash';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

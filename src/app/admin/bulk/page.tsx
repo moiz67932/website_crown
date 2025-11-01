@@ -1,7 +1,7 @@
 // src/app/admin/bulk/page.tsx
 export const dynamic = "force-dynamic";
 
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../lib/supabase'
 
 export default async function BulkAdmin() {
   async function call(path: string, body?: any) {

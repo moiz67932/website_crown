@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supaServer } from '@/lib/supabase'
-import { getSupabaseAuth } from '@/lib/supabase-auth'
-import { ensureReferralCode } from '@/lib/referrals'
+import { supaServer } from '../../../../lib/supabase'
+import { getSupabaseAuth } from '../../../../lib/supabase-auth'
+import { ensureReferralCode } from '../../../../lib/referrals'
 
 const rateBuckets = new Map<string, { n: number; t: number }>()
 const MAX_PER_MINUTE = 20

@@ -1,6 +1,6 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../lib/supabase'
 import Link from 'next/link'
-import { fetchRealEstateTrends } from '@/lib/discovery/google-trends'
+import { fetchRealEstateTrends } from '../../../lib/discovery/google-trends'
 import GenerateDraftButton from './GenerateDraftButton'
 import { revalidatePath } from 'next/cache'
 

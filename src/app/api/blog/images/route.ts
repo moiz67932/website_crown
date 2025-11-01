@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
-import { attachImagesToPost } from '@/lib/unsplash'
+import { getSupabase } from '../../../../lib/supabase'
+import { attachImagesToPost } from '../../../../lib/unsplash'
 
 type Body = {
   postId: string

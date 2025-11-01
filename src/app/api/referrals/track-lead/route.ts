@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { recordLead } from '@/lib/referrals'
-import { supaServer } from '@/lib/supabase'
+import { recordLead } from '../../../../lib/referrals'
+import { supaServer } from '../../../../lib/supabase'
 
 function serviceClient(){ try { return supaServer() } catch { return null } }
 

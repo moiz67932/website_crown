@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
-import { pool } from "@/lib/db/connection"
-import { guardRateLimit } from "@/lib/rate-limit"
+import { pool } from "../../../lib/db/connection"
+import { guardRateLimit } from "../../../lib/rate-limit"
 
 // Node runtime (DB access)
 export const runtime = "nodejs"

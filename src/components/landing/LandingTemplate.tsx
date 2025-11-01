@@ -23,7 +23,7 @@
 // import CitySchema from '../seo/CitySchema'
 // import RelatedVariants from './sections/RelatedVariants'
 // import Link from 'next/link'
-// import { CA_CITIES, cityToTitle } from '@/lib/seo/cities'
+// import { CA_CITIES, cityToTitle } from '../../lib/seo/cities'
 // // FAQ collapse UI uses FAQSection; we pass structured items
 
 // // Deferred / client-only sections (no ssr:false inside server component; Next will handle client boundary)

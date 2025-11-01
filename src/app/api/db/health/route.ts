@@ -1,7 +1,7 @@
 // src/app/api/db/health/route.ts
 export const runtime = "nodejs";
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/db/connection";
+import { pool } from "../../../../lib/db/connection";
 
 export async function GET() {
   const sql = `

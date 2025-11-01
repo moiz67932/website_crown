@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
-import { attachImagesToPost, deriveImagePromptsFromPost } from '@/lib/unsplash'
+import { getSupabase } from '../../../../../lib/supabase'
+import { attachImagesToPost, deriveImagePromptsFromPost } from '../../../../../lib/unsplash'
 
 export async function POST(req: NextRequest) {
   const supa = getSupabase()

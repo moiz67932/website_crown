@@ -1,6 +1,6 @@
 // src/app/admin/page.tsx
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase } from "../../lib/supabase";
 import { ArrowUpRight, FilePlus2, RefreshCw, Server, Database } from "lucide-react";
 import SyncControls from "../../components/admin/SyncControls";
 

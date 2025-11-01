@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { supaServer } from '@/lib/supabase'
+import { supaServer } from '../../../../lib/supabase'
 
 function admin() { return supaServer() }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseAuth } from '@/lib/supabase-auth'
-import { isAdmin } from '@/lib/referrals'
+import { getSupabaseAuth } from '../../../../../lib/supabase-auth'
+import { isAdmin } from '../../../../../lib/referrals'
 
 function bearerOk(req: NextRequest){
   const hdr = req.headers.get('authorization') || ''

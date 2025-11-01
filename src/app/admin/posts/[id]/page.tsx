@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../../lib/supabase'
 import { notFound } from 'next/navigation'
 
 export default async function EditPost({ params }: { params: Promise<{ id: string }> }) {

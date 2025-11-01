@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseAuthService } from '@/lib/supabase-auth';
-import { loginSchema } from '@/lib/validation';
-import { AuthService } from '@/lib/auth';
+import { SupabaseAuthService } from '../../../../lib/supabase-auth';
+import { loginSchema } from '../../../../lib/validation';
+import { AuthService } from '../../../../lib/auth';
 // Legacy referral session merge removed (explicit referral system now)
 
 export async function POST(request: NextRequest) {

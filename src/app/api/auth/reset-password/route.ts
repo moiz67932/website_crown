@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supaBrowser } from '@/lib/supabase'
+import { supaBrowser } from '../../../../lib/supabase'
 
 // This route triggers a reset email via Supabase client SDK (anon key)
 export async function POST(req: NextRequest) {

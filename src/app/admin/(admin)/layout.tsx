@@ -1,6 +1,6 @@
 // import { redirect } from 'next/navigation'
 // import { cookies } from 'next/headers'
-// import { AuthService } from '@/lib/auth'
+// import { AuthService } from '../../../lib/auth'
 
 // export default async function AdminLayout({ children }: { children: React.ReactNode }) {
 //   // Server component guard: verify token cookie and isAdmin
@@ -24,7 +24,7 @@
 
 // src/app/admin/page.tsx
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase } from "../../../lib/supabase";
 import { ArrowUpRight, FilePlus2, RefreshCw, Server, Database } from "lucide-react";
 import SyncControls from "../../../components/admin/SyncControls";
 

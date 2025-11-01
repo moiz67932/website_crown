@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 import 'dotenv/config'
-import { supaServer } from '@/lib/supabase'
+import { supaServer } from '../src/lib/supabase'
 import OpenAI from 'openai'
 import crypto from 'crypto'
 import { QdrantClient } from '@qdrant/js-client-rest'

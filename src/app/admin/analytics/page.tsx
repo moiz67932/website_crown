@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../lib/supabase'
 import ChartCard from '../../../components/admin/ChartCard'
 import { ViewsLine, CTRBar } from '../../../components/admin/charts/AnalyticsCharts'
 

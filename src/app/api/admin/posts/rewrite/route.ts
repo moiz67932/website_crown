@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
-import { getOpenAI } from '@/lib/singletons'
+import { getSupabase } from '../../../../../lib/supabase'
+import { getOpenAI } from '../../../../../lib/singletons'
 
 export const dynamic = 'force-dynamic'
 

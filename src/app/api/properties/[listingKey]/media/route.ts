@@ -1,6 +1,6 @@
 // src/app/api/properties/[listingKey]/media/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getPropertyMediaCached } from "@/lib/db/media-repo";
+import { getPropertyMediaCached } from "../../../../../lib/db/media-repo";
 
 export const runtime = "nodejs"; // We use pg; ensure Node runtime
 

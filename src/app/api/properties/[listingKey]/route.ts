@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPropertyByListingKey } from "@/lib/db/properties";
-import { deriveDisplayName } from "@/lib/display-name";
+import { getPropertyByListingKey } from "../../../../lib/db/properties";
+import { deriveDisplayName } from "../../../../lib/display-name";
 
 export const runtime = "nodejs";
 

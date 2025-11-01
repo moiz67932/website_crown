@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseAuthService } from '@/lib/supabase-auth';
+import { SupabaseAuthService } from '../../../../lib/supabase-auth';
 import { z } from 'zod';
 
 const forgotPasswordSchema = z.object({

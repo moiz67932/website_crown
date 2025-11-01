@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../../lib/supabase'
 
 const Schema = z.object({
   postId: z.string().uuid().optional(),

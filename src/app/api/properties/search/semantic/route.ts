@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createTrestleApiService } from '@/lib/trestle-service';
-import { TrestleProperty } from '@/lib/trestle-api';
+import { createTrestleApiService } from '../../../../../lib/trestle-service';
+import { TrestleProperty } from '../../../../../lib/trestle-api';
 
 const trestleApi = createTrestleApiService();
 

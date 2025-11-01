@@ -1,5 +1,5 @@
-import { ensureSessionForUser, loadSessionMessages } from '@/lib/chat/store'
-import { SupabaseAuthService } from '@/lib/supabase-auth'
+import { ensureSessionForUser, loadSessionMessages } from '../../../../lib/chat/store'
+import { SupabaseAuthService } from '../../../../lib/supabase-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

@@ -1,7 +1,7 @@
 // src/app/api/newsletter/subscribe/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../../../lib/supabase'
 import nodemailer from 'nodemailer'
 
 // Accept honeypot/time-on-page signals so our notification email route doesn't reject as bot

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { pool } from '@/lib/db/connection'
+import { pool } from '../../../../lib/db/connection'
 export const runtime = 'nodejs'
 
 export async function PATCH(req: Request) {

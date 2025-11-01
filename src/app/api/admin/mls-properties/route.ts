@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { pool } from '@/lib/db/connection'
+import { pool } from '../../../../lib/db/connection'
 export const runtime = 'nodejs'
 
 // Admin API for properties managed in Postgres (MLS import).

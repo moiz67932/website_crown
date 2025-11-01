@@ -10,8 +10,8 @@
 // } from "react"
 // import { PropertyCards } from "../PropertyCards"
 // import { ChatMessageRenderer } from "../chat/ChatMessageRenderer"
-// import type { ChatUISpec } from "@/lib/ui-spec"
-// import { stripBasicMarkdownArtifacts } from "@/lib/sanitize"
+// import type { ChatUISpec } from "../../lib/ui-spec"
+// import { stripBasicMarkdownArtifacts } from "../../lib/sanitize"
 
 // type ChatCoreProps = {
 //   defaultLang?: string
@@ -809,8 +809,8 @@
 // } from "react"
 // import { PropertyCards } from "../PropertyCards"
 // import { ChatMessageRenderer } from "../chat/ChatMessageRenderer"
-// import type { ChatUISpec } from "@/lib/ui-spec"
-// import { stripBasicMarkdownArtifacts } from "@/lib/sanitize"
+// import type { ChatUISpec } from "../../lib/ui-spec"
+// import { stripBasicMarkdownArtifacts } from "../../lib/sanitize"
 
 // type ChatCoreProps = {
 //   defaultLang?: string

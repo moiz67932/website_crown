@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server'
 // Legacy referral create endpoint deprecated; explicit tracking only.
 // Keeping minimal stub to avoid 404 if frontend still calls temporarily.
 // Remove after clients updated.
-import { ensureReferralCode } from '@/lib/referrals'
-import { getSupabaseAuth } from '@/lib/supabase-auth'
+import { ensureReferralCode } from '../../../../lib/referrals'
+import { getSupabaseAuth } from '../../../../lib/supabase-auth'
 
 export async function POST(req: NextRequest) {
   try {

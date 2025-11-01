@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProperties } from '@/lib/db/properties';
-import { deriveDisplayName } from '@/lib/display-name';
+import { getProperties } from '../../../lib/db/properties';
+import { deriveDisplayName } from '../../../lib/display-name';
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {

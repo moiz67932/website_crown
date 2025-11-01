@@ -2,7 +2,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
-import { getQdrant } from "@/lib/qdrant"
+import { getQdrant } from "../../../../lib/qdrant"
 
 export async function GET() {
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { initSupabaseClient } from '@/lib/db/supabase-debug'
+import { initSupabaseClient } from '../../../../lib/db/supabase-debug'
 
 // Self-test endpoint: verifies Supabase connectivity and counts rows from 'properties' using a HEAD count
 export async function GET() {

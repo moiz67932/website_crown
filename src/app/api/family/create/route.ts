@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseAuth } from '@/lib/supabase-auth'
+import { getSupabaseAuth } from '../../../../lib/supabase-auth'
 
 function randCode(){ return Math.random().toString(36).slice(2,10).toUpperCase() }
 

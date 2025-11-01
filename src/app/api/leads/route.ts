@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { pushLead } from '@/lib/crm'
-import { parseUTMFromURL } from '@/lib/analytics/utm'
+import { pushLead } from '../../../lib/crm'
+import { parseUTMFromURL } from '../../../lib/analytics/utm'
 
 export async function POST(req: NextRequest) {
   try {

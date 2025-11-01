@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth';
-import { SupabaseAuthService } from '@/lib/supabase-auth';
+import { AuthService } from '../../../../lib/auth';
+import { SupabaseAuthService } from '../../../../lib/supabase-auth';
 
 export async function GET(request: NextRequest) {
   try {

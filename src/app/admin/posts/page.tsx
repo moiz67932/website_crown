@@ -1,6 +1,6 @@
 // src/app/admin/posts/page.tsx
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase } from "../../../lib/supabase";
 import PostActions from "../../../components/admin/PostActions";
 import ReviewerCell from "../../../components/admin/ReviewerCell";
 
