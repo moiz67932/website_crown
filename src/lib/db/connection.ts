@@ -102,6 +102,19 @@ import { Pool } from "pg";
 import { Connector, IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import { GoogleAuth } from "google-auth-library";
 
+// Detect Next.js build/static export to avoid initializing Cloud SQL during build
+function isBuildTime(): boolean {
+  const argv = Array.isArray(process.argv) ? process.argv.join(" ") : "";
+  return (
+    process.env.SKIP_DB_ON_BUILD === "1" ||
+    process.env.NEXT_BUILD === "1" ||
+    process.env.npm_lifecycle_event === "build" ||
+    process.env.NPM_LIFECYCLE_EVENT === "build" ||
+    process.env.VERCEL === "1" && process.env.VERCEL_BUILD === "1" ||
+    (argv.includes("next") && argv.includes("build"))
+  );
+}
+
 declare global {
   // eslint-disable-next-line no-var
   var __cloudsqlPool: Pool | undefined;
@@ -159,6 +172,17 @@ function loadServiceAccountCredentials():
 }
 
 async function initPool(): Promise<Pool> {
+  // Short-circuit during build to prevent connector calls (which can 409/timeout)
+  if (isBuildTime()) {
+    const fake: any = {
+      query: async () => {
+        throw new Error("[db] Pool disabled during build");
+      },
+      end: async () => void 0,
+    };
+    return fake as Pool;
+  }
+
   const instance = process.env.CLOUDSQL_INSTANCE_CONNECTION_NAME;
   const dbName = process.env.DB_NAME;
   const dbUser = process.env.DB_USER;

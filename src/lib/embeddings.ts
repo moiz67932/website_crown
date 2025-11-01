@@ -1,10 +1,11 @@
 import 'dotenv/config'
-import { openai } from './openai'
+import { getOpenAI } from './openai'
 import { getSupabase } from '../lib/supabase'
 
 export async function embedText(text: string): Promise<number[]> {
   const trimmed = (text || '').slice(0, 8000) // safety cap
-  const res = await openai.embeddings.create({
+  const client = getOpenAI()
+  const res = await client.embeddings.create({
     model: process.env.EMBEDDING_MODEL || process.env.EMBED_MODEL || 'text-embedding-3-small',
     input: trimmed,
   })
@@ -13,7 +14,8 @@ export async function embedText(text: string): Promise<number[]> {
 
 // Batch embedding helper for RAG retrieval
 export async function embed(texts: string[], model = process.env.EMBED_MODEL || process.env.EMBEDDING_MODEL || 'text-embedding-3-small') {
-  const r = await openai.embeddings.create({ model, input: texts })
+  const client = getOpenAI()
+  const r = await client.embeddings.create({ model, input: texts })
   return r.data.map(d => d.embedding as unknown as number[])
 }
 
