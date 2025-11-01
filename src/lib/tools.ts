@@ -131,7 +131,7 @@
 
 // lib/tools.ts
 import { retrieve } from "./rag"
-import { supaServer } from '@/lib/supabase'
+import { supaServer } from './supabase'
 
 function admin() { return supaServer() }
 

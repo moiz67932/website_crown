@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '../../hooks/use-auth'
 import { 
   useUserProfile,
   useSavedProperties,
   useSavedSearches,
   useSearchHistory,
   useViewedProperties
-} from '@/hooks/use-user-management'
+} from '../../hooks/use-user-management'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'

@@ -1,10 +1,10 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../supabase'
 import type { SearchFilters } from './parse'
-import type { PropertyCard } from '@/lib/ui-spec'
-import { embedText } from '@/lib/embeddings'
-import { vectorSearch, resolveVectorSpec, dlog as vLog, strictModeBlocksUnindexedFiltering } from '@/lib/qdrant'
-import { buildQdrantFilter } from '@/lib/qdrantFilter'
-import { getPropertyVectorSearch } from '@/lib/vector-search'
+import type { PropertyCard } from '../ui-spec'
+import { embedText } from '../embeddings'
+import { vectorSearch, resolveVectorSpec, dlog as vLog, strictModeBlocksUnindexedFiltering } from '../qdrant'
+import { buildQdrantFilter } from '../qdrantFilter'
+import { getPropertyVectorSearch } from '../vector-search'
 
 const client = getSupabase()
 

@@ -8,7 +8,7 @@ import Image from "next/image"
 import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
-import { formatPrice } from "@/lib/utils"
+import { formatPrice } from "../../lib/utils"
 import ReactMarkdown from "react-markdown"
 
 // Define the property type based on useGetListProperties.ts API response

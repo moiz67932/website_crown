@@ -1,4 +1,4 @@
-import { getVectorClient } from "@/lib/singletons"
+import { getVectorClient } from "./singletons"
 
 // Safe no-op retrieval that can be wired to a vector DB later.
 export async function maybeRetrieveContext(query: string): Promise<string> {

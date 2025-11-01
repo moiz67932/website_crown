@@ -1,7 +1,7 @@
-import { getOpenAI } from '@/lib/singletons'
-import { getSupabase } from '@/lib/supabase'
-import { pool } from '@/lib/db/connection'
-import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
+import { getOpenAI } from './singletons'
+import { getSupabase } from './supabase'
+import { pool } from './db/connection'
+import { LANDING_PROMPTS } from './ai/prompts/landings'
 
 export type FAQItem = { question: string; answer: string }
 type RichFAQItem = { q: string; longAnswer: string; shortAnswer?: string }

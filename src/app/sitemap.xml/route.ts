@@ -1,5 +1,5 @@
-import { CA_CITIES } from '@/lib/seo/cities'
-import { LANDINGS } from '@/lib/landing/defs'
+import { CA_CITIES } from '../../lib/seo/cities'
+import { LANDINGS } from '../../lib/landing/defs'
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://www.example.com'

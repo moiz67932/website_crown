@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css"
 import { useEffect, useState, useMemo, useCallback } from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
-import { createCustomIcon } from "@/app/map/property-map"
+import { createCustomIcon } from "../app/map/property-map"
 import { useRouter } from "next/navigation"
 
 // Component to handle map bounds

@@ -8,7 +8,7 @@ import { ArrowLeft, SlidersHorizontal, X, ChevronDown, ChevronUp, HelpCircle } f
 import { Badge } from "../../components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../../components/ui/sheet"
 import MapFilterSidebar from "./map-filter-sidebar"
-import { useMediaQuery } from "@/hooks/use-media-query"
+import { useMediaQuery } from "../../hooks/use-media-query"
 
 export interface FilterValues {
   propertyType?: string[]

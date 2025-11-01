@@ -16,7 +16,7 @@
 // src/app/(landing)/sections/AIDescription.tsx
 import React from 'react'
 import Image from 'next/image'
-import { getLandingInlineImages } from '@/lib/landing/image' // same file where getLandingHeroImage lives
+import { getLandingInlineImages } from '../../../lib/landing/image' // same file where getLandingHeroImage lives
 
 type Props = {
   city: string

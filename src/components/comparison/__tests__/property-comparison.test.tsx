@@ -1,14 +1,16 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import PropertyComparison from '../property-comparison'
-import { Property } from '@/interfaces'
+import { Property } from '../../../interfaces'
 
 // Mock Next.js Image component
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
+    // Strip Next.js-only props like `fill` to avoid React DOM warnings in tests
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} />
+    const { src, alt, fill, ...rest } = props
+    return <img src={src} alt={alt} {...rest} />
   },
 }))
 
@@ -92,9 +94,11 @@ describe('PropertyComparison', () => {
 
   it('displays initial properties', () => {
     render(<PropertyComparison initialProperties={[mockProperty1, mockProperty2]} />)
-    
-    expect(screen.getByText('123 Test Street')).toBeInTheDocument()
-    expect(screen.getByText('456 Test Avenue')).toBeInTheDocument()
+
+    const street1 = screen.getAllByText('123 Test Street')
+    const street2 = screen.getAllByText('456 Test Avenue')
+    expect(street1.length).toBeGreaterThan(0)
+    expect(street2.length).toBeGreaterThan(0)
   })
 
   it('shows comparison table with property details', () => {

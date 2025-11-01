@@ -14,7 +14,7 @@ import {
   Search, SlidersHorizontal, MapPin, DollarSign, Bed, Bath, Calendar, 
   Maximize, Building, Zap, Save, History, X, Plus
 } from "lucide-react"
-import { PropertyFilters, PROPERTY_TYPES, PROPERTY_STATUS, SORT_OPTIONS } from "@/types/filters"
+import { PropertyFilters, PROPERTY_TYPES, PROPERTY_STATUS, SORT_OPTIONS } from "../../types/filters"
 import EnhancedFilterSidebar from "./enhanced-filter-sidebar"
 
 interface AdvancedSearchProps {

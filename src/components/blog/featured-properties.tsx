@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../lib/supabase'
 
 export default async function FeaturedProperties({ postId, city, limit = 6 }: { postId: string; city?: string | null; limit?: number }) {
   const supa = getSupabase()

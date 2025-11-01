@@ -21,7 +21,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Property } from '@/interfaces'
+import { Property } from '../../interfaces'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
@@ -54,7 +54,7 @@ import {
   Hospital,
   Train
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '../../lib/utils'
 import Image from 'next/image'
 
 interface ComparisonSlot {

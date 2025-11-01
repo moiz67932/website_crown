@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import type { PropertyResultsBlock } from "@/lib/ui-spec"
+import type { PropertyCard, PropertyResultsBlock } from "../../../lib/ui-spec"
 
 export function PropertyResults({ items, querySummary, page, pageSize, nextPage, rawQuery }: PropertyResultsBlock) {
   const onMore = () => {
@@ -13,7 +13,7 @@ export function PropertyResults({ items, querySummary, page, pageSize, nextPage,
     <div className="space-y-3">
       <div className="text-sm text-gray-600">{querySummary}</div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {items.map((p) => (
+  {items.map((p: PropertyCard) => (
           <a key={p.id} href={p.url || '#'} className="group overflow-hidden rounded-xl border bg-white hover:shadow transition">
             {p.photoUrl ? (
               <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">

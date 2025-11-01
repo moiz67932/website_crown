@@ -11,7 +11,7 @@ import { Label } from "../../../components/ui/label"
 import { Checkbox } from "../../../components/ui/checkbox"
 import { Separator } from "../../../components/ui/separator"
 import { Alert, AlertDescription } from "../../../components/ui/alert"
-import { registerSchema, validatePassword } from "@/lib/validation"
+import { registerSchema, validatePassword } from "../../../lib/validation"
 
 export default function SignupForm() {
   const router = useRouter()

@@ -1,7 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
-import { ensureReferralCode, recordSignup } from '@/lib/referrals'
-import { supaServer, supaBrowser, supaPublic } from '@/lib/supabase'
+import { ensureReferralCode, recordSignup } from './referrals'
+import { supaServer, supaBrowser, supaPublic } from './supabase'
 
 // Prefer explicit clients based on need
 // Admin/service-role client (NEVER expose to browser)

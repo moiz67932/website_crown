@@ -9,7 +9,7 @@ import { Label } from "../../components/ui/label"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../components/ui/accordion"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { Building, Wifi, Car, Waves, Trees, Utensils, Dumbbell } from "lucide-react"
-import useGetPropertyTypes from "@/hooks/queries/useGetPropertyType"
+import useGetPropertyTypes from "../../hooks/queries/useGetPropertyType"
 
 interface FilterSidebarProps {
   filters: {

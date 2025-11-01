@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth';
-import { SavedSearchesService } from '@/lib/database';
+import { AuthService } from '../../../../lib/auth';
+import { SavedSearchesService } from '../../../../lib/database';
 
 export async function GET(request: NextRequest) {
   try {

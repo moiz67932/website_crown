@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth';
-import { PropertyAlertsService } from '@/lib/database';
+import { AuthService } from '../../../../../lib/auth';
+import { PropertyAlertsService } from '../../../../../lib/database';
 
 // Loosen param typing for Next.js route handler validation compatibility
 interface RouteParams { params: any }

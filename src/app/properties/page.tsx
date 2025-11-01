@@ -16,12 +16,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "../../components/ui/pagination"
-import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated"
+import { useTrestlePropertiesIntegrated } from "../../hooks/useTrestlePropertiesIntegrated"
 import { useSearchParams, usePathname } from "next/navigation"
 import { PropertyCard } from "../../components/property-card"
-import { Property } from "@/interfaces"
-import { PropertyFilters } from "@/types/filters"
-import { generateSEOURL, parseURLToFilters } from "@/utils/url-filters"
+import { Property } from "../../interfaces"
+import { PropertyFilters } from "../../types/filters"
+import { generateSEOURL, parseURLToFilters } from "../../utils/url-filters"
 
 // Import the new enhanced components
 import AdvancedSearch from "../../components/filters/advanced-search"

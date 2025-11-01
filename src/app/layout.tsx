@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import AnalyticsMount from '../components/analytics/AnalyticsMount'
-import "@/styles/globals.css";
+import "../styles/globals.css";
 import Layout from "../components/layout";
 import Providers from "../components/providers";
 import { ChatWidgetProvider } from "../components/chat/ChatWidgetProvider";

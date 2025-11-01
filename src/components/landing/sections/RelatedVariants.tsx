@@ -1,6 +1,6 @@
 "use client"
 import Link from 'next/link'
-import { LANDINGS } from '@/lib/landing/defs'
+import { LANDINGS } from '../../../lib/landing/defs'
 
 export default function RelatedVariants({ citySlug, currentSlug }: { citySlug: string; currentSlug: string }) {
   const items = LANDINGS.filter(l => l.slug !== currentSlug)

@@ -1,5 +1,5 @@
 // src/lib/referrals.ts
-import { supaServer } from '@/lib/supabase'
+import { supaServer } from './supabase'
 
 // New simplified referrals (explicit code entry; signups + leads only)
 

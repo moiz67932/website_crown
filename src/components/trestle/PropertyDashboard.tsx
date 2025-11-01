@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTrestleProperties, useTrestleSync } from '@/hooks/useTrestleProperties';
+import { useTrestleProperties, useTrestleSync } from '../../hooks/useTrestleProperties';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';

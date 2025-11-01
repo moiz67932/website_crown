@@ -1,5 +1,5 @@
 import { chatText } from "./openai"
-import { supaServer } from '@/lib/supabase'
+import { supaServer } from './supabase'
 
 function admin() { return supaServer() }
 

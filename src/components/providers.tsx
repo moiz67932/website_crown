@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useState } from "react"
-import { ComparisonProvider } from "@/contexts/comparison-context"
+import { ComparisonProvider } from "../contexts/comparison-context"
 import { SupabaseProvider } from "./providers/supabase-provider"
 import { Toaster } from "./ui/toaster"
 

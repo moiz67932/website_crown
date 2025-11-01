@@ -1,5 +1,5 @@
 // lib/properties.ts
-import { pool } from "@/lib/db/connection"
+import { pool } from "./db/connection"
 
 export async function getPropertyByListingKey(listingKey: string) {
   const { rows } = await pool.query(

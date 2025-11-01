@@ -6,14 +6,14 @@ import PureLeafletMap from "../../components/map/pure-leaflet-map"
 import L from "leaflet"
 import * as turf from "@turf/turf"
 import type { Feature, Polygon as TurfPolygon } from "geojson"
-import { formatPrice } from "@/lib/utils"
+import { formatPrice } from "../../lib/utils"
 import { Button } from "../../components/ui/button"
 import { Trash2, MapPin, CircleIcon, BarChart3, ChevronDown, ChevronUp, ViewIcon as StreetView } from "lucide-react"
 import { Badge } from "../../components/ui/badge"
 import PropertyStatistics from "./property-statistics"
 import { useRouter } from "next/navigation"
 import StreetViewModal from "../../components/shared/street-view-model"
-import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated" // <-- Import the hook
+import { useTrestlePropertiesIntegrated } from "../../hooks/useTrestlePropertiesIntegrated" // <-- Import the hook
 
 // Import Leaflet CSS
 import "leaflet/dist/leaflet.css"

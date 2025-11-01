@@ -6,7 +6,7 @@ import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
 import { Alert, AlertDescription } from '../../../components/ui/alert'
 import { Loader2 } from 'lucide-react'
-import { supaBrowser } from '@/lib/supabase'
+import { supaBrowser } from '../../../lib/supabase'
 
 /**
  * Form for completing password reset after user clicks the Supabase recovery link.

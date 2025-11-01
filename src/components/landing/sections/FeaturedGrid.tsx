@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { LandingPropertyCard } from '@/types/landing';
-import { formatPriceWithCommas } from '@/lib/utils';
+import { LandingPropertyCard } from '../../../types/landing';
+import { formatPriceWithCommas } from '../../../lib/utils';
 
 interface Props { properties?: LandingPropertyCard[]; }
 

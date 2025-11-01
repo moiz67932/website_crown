@@ -1,4 +1,4 @@
-import { PropertyFilters } from '@/types/filters'
+import { PropertyFilters } from '../../types/filters'
 
 // Supported landing slugs (city-focused variants)
 export type LandingSlug =

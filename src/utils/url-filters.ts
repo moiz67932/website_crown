@@ -1,4 +1,4 @@
-import { PropertyFilters } from "@/types/filters";
+import { PropertyFilters } from "../types/filters";
 
 /**
  * URL Filter Utilities for SEO-friendly property search URLs

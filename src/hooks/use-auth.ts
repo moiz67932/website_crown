@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { ClientAuthService } from '@/lib/auth'
-import type { JWTPayload } from '@/lib/auth'
+import { ClientAuthService } from '../lib/auth'
+import type { JWTPayload } from '../lib/auth'
 
 export function useAuth() {
   const [user, setUser] = useState<JWTPayload | null>(null)

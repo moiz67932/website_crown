@@ -1,4 +1,4 @@
-import { PropertyFilters } from "@/types/filters";
+import { PropertyFilters } from "../types/filters";
 
 /**
  * Search Performance Optimization Utilities

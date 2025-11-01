@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Property } from '@/interfaces';
-import { TrestleProperty } from '@/lib/trestle-api';
+import { Property } from '../interfaces';
+import { TrestleProperty } from '../lib/trestle-api';
 
 export interface TrestlePropertyFilters {
   city?: string;

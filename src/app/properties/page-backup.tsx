@@ -12,10 +12,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "../../components/ui/pagination"
-import useListProperties from "@/hooks/queries/useGetListProperties"
+import useListProperties from "../../hooks/queries/useGetListProperties"
 import { useSearchParams } from "next/navigation"
 import { PropertyCard } from "../../components/property-card"
-import { Property } from "@/interfaces"
+import { Property } from "../../interfaces"
 
 // Dynamically import FilterSidebar and MobileFilterDrawer with SSR disabled
 const FilterSidebar = dynamic(() => import("./filter-sidebar"), { ssr: false })

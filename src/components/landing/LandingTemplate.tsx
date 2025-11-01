@@ -165,7 +165,7 @@
 // src/app/(landing)/landing-page.tsx
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
-import { LandingData } from '@/types/landing'
+import { LandingData } from '../../types/landing'
 import Hero from './sections/Hero'
 import Intro from './sections/Intro'
 import StatsSection from './sections/Stats'
@@ -185,7 +185,7 @@ import BusinessDirectorySection from './sections/BusinessDirectory'
 import CitySchema from '../seo/CitySchema'
 import RelatedVariants from './sections/RelatedVariants'
 import Link from 'next/link'
-import { CA_CITIES, cityToTitle } from '@/lib/seo/cities'
+import { CA_CITIES, cityToTitle } from '../../lib/seo/cities'
 
 const MapSection = dynamic<{ city: string }>(() => import('./sections/Map'), {
   loading: () => <div className="rounded-xl border bg-muted/40 h-64 w-full animate-pulse" />

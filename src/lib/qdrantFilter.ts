@@ -1,4 +1,4 @@
-import type { SearchFilters } from "@/lib/search/parse"
+import type { SearchFilters } from "./search/parse"
 
 export function buildQdrantFilter(f: SearchFilters): any | undefined {
   const must: any[] = []

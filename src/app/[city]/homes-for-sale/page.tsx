@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import LandingTemplate from '../../../components/landing/LandingTemplate'
-import { getLandingData } from '@/lib/landing/query'
-import { LandingKind } from '@/types/landing'
+import { getLandingData } from '../../../lib/landing/query'
+import { LandingKind } from '../../../types/landing'
 
 // In newer Next.js versions, params in async components must be awaited.
 interface PageParams { params: Promise<{ city: string }> }

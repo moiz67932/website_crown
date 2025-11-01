@@ -622,7 +622,7 @@ import {
   Eye,
 } from "lucide-react"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel"
-import { PropertyDetail, usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
+import { PropertyDetail, usePropertyDetail } from "../../../../hooks/queries/useGetDetailProperty"
 import React from "react"
 import Loading from "../../../../components/shared/loading"
 import ContactForm from "../../../../components/contact-form"

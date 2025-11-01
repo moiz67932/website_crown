@@ -1,6 +1,6 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from '../../lib/supabase'
 import Link from 'next/link'
-import { getBucket } from '@/lib/ab'
+import { getBucket } from '../../lib/ab'
 
 export const dynamic = 'force-dynamic'
 

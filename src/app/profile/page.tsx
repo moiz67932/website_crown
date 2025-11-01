@@ -10,11 +10,11 @@ import { Textarea } from "../../components/ui/textarea"
 import { Alert, AlertDescription } from "../../components/ui/alert"
 import { Skeleton } from "../../components/ui/skeleton"
 import { Switch } from "../../components/ui/switch"
-import { useAuth } from "@/hooks/use-auth"
-import { useUserProfile } from "@/hooks/use-user-management"
+import { useAuth } from "../../hooks/use-auth"
+import { useUserProfile } from "../../hooks/use-user-management"
 import { ArrowLeft, User, Settings, Bell, Shield } from "lucide-react"
 import Link from "next/link"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "../../hooks/use-toast"
 
 function calculateAge(dateOfBirth: string) {
   const today = new Date()

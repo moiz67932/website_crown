@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Property } from '@/interfaces'
+import { Property } from '../../interfaces'
 import PropertyComparison from '../../components/comparison/property-comparison'
 import { Button } from '../../components/ui/button'
 import { ArrowLeft, Search } from 'lucide-react'
 import Link from 'next/link'
-import useListProperties from '@/hooks/queries/useGetListProperties'
-import { useComparison } from '@/contexts/comparison-context'
+import useListProperties from '../../hooks/queries/useGetListProperties'
+import { useComparison } from '../../contexts/comparison-context'
 import Image from 'next/image'
 
 export default function ComparePageClient() {

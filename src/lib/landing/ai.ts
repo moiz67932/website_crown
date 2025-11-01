@@ -1,6 +1,6 @@
-import { pool } from '@/lib/db/connection'
-import type { LandingKind } from '@/types/landing'
-import { supaPublic, supaServer } from '@/lib/supabase'
+import { pool } from '../db/connection'
+import type { LandingKind } from '../../types/landing'
+import { supaPublic, supaServer } from '../supabase'
 import OpenAI from 'openai'
 
 // Memory cache (runtime only)

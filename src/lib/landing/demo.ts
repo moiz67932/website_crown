@@ -1,4 +1,4 @@
-import { LandingData, LandingKind, LandingPropertyCard } from '@/types/landing'
+import { LandingData, LandingKind, LandingPropertyCard } from '../../types/landing'
 
 // Deterministic pseudo-random generator (simple hash) to keep demo numbers stable per city+kind
 function hashInt(input: string): number {

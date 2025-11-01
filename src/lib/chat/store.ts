@@ -1,5 +1,5 @@
-import { supaServer } from '@/lib/supabase'
-import type { ChatUISpec } from '@/lib/ui-spec'
+import { supaServer } from '../supabase'
+import type { ChatUISpec } from '../ui-spec'
 
 export async function ensureSessionForUser(userId: string): Promise<string> {
   const supa = supaServer()

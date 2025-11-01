@@ -19,9 +19,9 @@ import SavedSearches from "./saved-searches"
 import MapPolygonSearch, { MapPolygon } from "./map-polygon-search"
 
 // Import utilities
-import { PropertyFilters, SavedSearch } from "@/types/filters"
-import { generateSEOURL, parseURLToFilters, generatePageTitle, generateMetaDescription } from "@/utils/url-filters"
-import { searchOptimizer, performanceMonitor, processFacetResponse, Facet } from "@/utils/search-optimization"
+import { PropertyFilters, SavedSearch } from "../../types/filters"
+import { generateSEOURL, parseURLToFilters, generatePageTitle, generateMetaDescription } from "../../utils/url-filters"
+import { searchOptimizer, performanceMonitor, processFacetResponse, Facet } from "../../utils/search-optimization"
 
 interface PropertySearchResult {
   properties: any[];

@@ -1,5 +1,5 @@
 // import dynamic from "next/dynamic";
-import { getCityData, MappingCityIdToCityName } from "@/lib/city-data";
+import { getCityData, MappingCityIdToCityName } from "../../../lib/city-data";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,8 +22,8 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import { PropertyCard } from "../../../components/property-card";
-import { cn } from "@/lib/utils";
-import { Property } from "@/interfaces";
+import { cn } from "../../../lib/utils";
+import { Property } from "../../../interfaces";
 import { cityPageStyles, citySearchWidgetStyles } from "./page.styles";
 import ScrollButton from "./_components/ScrollButton";
 import CityMapWrapper from "../../../components/map/CityMapWrapper";

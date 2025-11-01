@@ -15,8 +15,8 @@ import {
   Wifi, Utensils, Wind, Thermometer, ArrowUp, User, Heart, Accessibility,
   MapPin, Calendar, DollarSign, Bed, Bath, Maximize, Search
 } from "lucide-react"
-import { PropertyFilters, PROPERTY_FEATURES, PROPERTY_TYPES, PROPERTY_STATUS, SORT_OPTIONS } from "@/types/filters"
-import useGetPropertyTypes from "@/hooks/queries/useGetPropertyType"
+import { PropertyFilters, PROPERTY_FEATURES, PROPERTY_TYPES, PROPERTY_STATUS, SORT_OPTIONS } from "../../types/filters"
+import useGetPropertyTypes from "../../hooks/queries/useGetPropertyType"
 
 interface EnhancedFilterSidebarProps {
   filters: PropertyFilters;

@@ -1,5 +1,5 @@
 // src/lib/unsplash.ts
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from './supabase'
 
 /**
  * One-off Unsplash search for a given query.

@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
-import { getLandingHeroImage } from '@/lib/landing/image';
+import { cn } from '../../../lib/utils';
+import { getLandingHeroImage } from '../../../lib/landing/image';
 
 interface Props { city: string; kind: string; image?: string }
 

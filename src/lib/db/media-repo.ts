@@ -1,5 +1,5 @@
 // src/lib/db/media-repo.ts
-import { pool } from "@/lib/db";
+import { pool } from "./index";
 import { unstable_cache } from "next/cache";
 
 export type PropertyMedia = {

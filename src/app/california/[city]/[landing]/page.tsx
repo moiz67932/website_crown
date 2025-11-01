@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import LandingTemplate from '../../../../components/landing/LandingTemplate'
-import { CA_CITIES, cityToTitle } from '@/lib/seo/cities'
-import { LANDINGS, LANDINGS_BY_SLUG, type LandingSlug } from '@/lib/landing/defs'
-import { getLandingData } from '@/lib/landing/query'
-import { getSupabase } from '@/lib/supabase'
-import { getOrGenerateFaqs } from '@/lib/faqs'
+import { CA_CITIES, cityToTitle } from '../../../../lib/seo/cities'
+import { LANDINGS, LANDINGS_BY_SLUG, type LandingSlug } from '../../../../lib/landing/defs'
+import { getLandingData } from '../../../../lib/landing/query'
+import { getSupabase } from '../../../../lib/supabase'
+import { getOrGenerateFaqs } from '../../../../lib/faqs'
 
 // Pre-render all CA city x landing combos
 export async function generateStaticParams() {

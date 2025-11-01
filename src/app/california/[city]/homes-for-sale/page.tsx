@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import LandingTemplate from '../../../../components/landing/LandingTemplate'
-import { getLandingData } from '@/lib/landing/query'
-import { CA_CITIES, cityToTitle, slugToCity } from '@/lib/seo/cities'
-import { getOrGenerateFaqs } from '@/lib/faqs'
+import { getLandingData } from '../../../../lib/landing/query'
+import { CA_CITIES, cityToTitle, slugToCity } from '../../../../lib/seo/cities'
+import { getOrGenerateFaqs } from '../../../../lib/faqs'
 
 // Pre-render only CA cities for launch
 export async function generateStaticParams() {

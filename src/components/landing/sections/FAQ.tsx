@@ -1,5 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../ui/accordion'
-import { LandingFAQ } from '@/types/landing'
+import { LandingFAQ } from '../../../types/landing'
 
 interface Props { items?: LandingFAQ[] }
 

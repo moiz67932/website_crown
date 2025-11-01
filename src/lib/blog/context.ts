@@ -1,6 +1,6 @@
-import { supaServer } from '@/lib/supabase'
-import { getOpenAI } from '@/lib/singletons'
-import { qdrant, COLLECTION_CONTEXT } from '@/lib/vec/qdrant'
+import { supaServer } from '../supabase'
+import { getOpenAI } from '../singletons'
+import { qdrant, COLLECTION_CONTEXT } from '../vec/qdrant'
 
 const supa = supaServer()
 

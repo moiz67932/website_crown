@@ -1709,8 +1709,8 @@ import React, {
 } from "react"
 import { PropertyCards } from "../PropertyCards"
 import { ChatMessageRenderer } from "../chat/ChatMessageRenderer"
-import type { ChatUISpec } from "@/lib/ui-spec"
-import { stripBasicMarkdownArtifacts } from "@/lib/sanitize"
+import type { ChatUISpec } from "../../lib/ui-spec"
+import { stripBasicMarkdownArtifacts } from "../../lib/sanitize"
 import { IconSend, IconMic, IconMicOff } from "../icons/CcIcons"
 
 type ChatCoreProps = {

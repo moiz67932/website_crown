@@ -1,6 +1,6 @@
 // src/lib/discovery/google-trends.ts
 import * as googleTrends from 'google-trends-api'
-import { getOpenAI } from '@/lib/singletons'
+import { getOpenAI } from '../singletons'
 
 // Lazily acquire OpenAI client when enriching topics
 

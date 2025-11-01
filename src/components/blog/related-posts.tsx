@@ -1,4 +1,4 @@
-import { getRelatedPosts } from '@/lib/related-posts'
+import { getRelatedPosts } from '../../lib/related-posts'
 
 export default async function RelatedPosts({ postId, city }: { postId: string; city?: string | null }) {
   if (!city) return null

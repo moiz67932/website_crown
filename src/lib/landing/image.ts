@@ -1,4 +1,4 @@
-import { supaPublic, supaServer } from '@/lib/supabase'
+import { supaPublic, supaServer } from '../supabase'
 
 // Simple in-memory cache (per server runtime)
 const memCache = new Map<string, string | null>()

@@ -10,9 +10,9 @@
 //   return Response.json({ text: tr.text || "" })
 // }
 
-import { getOpenAI } from "@/lib/openai"
+import { getOpenAI } from "../../../../lib/openai"
 import { toFile } from "openai/uploads"
-import { guardRateLimit } from "@/lib/rate-limit"
+import { guardRateLimit } from "../../../../lib/rate-limit"
 
 // Force Node runtime (Edge can't reliably handle multipart audio for Whisper)
 export const runtime = "nodejs"

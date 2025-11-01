@@ -562,7 +562,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { ChatCore, ChatCoreHandle } from "./ChatCore"
-import type { ChatOpenAndSendPayload } from "@/contexts/chat-bus"
+import type { ChatOpenAndSendPayload } from "../../contexts/chat-bus"
 import {
   IconChat,
   IconClose,

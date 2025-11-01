@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from './supabase'
 
 export async function logError(path: string, err: any) {
   try {

@@ -1,11 +1,11 @@
 // Real Postgres-backed landing query layer.
 // Provides aggregate stats + featured listings + basic SEO scaffolding.
 
-import { LandingKind, LandingData, LandingStats, LandingPropertyCard } from '@/types/landing'
-import { searchProperties } from '@/lib/db'
-import { pool } from '@/lib/db/connection'
+import { LandingKind, LandingData, LandingStats, LandingPropertyCard } from '../../types/landing'
+import { searchProperties } from '../db'
+import { pool } from '../db/connection'
 import { getAIDescription } from './ai'
-import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
+import { LANDING_PROMPTS } from '../ai/prompts/landings'
 import type { LandingDef } from './defs'
 
 // Map landing kind to additional filter predicates for SQL aggregates

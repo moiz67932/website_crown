@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth';
-import { SavedPropertiesService } from '@/lib/database';
+import { AuthService } from '../../../../../lib/auth';
+import { SavedPropertiesService } from '../../../../../lib/database';
 
 interface RouteParams { params: any }
 

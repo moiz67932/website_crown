@@ -1,8 +1,8 @@
 "use client"
 import { useEffect, useState } from "react"
 import { PropertyCard } from "./property-card"
-import type { Property } from "@/interfaces"
-import { deriveDisplayName } from "@/lib/display-name"
+import type { Property } from "../interfaces"
+import { deriveDisplayName } from "../lib/display-name"
 
 function parseCityState(address?: string): { city?: string; state?: string } {
   if (!address) return {}

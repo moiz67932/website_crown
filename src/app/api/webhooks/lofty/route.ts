@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCRM } from '@/lib/crm/provider'
+import { createCRM } from '../../../../lib/crm/provider'
 
 export async function POST(req: NextRequest) {
   const raw = await req.text()

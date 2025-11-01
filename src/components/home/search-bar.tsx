@@ -5,7 +5,7 @@ import { Search, MapPin, Home, DollarSign, Map, Loader2 } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { useRouter } from "next/navigation"
-import { useAutoComplete } from "@/hooks/queries/useAutoComplete"
+import { useAutoComplete } from "../../hooks/queries/useAutoComplete"
 
 export default function SearchBar() {
   const [searchType, setSearchType] = useState("buy")

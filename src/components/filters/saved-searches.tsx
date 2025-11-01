@@ -12,7 +12,7 @@ import {
   Plus, Eye, Clock, MapPin, DollarSign, Filter, Star,
   Mail, Smartphone, Calendar
 } from "lucide-react"
-import { PropertyFilters, SavedSearch } from "@/types/filters"
+import { PropertyFilters, SavedSearch } from "../../types/filters"
 
 interface SavedSearchesProps {
   savedSearches: SavedSearch[];

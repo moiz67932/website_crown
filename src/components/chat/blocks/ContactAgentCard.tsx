@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import type { ContactAgentBlock } from "@/lib/ui-spec"
+import type { ContactAgentBlock } from "../../../lib/ui-spec"
 
 function onlyDigits(s?: string) {
   return (s || "").replace(/\D+/g, "")

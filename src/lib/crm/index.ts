@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { supaServer } from '@/lib/supabase'
+import { supaServer } from '../supabase'
 import type { AssignedAgent, FollowupSchedule, LeadPayload } from './types'
 import { toLoftyLead } from './mapping'
 import { createLoftyLead } from './lofty-client'

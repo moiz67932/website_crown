@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { pool } from "@/lib/db/connection";
+import { pool } from "./connection";
 
 // ---------------- Types ----------------
 export const PropertySchema = z.object({

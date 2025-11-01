@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import type { ChatUISpec, ContactAgentBlock, NoticeBlock, DividerBlock, PropertyResultsBlock } from "@/lib/ui-spec"
+import type { ChatUISpec, ContactAgentBlock, NoticeBlock, DividerBlock, PropertyResultsBlock } from "../../lib/ui-spec"
 import { ContactAgentCard } from "./blocks/ContactAgentCard"
 import { PropertyResults } from "./blocks/PropertyResults"
 

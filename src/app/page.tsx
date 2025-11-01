@@ -5,9 +5,9 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import React, { useState, useEffect } from "react"
 
 import SearchBar from "../components/home/search-bar"
-import { useTrestlePropertiesIntegrated } from "@/hooks/useTrestlePropertiesIntegrated";
+import { useTrestlePropertiesIntegrated } from "../hooks/useTrestlePropertiesIntegrated";
 import Loading from "../components/shared/loading"
-import { Property } from "@/interfaces"
+import { Property } from "../interfaces"
 import { PropertyCard } from "../components/property-card"
 import CustomerReview from "../components/customer-review"
 

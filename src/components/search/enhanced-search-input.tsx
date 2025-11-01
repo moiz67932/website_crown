@@ -5,7 +5,7 @@ import { Search, MapPin, X, Loader2, Clock, Zap } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { highlightMatches } from '@/utils/search-utils'
+import { highlightMatches } from '../../utils/search-utils'
 
 interface SearchSuggestion {
   id: string

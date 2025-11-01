@@ -1,5 +1,5 @@
 import { QdrantClient } from "@qdrant/js-client-rest"
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase } from './supabase'
 
 // Env
 const QURL = process.env.QDRANT_URL

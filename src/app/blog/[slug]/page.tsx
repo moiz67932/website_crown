@@ -2,15 +2,15 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { headers } from "next/headers";
-import { getSupabase } from "@/lib/supabase";
-import { getBucket } from "@/lib/ab";
-import { linkifyHtml } from "@/lib/linkify";
 import FeaturedProperties from "../../../components/blog/featured-properties";
 import RelatedPosts from "../../../components/blog/related-posts";
 import Comments from "../../../components/blog/comments";
 import NewsletterInline from "../../../components/blog/newsletter-inline";
 import ShareBar from "../../../components/blog/share-bar";
-import { attachImagesToPost, deriveImagePromptsFromPost } from "@/lib/unsplash";
+import { getSupabase } from "../../../lib/supabase";
+import { getBucket } from "../../../lib/ab";
+import { linkifyHtml } from "../../../lib/linkify";
+import { attachImagesToPost, deriveImagePromptsFromPost } from "../../../lib/unsplash";
 import type { ReactElement } from "react";
 
 export const dynamic = "force-dynamic";

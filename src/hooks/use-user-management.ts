@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from './use-toast'
 
 // Custom hook for user profile management
 export function useUserProfile() {

@@ -1,5 +1,5 @@
-import { getSupabase } from '@/lib/supabase'
-import { embedText, upsertPostEmbedding } from '@/lib/embeddings'
+import { getSupabase } from './supabase'
+import { embedText, upsertPostEmbedding } from './embeddings'
 
 type Params = { postId: string; city: string; topK?: number }
 

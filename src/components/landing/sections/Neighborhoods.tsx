@@ -1,4 +1,4 @@
-import { LandingNeighborhood } from '@/types/landing'
+import { LandingNeighborhood } from '../../../types/landing'
 
 interface Props { neighborhoods?: LandingNeighborhood[]; city: string }
 

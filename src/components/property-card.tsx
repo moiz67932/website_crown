@@ -14,11 +14,11 @@ import {
 } from "lucide-react"; // Added HomeModern
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { cn } from "@/lib/utils";
-import { Property } from "@/interfaces";
-import { deriveDisplayName } from '@/lib/display-name';
+import { cn } from "../lib/utils";
+import { Property } from "../interfaces";
+import { deriveDisplayName } from '../lib/display-name';
 import React, { useState } from "react";
-import { useComparison } from "@/contexts/comparison-context";
+import { useComparison } from "../contexts/comparison-context";
 
 // Function to get appropriate fallback image based on property type, price, and listing key for variety
 const getPropertyFallbackImage = (
