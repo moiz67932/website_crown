@@ -4506,7 +4506,7 @@
   resolved "https://registry.npmjs.org/@types/ms/-/ms-2.1.0.tgz"
   integrity sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==
 
-"@types/node@*", "@types/node@^20":
+"@types/node@*", "@types/node@^20.0.0":
   version "20.17.47"
   resolved "https://registry.npmjs.org/@types/node/-/node-20.17.47.tgz"
   integrity sha512-3dLX0Upo1v7RvUimvxLeXqwrfyKxUINk0EAM83swP2mlSUcwV73sZy8XhNz8bcZ3VbsfQyC/y6jRdL5tgCNpDQ==
@@ -4544,7 +4544,7 @@
   resolved "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.7.tgz"
   integrity sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==
 
-"@types/react@^18.3.5":
+"@types/react@^18.0.0":
   version "18.3.26"
   resolved "https://registry.npmjs.org/@types/react/-/react-18.3.26.tgz"
   integrity sha512-RFA/bURkcKzx/X9oumPG9Vp3D3JUgus/d0b67KB0t5S/raciymilkOa66olh78MUI92QLbEJevO7rvqU/kjwKA==
@@ -11323,7 +11323,7 @@ typescript-eslint@^8.32.1:
     "@typescript-eslint/typescript-estree" "8.46.2"
     "@typescript-eslint/utils" "8.46.2"
 
-typescript@^5:
+typescript@^5.0.0:
   version "5.8.3"
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.8.3.tgz"
   integrity sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==
