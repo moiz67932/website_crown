@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, Suspense } from "react"
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Polygon as LeafletPolygon } from "react-leaflet"
 import PureLeafletMap from "../../components/map/pure-leaflet-map"
-import L from "leaflet"
+import * as L from "leaflet"
 import * as turf from "@turf/turf"
 import type { Feature, Polygon as TurfPolygon } from "geojson"
 import { formatPrice } from "../../lib/utils"
