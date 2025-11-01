@@ -236,7 +236,9 @@ export default function PropertyStatistics({ properties }: PropertyStatisticsPro
                     outerRadius={50}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }) => percent ? `${name} (${(percent * 100).toFixed(0)}%)` : name}
+                    label={({ name, percent }: { name: string; percent?: number }) =>
+                      typeof percent === "number" ? `${name} (${(percent * 100).toFixed(0)}%)` : name
+                    }
                     labelLine={false}
                   >
                     {stats.statusDistribution.map((entry, index) => (
