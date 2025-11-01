@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts"
+import type { PieLabelRenderProps } from "recharts"
 
 interface PropertyStatisticsProps {
   properties: Array<{
@@ -236,8 +237,10 @@ export default function PropertyStatistics({ properties }: PropertyStatisticsPro
                     outerRadius={50}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }: { name: string; percent?: number }) =>
-                      typeof percent === "number" ? `${name} (${(percent * 100).toFixed(0)}%)` : name
+                    label={({ name, percent }: PieLabelRenderProps) =>
+                      typeof percent === "number" && typeof name === "string"
+                        ? `${name} (${(percent * 100).toFixed(0)}%)`
+                        : name ?? ""
                     }
                     labelLine={false}
                   >
