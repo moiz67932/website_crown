@@ -24,47 +24,45 @@ export async function resetPgPool(reason = "manual-reset") {
  * then impersonates your service account. Only runs on Vercel.
  */
 async function buildVercelExternalAuth() {
-  // Require the five GCP OIDC envs; otherwise return null and the connector will use ADC.
-  const req = [
-    "GCP_PROJECT_NUMBER",
-    "GCP_WORKLOAD_IDENTITY_POOL_ID",
-    "GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID",
-    "GCP_SERVICE_ACCOUNT_EMAIL",
+  // Only attempt OIDC if we are on Vercel or we have a local token.
+  const isVercelRuntime = process.env.VERCEL === '1';
+  const hasLocalOidc = !!process.env.VERCEL_OIDC_TOKEN;
+
+  if (!isVercelRuntime && !hasLocalOidc) return null;
+
+  // Require the five GCP OIDC envs; otherwise skip OIDC
+  const needed = [
+    'GCP_PROJECT_NUMBER',
+    'GCP_WORKLOAD_IDENTITY_POOL_ID',
+    'GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID',
+    'GCP_SERVICE_ACCOUNT_EMAIL',
   ] as const;
-  for (const k of req) if (!process.env[k]) return null;
+  for (const k of needed) if (!process.env[k]) return null;
 
   try {
-    // Loaded dynamically so local dev doesn’t need @vercel/oidc.
-    const { ExternalAccountClient } = await import("google-auth-library");
-    let getVercelOidcToken: undefined | (() => Promise<string>);
-    try {
-      // Available in Vercel runtime when OIDC is configured
-      const m = await import("@vercel/oidc");
-      getVercelOidcToken = (m as any).getVercelOidcToken;
-    } catch {
-      return null;
-    }
-    if (!getVercelOidcToken) return null;
+    // Dynamically load to avoid burdening non-OIDC setups
+    const { ExternalAccountClient } = await import('google-auth-library');
+    const { getVercelOidcToken } = await import('@vercel/oidc');
 
     const audience =
       `//iam.googleapis.com/projects/${process.env.GCP_PROJECT_NUMBER}` +
       `/locations/global/workloadIdentityPools/${process.env.GCP_WORKLOAD_IDENTITY_POOL_ID}` +
       `/providers/${process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID}`;
 
-    // External account client that uses Vercel’s OIDC JWT as the subject token,
-    // then impersonates your GCP service account.
     const authClient = (ExternalAccountClient as any).fromJSON({
-      type: "external_account",
+      type: 'external_account',
       audience,
-      subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
-      token_url: "https://sts.googleapis.com/v1/token",
+      subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+      token_url: 'https://sts.googleapis.com/v1/token',
       service_account_impersonation_url:
         `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${process.env.GCP_SERVICE_ACCOUNT_EMAIL}:generateAccessToken`,
+      // In Vercel functions it reads the header; in local dev it reads VERCEL_OIDC_TOKEN
       subject_token_supplier: { getSubjectToken: getVercelOidcToken },
     });
 
     return authClient;
   } catch {
+    // If libs are not present or token can’t be sourced, skip OIDC so other modes work
     return null;
   }
 }
