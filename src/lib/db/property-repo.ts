@@ -21,7 +21,7 @@ export interface PropertyListItem {
 }
 
 export interface PropertySearchParams {
-  city?: string;
+   city?: string;
   state?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -30,9 +30,12 @@ export interface PropertySearchParams {
   minBathrooms?: number;
   maxBathrooms?: number;
   propertyType?: string;
+  hasPool?: boolean;        // ← add this
+  hasView?: boolean;       // maybe add this
+  isWaterfront?: boolean;  // maybe add this
   limit?: number;
   offset?: number;
-  sort?: "price_asc" | "price_desc" | "newest" | "updated";
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'updated';
 }
 
 export async function searchProperties(params: PropertySearchParams) {
