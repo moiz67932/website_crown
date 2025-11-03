@@ -39,3 +39,6 @@ export async function getPool(): Promise<any> {
 
   return _pool;
 }
+
+// Back-compat alias for existing code that imports { getPgPool } from "@/lib/db"
+export const getPgPool = getPool;
