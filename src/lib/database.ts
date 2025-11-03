@@ -1,3 +1,4 @@
+export { getPool } from './db';
 import Database from 'better-sqlite3';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
