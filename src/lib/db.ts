@@ -42,3 +42,6 @@ export async function getPool(): Promise<any> {
 
 // Back-compat alias for existing code that imports { getPgPool } from "@/lib/db"
 export const getPgPool = getPool;
+
+// Re-export property repository helpers for convenience
+export * from './db/property-repo';
