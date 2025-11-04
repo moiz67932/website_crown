@@ -2,7 +2,7 @@
 // Provides aggregate stats + featured listings + basic SEO scaffolding.
 
 import { LandingKind, LandingData, LandingStats, LandingPropertyCard } from '@/types/landing'
-import { searchProperties } from '@/lib/db'
+import { searchProperties } from '@/lib/db/property-repo'
 import { getPgPool } from '@/lib/db'
 import { getAIDescription } from './ai'
 import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
