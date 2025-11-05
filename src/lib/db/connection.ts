@@ -112,8 +112,15 @@ async function createPool(): Promise<Pool> {
       keepAliveInitialDelayMillis: 5_000,
     } as any);
 
-    // Reset the connector when the pool closes
-    p.on("end", () => { try { (connector as any).close?.(); } catch {} });
+    // Clean up connector when pool drains all clients
+    p.on("remove", () => {
+      try {
+        // When no clients remain in the pool, close the Cloud SQL connector
+        if ((p as any).totalCount === 0) {
+          (connector as any).close?.();
+        }
+      } catch { /* ignore */ }
+    });
 
     attachPoolEvents(p, "cloud-sql-connector");
     return p;
