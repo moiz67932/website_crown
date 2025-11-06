@@ -46,8 +46,8 @@ async function makeCloudSqlPool(): Promise<import("pg").Pool> {
   const cfg: PoolConfig = {
     ...clientOpts, // host/ssl/socket options provided by the connector
     user: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASS || process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    password: process.env.DB_PASS || process.env.DB_PASSWORD || "Marwah123",
+    database: process.env.DB_NAME || "redata",
     max: Number(process.env.PG_POOL_MAX || 8),
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 30_000),
     connectionTimeoutMillis: Number(process.env.PG_CONN_TIMEOUT_MS || process.env.PG_CONNECTION_TIMEOUT_MS || 15_000),
