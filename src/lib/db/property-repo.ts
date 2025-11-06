@@ -1,4 +1,4 @@
-import { getPgPool } from "./connection";
+import { getPgPool } from "@/lib/db";
 
 export interface PropertyListItem {
   listing_key: string;
