@@ -1,21 +1,41 @@
 // /src/lib/db.ts
+import fs from "fs";
+import path from "path";
 import { Pool, PoolConfig } from "pg";
 import { Connector, IpAddressTypes } from "@google-cloud/cloud-sql-connector";
 import { GoogleAuth } from "google-auth-library";
 
-export const runtime = 'nodejs';          // ensure Node runtime (not edge) for GCP libs
-export const dynamic = 'force-dynamic';   // avoid accidental SSG on this API
+export const runtime = "nodejs";          // Ensure Node runtime for GCP libs
+export const dynamic = "force-dynamic";   // Prevent accidental static builds
 
 let pool: Pool | null = null;
 
-async function makeCloudSqlPool(): Promise<Pool> {
-  const instance = process.env.INSTANCE_CONNECTION_NAME;
-  if (!instance) throw new Error("INSTANCE_CONNECTION_NAME is required for Cloud SQL connector");
+async function ensureGoogleCredentialsFile(): Promise<void> {
+  const credsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (!credsJson) {
+    console.warn("⚠️ No GOOGLE_APPLICATION_CREDENTIALS_JSON found in env");
+    return;
+  }
 
-  // IMPORTANT: The connector will read GOOGLE_APPLICATION_CREDENTIALS_JSON automatically via GoogleAuth
-  // No manual ExternalAccountClient or @vercel/oidc imports needed.
+  // Write credentials JSON to a temp file (Vercel allows /tmp writes)
+  const credsPath = path.join("/tmp", "vercel-wif-creds.json");
+  try {
+    fs.writeFileSync(credsPath, credsJson);
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = credsPath;
+    console.log("✅ Wrote WIF credentials to", credsPath);
+  } catch (err) {
+    console.error("❌ Failed to write credentials file:", err);
+  }
+}
+
+async function makeCloudSqlPool(): Promise<Pool> {
+  await ensureGoogleCredentialsFile();
+
+  const instance = process.env.INSTANCE_CONNECTION_NAME;
+  if (!instance)
+    throw new Error("INSTANCE_CONNECTION_NAME is required for Cloud SQL connector");
+
   const auth = new GoogleAuth({
-    // Required scope for the connector to fetch ephemeral certs + instance metadata
     scopes: ["https://www.googleapis.com/auth/sqlservice.admin"],
   });
 
@@ -40,7 +60,11 @@ async function makeCloudSqlPool(): Promise<Pool> {
     database: process.env.DB_NAME || "redata",
     max: Number(process.env.PG_POOL_MAX || 8),
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 30_000),
-    connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS || process.env.PG_CONN_TIMEOUT_MS || 15_000),
+    connectionTimeoutMillis: Number(
+      process.env.PG_CONNECTION_TIMEOUT_MS ||
+        process.env.PG_CONN_TIMEOUT_MS ||
+        15_000
+    ),
   };
 
   return new Pool(cfg);
@@ -62,13 +86,15 @@ async function makeTcpPoolFromUrl(): Promise<Pool> {
 export async function getPool(): Promise<Pool> {
   if (pool) return pool;
   try {
-    // Prefer Cloud SQL connector if INSTANCE_CONNECTION_NAME is present
     if (process.env.INSTANCE_CONNECTION_NAME) {
+      console.log("☁️ Initializing Cloud SQL connector pool...");
       pool = await makeCloudSqlPool();
     } else if (process.env.DATABASE_URL) {
       pool = await makeTcpPoolFromUrl();
     } else {
-      throw new Error("No DB configuration: set INSTANCE_CONNECTION_NAME (Cloud SQL) or DATABASE_URL (TCP).");
+      throw new Error(
+        "No DB configuration found: set INSTANCE_CONNECTION_NAME or DATABASE_URL."
+      );
     }
     return pool;
   } catch (err) {
