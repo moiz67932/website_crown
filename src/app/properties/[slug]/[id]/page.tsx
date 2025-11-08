@@ -602,8 +602,14 @@ const generatePropertyJsonLd = (property: PropertyDetail | undefined) => {
   }
 }
 
-export default function PropertyDetailPage({ params }: { params: { id: string } }) {
-  // read params directly in this client component
+type PropertyDetailPageProps = {
+  params: { id: string; slug?: string }
+}
+
+
+// export default function PropertyDetailPage({ params }: { params: { id: string } }) {
+export default function PropertyDetailPage({ params }: PropertyDetailPageProps) {
+// read params directly in this client component
   const { data: propertyData, isLoading, isError } = usePropertyDetail(params.id)
   const faqs = propertyData?.faq_content ? JSON.parse(propertyData.faq_content) : []
   const propertyJsonLd = generatePropertyJsonLd(propertyData)
