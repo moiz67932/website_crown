@@ -1,14 +1,19 @@
 // /src/lib/db.ts
 import { Pool, PoolConfig } from "pg";
 import { Connector, IpAddressTypes } from "@google-cloud/cloud-sql-connector";
-import type { AuthClient } from "google-auth-library";
-import { ExternalAccountClient } from "google-auth-library";
-import { getVercelOidcToken } from "@vercel/oidc";
+import fs from "node:fs";
+import path from "node:path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 let pool: Pool | null = null;
+
+function required(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`Missing required env: ${name}`);
+  return v;
+}
 
 function pickIpType(): IpAddressTypes {
   const raw = (process.env.DB_IP_TYPE || "PUBLIC").toUpperCase();
@@ -17,58 +22,55 @@ function pickIpType(): IpAddressTypes {
   return IpAddressTypes.PUBLIC;
 }
 
-function required(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing required env: ${name}`);
-  return v;
-}
-
 /**
- * Build an AuthClient that:
- *  - exchanges the Vercel OIDC JWT via Google STS,
- *  - impersonates your GCP service account,
- *  - includes the Cloud SQL Admin scope.
+ * Write a Google External Account JSON to /tmp and point ADC to it.
+ * This is the most reliable way for the Cloud SQL Connector to pick up WIF creds.
  */
-async function makeAuthClient(): Promise<AuthClient> {
+function ensureWifJsonOnDisk() {
   const projectNumber = required("GCP_PROJECT_NUMBER");
   const poolId = required("GCP_WORKLOAD_IDENTITY_POOL_ID");
   const providerId = required("GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID");
   const saEmail = required("GCP_SERVICE_ACCOUNT_EMAIL");
+  const vercelOidcUrl = required("VERCEL_OIDC_TOKEN_URL"); // provided by Vercel at runtime
 
-  // `subject_token_supplier` isn't in published typings yet -> cast options to any.
-  const options: any = {
+  const creds = {
     type: "external_account",
     audience: `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`,
-    subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
+    subject_token_type: "urn:ietf:params:oauth:token-type:id_token",
     token_url: "https://sts.googleapis.com/v1/token",
     service_account_impersonation_url:
       `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${saEmail}:generateAccessToken`,
-    // Provide the Vercel OIDC token programmatically (do NOT use credential_source.url)
-    subject_token_supplier: {
-      getSubjectToken: getVercelOidcToken,
-    },
+    // IMPORTANT: this must be the actual URL (no env interpolation inside JSON)
+    credential_source: {
+      url: vercelOidcUrl
+    }
   };
 
-  // fromJSON returns BaseExternalAccountClient | null; narrow and cast to AuthClient
-  const clientMaybe = ExternalAccountClient.fromJSON(options as any);
-  if (!clientMaybe) {
-    throw new Error("Failed to create ExternalAccountClient from JSON options");
+  const out = path.join("/tmp", "vercel-wif.json");
+  const json = JSON.stringify(creds);
+  // Only rewrite if changed to avoid unnecessary IO
+  try {
+    const existing = fs.readFileSync(out, "utf8");
+    if (existing !== json) fs.writeFileSync(out, json, "utf8");
+  } catch {
+    fs.writeFileSync(out, json, "utf8");
   }
 
-  // Ensure Cloud SQL Admin scope is set (explicit avoids surprises across lib versions).
-  (clientMaybe as any).scopes = ["https://www.googleapis.com/auth/sqlservice.admin"];
+  // Force ADC to use this file
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = out;
+  // Be explicit about required scope for the connector
+  process.env.GOOGLE_AUTH_SCOPES = "https://www.googleapis.com/auth/sqlservice.admin";
 
-  return clientMaybe as unknown as AuthClient;
+  console.log(`✅ Wrote WIF ADC JSON to ${out}`);
 }
 
 async function makeCloudSqlPool(): Promise<Pool> {
   const instance = required("INSTANCE_CONNECTION_NAME");
+  ensureWifJsonOnDisk();
 
   console.log("☁️ Initializing Cloud SQL connector pool...");
-
-  // Use our explicit external-account AuthClient.
-  const authClient = await makeAuthClient();
-  const connector = new Connector({ auth: authClient as any });
+  // Let the connector use ADC (it will pick up GOOGLE_APPLICATION_CREDENTIALS we set)
+  const connector = new Connector();
 
   const clientOpts = await connector.getOptions({
     instanceConnectionName: instance,
