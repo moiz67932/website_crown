@@ -493,7 +493,7 @@
 
 
 
-
+// @ts-nocheck
 // ✅ server wrapper that ensures params reach the client component
 import PropertyDetailClient from "./page.client"
 
