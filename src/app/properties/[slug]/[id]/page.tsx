@@ -494,18 +494,15 @@
 
 
 
+// ✅ server wrapper that ensures params reach the client component
+import PropertyDetailClient from "./page.client"
 
+// prevent Next from static-optimizing this route
+export const dynamic = "force-dynamic"
 
-
-// NOTE: No "use client" here.
-// This tiny wrapper satisfies Next's PageProps typing and forwards everything to the client component.
-import PropertyDetailClient from "./page.client";
-
-export default function Page(props: any) {
-  // props includes { params, searchParams } per Next.js
-  return <PropertyDetailClient {...props} />;
+export default function Page({ params, searchParams }: { params: { id: string; slug?: string }; searchParams?: any }) {
+  return <PropertyDetailClient params={params} searchParams={searchParams} />
 }
-
 
 
 
