@@ -1,7 +1,8 @@
 // /src/lib/db.ts
 import { Pool, PoolConfig } from "pg";
 import { Connector, IpAddressTypes } from "@google-cloud/cloud-sql-connector";
-import { GoogleAuth, ExternalAccountClient } from "google-auth-library";
+import type { AuthClient } from "google-auth-library";
+import { ExternalAccountClient } from "google-auth-library";
 import { getVercelOidcToken } from "@vercel/oidc";
 
 export const runtime = "nodejs";
@@ -16,48 +17,58 @@ function pickIpType(): IpAddressTypes {
   return IpAddressTypes.PUBLIC;
 }
 
-async function makeConnectorAuth(): Promise<GoogleAuth> {
-  const projectNumber = process.env.GCP_PROJECT_NUMBER!;
-  const poolId = process.env.GCP_WORKLOAD_IDENTITY_POOL_ID!;
-  const providerId = process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID!;
-  const saEmail = process.env.GCP_SERVICE_ACCOUNT_EMAIL!;
+function required(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`Missing required env: ${name}`);
+  return v;
+}
 
-  // External Account config that uses Vercel's runtime OIDC token supplier.
-  const externalAccountOptions = {
+/**
+ * Build an AuthClient that:
+ *  - exchanges the Vercel OIDC JWT via Google STS,
+ *  - impersonates your GCP service account,
+ *  - includes the Cloud SQL Admin scope.
+ */
+async function makeAuthClient(): Promise<AuthClient> {
+  const projectNumber = required("GCP_PROJECT_NUMBER");
+  const poolId = required("GCP_WORKLOAD_IDENTITY_POOL_ID");
+  const providerId = required("GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID");
+  const saEmail = required("GCP_SERVICE_ACCOUNT_EMAIL");
+
+  // `subject_token_supplier` isn't in published typings yet -> cast options to any.
+  const options: any = {
     type: "external_account",
-    // The "audience" here is the full provider resource on GCP (not the Vercel URL).
     audience: `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`,
-    // Vercel returns a JWT; use the JWT token type (per Vercel doc example).
     subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
     token_url: "https://sts.googleapis.com/v1/token",
     service_account_impersonation_url:
       `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${saEmail}:generateAccessToken`,
-    // Programmatic supplier: do NOT use credential_source.url
+    // Provide the Vercel OIDC token programmatically (do NOT use credential_source.url)
     subject_token_supplier: {
       getSubjectToken: getVercelOidcToken,
     },
-  } as const;
+  };
 
-  // Build a GoogleAuth that uses these External Account credentials
-  // and has the scope required by the Cloud SQL Connector.
-  const authClient = ExternalAccountClient.fromJSON(externalAccountOptions);
-  return new GoogleAuth({
-    credentials: externalAccountOptions, // also acceptable; lib will create the client
-    scopes: ["https://www.googleapis.com/auth/sqlservice.admin"],
-  });
+  // fromJSON returns BaseExternalAccountClient | null; narrow and cast to AuthClient
+  const clientMaybe = ExternalAccountClient.fromJSON(options as any);
+  if (!clientMaybe) {
+    throw new Error("Failed to create ExternalAccountClient from JSON options");
+  }
+
+  // Ensure Cloud SQL Admin scope is set (explicit avoids surprises across lib versions).
+  (clientMaybe as any).scopes = ["https://www.googleapis.com/auth/sqlservice.admin"];
+
+  return clientMaybe as unknown as AuthClient;
 }
 
 async function makeCloudSqlPool(): Promise<Pool> {
-  const instance = process.env.INSTANCE_CONNECTION_NAME;
-  if (!instance) {
-    throw new Error("INSTANCE_CONNECTION_NAME is required for Cloud SQL connector");
-  }
+  const instance = required("INSTANCE_CONNECTION_NAME");
 
-  console.info("☁️ Initializing Cloud SQL connector pool...");
+  console.log("☁️ Initializing Cloud SQL connector pool...");
 
-  // Use custom GoogleAuth backed by Vercel OIDC → GCP WIF
-  const auth = await makeConnectorAuth();
-  const connector = new Connector({ auth });
+  // Use our explicit external-account AuthClient.
+  const authClient = await makeAuthClient();
+  const connector = new Connector({ auth: authClient as any });
 
   const clientOpts = await connector.getOptions({
     instanceConnectionName: instance,
@@ -65,21 +76,22 @@ async function makeCloudSqlPool(): Promise<Pool> {
   });
 
   const cfg: PoolConfig = {
-    ...clientOpts, // host/socket/ssl from connector
+    ...clientOpts, // socket/ssl settings provided by connector
     user: process.env.DB_USER || "postgres",
     password: process.env.DB_PASS || process.env.DB_PASSWORD,
     database: process.env.DB_NAME || "redata",
     max: Number(process.env.PG_POOL_MAX || 8),
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 30_000),
-    connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS || process.env.PG_CONN_TIMEOUT_MS || 15_000),
+    connectionTimeoutMillis: Number(
+      process.env.PG_CONNECTION_TIMEOUT_MS || process.env.PG_CONN_TIMEOUT_MS || 15_000
+    ),
   };
 
   return new Pool(cfg);
 }
 
 async function makeTcpPoolFromUrl(): Promise<Pool> {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL not set");
+  const url = required("DATABASE_URL");
   console.log("🌐 Using direct TCP connection via DATABASE_URL");
   return new Pool({
     connectionString: url,
@@ -98,7 +110,9 @@ export async function getPool(): Promise<Pool> {
     } else if (process.env.DATABASE_URL) {
       pool = await makeTcpPoolFromUrl();
     } else {
-      throw new Error("No DB configuration: set INSTANCE_CONNECTION_NAME (Cloud SQL) or DATABASE_URL (TCP).");
+      throw new Error(
+        "No DB configuration: set INSTANCE_CONNECTION_NAME (Cloud SQL) or DATABASE_URL (TCP)."
+      );
     }
     return pool;
   } catch (err) {
@@ -107,4 +121,5 @@ export async function getPool(): Promise<Pool> {
   }
 }
 
+// Back-compat alias
 export const getPgPool = getPool;
