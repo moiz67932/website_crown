@@ -144,9 +144,6 @@
 //   );
 // }
 
-
-
-
 // /src/app/properties/[slug]/[id]/PropertyDetailPage.client.tsx
 // @ts-nocheck
 "use client";
@@ -224,9 +221,7 @@ const generatePropertyJsonLd = (property: PropertyDetail | undefined) => {
     availability: "A",
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${siteUrl}/properties/${property?.address}/${
-        property?.listing_key
-      }`,
+      "@id": `${siteUrl}/properties/${property?.address}/${property?.listing_key}`,
     },
     address: {
       "@type": "PostalAddress",
@@ -299,7 +294,11 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
       />
       <div className="bg-neutral-50 dark:bg-slate-900 min-h-screen w-full pt-16 theme-transition">
         <section className="relative overflow-hidden">
-          <Carousel className="w-full" data-carousel="main" opts={{ loop: true }}>
+          <Carousel
+            className="w-full"
+            data-carousel="main"
+            opts={{ loop: true }}
+          >
             <CarouselContent>
               {propertyData.images.map((src, index) => (
                 <CarouselItem key={index}>
@@ -344,7 +343,10 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                     {(() => {
                       const rawAddress = propertyData.address || "";
                       const sanitize = (v: string) =>
-                        v.trim().replace(/^0+\s+/, "").replace(/\s{2,}/g, " ");
+                        v
+                          .trim()
+                          .replace(/^0+\s+/, "")
+                          .replace(/\s{2,}/g, " ");
                       const sanitizedAddress = sanitize(rawAddress);
                       const candidates = [
                         propertyData.h1_heading,
@@ -358,10 +360,13 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                             !/^0+$/.test(c) &&
                             !["undefined", "null"].includes(c.toLowerCase())
                         );
-                      let displayName = candidates[0] ? sanitize(candidates[0]) : "";
+                      let displayName = candidates[0]
+                        ? sanitize(candidates[0])
+                        : "";
                       if (
                         displayName &&
-                        displayName.toLowerCase() === sanitizedAddress.toLowerCase()
+                        displayName.toLowerCase() ===
+                          sanitizedAddress.toLowerCase()
                       )
                         displayName = "";
                       return displayName ? (
@@ -387,7 +392,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       </span>
                     </div>
                     <h1 className="text-3xl lg:text-4xl xl:text-5xl font-display font-bold text-white mb-3 leading-tight">
-                      {(propertyData.address || "").replace(/^0+\s+/, "").trim()}
+                      {(propertyData.address || "")
+                        .replace(/^0+\s+/, "")
+                        .trim()}
                     </h1>
                     <div className="flex items-center text-white/90 text-lg">
                       <MapPin className="h-5 w-5 mr-2" />
@@ -418,7 +425,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
               variant="outline"
               size="icon"
               onClick={() => {
-                const carousel = document.querySelector('[data-carousel="main"]');
+                const carousel = document.querySelector(
+                  '[data-carousel="main"]'
+                );
                 if (carousel) {
                   if (document.fullscreenElement) document.exitFullscreen();
                   else (carousel as HTMLElement).requestFullscreen();
@@ -536,7 +545,11 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                           Estimated monthly payment
                         </div>
                         <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                          ${Math.round(propertyData.list_price / 360).toLocaleString()}/month
+                          $
+                          {Math.round(
+                            propertyData.list_price / 360
+                          ).toLocaleString()}
+                          /month
                         </div>
                       </div>
                       <TrendingUp className="h-8 w-8 text-accent-500" />
@@ -575,7 +588,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                     </div>
                     <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                       {propertyData.year_built &&
-                        `${new Date().getFullYear() - propertyData.year_built} years old`}
+                        `${
+                          new Date().getFullYear() - propertyData.year_built
+                        } years old`}
                     </div>
                   </div>
                   <div className="bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-success-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
@@ -587,7 +602,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       {propertyData.parking_total ?? "N/A"}
                     </div>
                     <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                      {propertyData.parking_total ? "vehicles" : "info not available"}
+                      {propertyData.parking_total
+                        ? "vehicles"
+                        : "info not available"}
                     </div>
                   </div>
                   <div className="bg-gradient-to-br from-gold-50 to-gold-100 dark:from-gold-900/20 dark:to-gold-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
@@ -596,12 +613,20 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       Lot Size
                     </div>
                     <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                      {propertyData.lot_size_sqft?.toLocaleString() || "N/A"}
-                    </div>
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                      {propertyData.lot_size_sqft > 43560 ? "acres" : "square feet"}
+                      {(() => {
+                        const sqft = Number(propertyData.lot_size_sqft || 0);
+                        if (!sqft) return "N/A";
+                        if (sqft > 43560) {
+                          const acres = sqft / 43560;
+                          return `${acres.toFixed(
+                            acres >= 10 ? 0 : acres >= 1 ? 2 : 3
+                          )} acres`;
+                        }
+                        return `${sqft.toLocaleString()} sq ft`;
+                      })()}
                     </div>
                   </div>
+
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
                     <School className="h-8 w-8 text-purple-500 mx-auto mb-3" />
                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
@@ -732,7 +757,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         </div>
                         <div className="text-sm text-neutral-600 dark:text-neutral-400">
                           Lot Size{" "}
-                          {propertyData.lot_size_sqft > 43560 ? "Acres" : "Sq Ft"}
+                          {propertyData.lot_size_sqft > 43560
+                            ? "Acres"
+                            : "Sq Ft"}
                         </div>
                       </div>
                     )}
@@ -790,16 +817,16 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         Amenities
                       </h3>
                       <div className="space-y-1">
-                        {propertyData.other_info?.CommunityFeatures?.split(",").map(
-                          (v: string, i: number) => (
-                            <p
-                              key={i}
-                              className="text-neutral-700 dark:text-neutral-300 text-sm"
-                            >
-                              {v.trim()}
-                            </p>
-                          )
-                        ) || (
+                        {propertyData.other_info?.CommunityFeatures?.split(
+                          ","
+                        ).map((v: string, i: number) => (
+                          <p
+                            key={i}
+                            className="text-neutral-700 dark:text-neutral-300 text-sm"
+                          >
+                            {v.trim()}
+                          </p>
+                        )) || (
                           <p className="text-neutral-600 dark:text-neutral-400 text-sm italic">
                             No specific amenities listed
                           </p>
@@ -907,7 +934,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                   <h3 className="font-semibold mb-4">Mortgage Calculator</h3>
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Home Price</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Home Price
+                      </p>
                       <div className="font-medium">
                         ${propertyData.list_price.toLocaleString()}
                       </div>
@@ -921,7 +950,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Loan Amount
+                      </p>
                       <div className="font-medium">
                         ${(propertyData.list_price * 0.8).toLocaleString()}
                       </div>
@@ -931,7 +962,10 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         Estimated Monthly Payment
                       </p>
                       <div className="font-medium">
-                        ${Math.round(propertyData.list_price / 360).toLocaleString()}
+                        $
+                        {Math.round(
+                          propertyData.list_price / 360
+                        ).toLocaleString()}
                         /month
                       </div>
                     </div>
@@ -975,7 +1009,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
             </div>
           </div>
         </div>
-      </div> 
+      </div>
     </>
   );
 }
