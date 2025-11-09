@@ -1,4 +1,3 @@
-// // /src/app/properties/[slug]/[id]/PropertyDetailPage.client.tsx
 // // @ts-nocheck
 // "use client";
 
@@ -140,6 +139,11 @@
 //       </div>
 //     );
 
+//   // ✅ Normalize lot size once for consistent display
+//   const lotSqft = Number(propertyData.lot_size_sqft || 0);
+//   const lotAcres =
+//     lotSqft >= 43560 ? Number((lotSqft / 43560).toFixed(2)) : null;
+
 //   return (
 //     <>
 //       <script
@@ -241,6 +245,7 @@
 //                           ? "FOR RENT"
 //                           : "FOR SALE"}
 //                       </Badge>
+//                       {/* ✅ unified: always show API days_on_market (e.g., 1139) */}
 //                       <span className="text-white/80 text-sm font-medium">
 //                         {propertyData.days_on_market} days on market
 //                       </span>
@@ -252,6 +257,7 @@
 //                     </h1>
 //                     <div className="flex items-center text-white/90 text-lg">
 //                       <MapPin className="h-5 w-5 mr-2" />
+//                       {/* your API maps county := state for display like "Lancaster, CA" */}
 //                       <span>
 //                         {propertyData.city}, {propertyData.county}
 //                       </span>
@@ -372,7 +378,7 @@
 //                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
 //                   <Calendar className="h-8 w-8 text-success-500 mx-auto mb-3" />
 //                   <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-//                     {propertyData.year_built}
+//                     {propertyData.year_built || "N/A"}
 //                   </div>
 //                   <div className="text-sm text-neutral-600 dark:text-neutral-400">
 //                     Built
@@ -401,7 +407,7 @@
 //                         <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
 //                           $
 //                           {Math.round(
-//                             propertyData.list_price / 360
+//                             (propertyData.list_price || 0) / 360
 //                           ).toLocaleString()}
 //                           /month
 //                         </div>
@@ -441,10 +447,12 @@
 //                       {propertyData.year_built || "N/A"}
 //                     </div>
 //                     <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-//                       {propertyData.year_built &&
-//                         `${
-//                           new Date().getFullYear() - propertyData.year_built
-//                         } years old`}
+//                       {propertyData.year_built
+//                         ? `${
+//                             new Date().getFullYear() -
+//                             Number(propertyData.year_built)
+//                           } years old`
+//                         : ""}
 //                     </div>
 //                   </div>
 //                   <div className="bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-success-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
@@ -461,26 +469,20 @@
 //                         : "info not available"}
 //                     </div>
 //                   </div>
+//                   {/* ✅ Lot size unified */}
 //                   <div className="bg-gradient-to-br from-gold-50 to-gold-100 dark:from-gold-900/20 dark:to-gold-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
 //                     <Square className="h-8 w-8 text-gold-500 mx-auto mb-3" />
 //                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
 //                       Lot Size
 //                     </div>
 //                     <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-//                       {(() => {
-//                         const sqft = Number(propertyData.lot_size_sqft || 0);
-//                         if (!sqft) return "N/A";
-//                         if (sqft > 43560) {
-//                           const acres = sqft / 43560;
-//                           return `${acres.toFixed(
-//                             acres >= 10 ? 0 : acres >= 1 ? 2 : 3
-//                           )} acres`;
-//                         }
-//                         return `${sqft.toLocaleString()} sq ft`;
-//                       })()}
+//                       {lotAcres !== null
+//                         ? `${lotAcres} acres`
+//                         : lotSqft
+//                         ? `${lotSqft.toLocaleString()} sq ft`
+//                         : "N/A"}
 //                     </div>
 //                   </div>
-
 //                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
 //                     <School className="h-8 w-8 text-purple-500 mx-auto mb-3" />
 //                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
@@ -498,13 +500,12 @@
 //                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
 //                       Days on Market
 //                     </div>
+//                     {/* ✅ always the API value */}
 //                     <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
 //                       {propertyData.days_on_market || "N/A"}
 //                     </div>
 //                     <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-//                       {propertyData.days_on_market < 30
-//                         ? "recently listed"
-//                         : "established listing"}
+//                       {propertyData.days_on_market ? "established listing" : ""}
 //                     </div>
 //                   </div>
 //                 </div>
@@ -548,22 +549,13 @@
 //                           {propertyData.mls_status}
 //                         </span>
 //                       </div>
+//                       {/* ❌ remove recomputation; ✅ use API days_on_market to avoid 1487 vs 1139 mismatch */}
 //                       <div className="flex justify-between">
 //                         <span className="text-neutral-600 dark:text-neutral-400">
 //                           Days on Market:
 //                         </span>
 //                         <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-//                           {(() => {
-//                             const now = new Date();
-//                             const onMarket = new Date(
-//                               propertyData.on_market_timestamp
-//                             );
-//                             const diff = now.getTime() - onMarket.getTime();
-//                             const days = Math.floor(diff / (1000 * 3600 * 24));
-//                             return days < 1
-//                               ? `${Math.floor(diff / (1000 * 3600))} hours`
-//                               : `${days} days`;
-//                           })()}
+//                           {propertyData.days_on_market} days
 //                         </span>
 //                       </div>
 //                     </div>
@@ -604,16 +596,18 @@
 //                           </div>
 //                         </div>
 //                       )}
-//                     {propertyData.lot_size_sqft && (
+//                     {/* ✅ show lot size consistently here too */}
+//                     {lotSqft > 0 && (
 //                       <div className="text-center p-4 bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900/20 dark:to-accent-800/20 rounded-xl">
 //                         <div className="text-2xl font-bold text-accent-600 dark:text-accent-400">
-//                           {propertyData.lot_size_sqft.toLocaleString()}
+//                           {lotAcres !== null
+//                             ? lotAcres
+//                             : lotSqft.toLocaleString()}
 //                         </div>
 //                         <div className="text-sm text-neutral-600 dark:text-neutral-400">
-//                           Lot Size{" "}
-//                           {propertyData.lot_size_sqft > 43560
-//                             ? "Acres"
-//                             : "Sq Ft"}
+//                           {lotAcres !== null
+//                             ? "Lot Size Acres"
+//                             : "Lot Size Sq Ft"}
 //                         </div>
 //                       </div>
 //                     )}
@@ -792,7 +786,7 @@
 //                         Home Price
 //                       </p>
 //                       <div className="font-medium">
-//                         ${propertyData.list_price.toLocaleString()}
+//                         ${(propertyData.list_price || 0).toLocaleString()}
 //                       </div>
 //                     </div>
 //                     <div>
@@ -800,7 +794,10 @@
 //                         Down Payment (20%)
 //                       </p>
 //                       <div className="font-medium">
-//                         ${(propertyData.list_price * 0.2).toLocaleString()}
+//                         $
+//                         {(
+//                           (propertyData.list_price || 0) * 0.2
+//                         ).toLocaleString()}
 //                       </div>
 //                     </div>
 //                     <div>
@@ -808,7 +805,10 @@
 //                         Loan Amount
 //                       </p>
 //                       <div className="font-medium">
-//                         ${(propertyData.list_price * 0.8).toLocaleString()}
+//                         $
+//                         {(
+//                           (propertyData.list_price || 0) * 0.8
+//                         ).toLocaleString()}
 //                       </div>
 //                     </div>
 //                     <div>
@@ -818,13 +818,13 @@
 //                       <div className="font-medium">
 //                         $
 //                         {Math.round(
-//                           propertyData.list_price / 360
+//                           (propertyData.list_price || 0) / 360
 //                         ).toLocaleString()}
 //                         /month
 //                       </div>
 //                     </div>
 //                     <MortgageCalculatorModal
-//                       propertyPrice={propertyData.list_price}
+//                       propertyPrice={propertyData.list_price || 0}
 //                       propertyTaxRate={0.0125}
 //                       insuranceRate={0.0035}
 //                       hoaFees={0.05}
@@ -868,6 +868,7 @@
 //   );
 // }
 
+// /src/app/properties/[slug]/[id]/PropertyDetailPage.client.tsx
 // @ts-nocheck
 "use client";
 
@@ -926,6 +927,8 @@ const PropertyMap = nextDynamic(() => import("./property-map"), {
     </div>
   ),
 });
+
+const FALLBACK_IMG = "/luxury-modern-house-exterior.png";
 
 const generatePropertyJsonLd = (property: PropertyDetail | undefined) => {
   const siteUrl = "https://www.crowncoastalhomes.com";
@@ -1009,10 +1012,22 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
       </div>
     );
 
-  // ✅ Normalize lot size once for consistent display
-  const lotSqft = Number(propertyData.lot_size_sqft || 0);
-  const lotAcres =
-    lotSqft >= 43560 ? Number((lotSqft / 43560).toFixed(2)) : null;
+  // Small helpers
+  const isLand = (propertyData.property_type || "").toLowerCase() === "land";
+  const lotSqFt =
+    Number(propertyData.lot_size_sqft || 0) ||
+    Number((propertyData as any).lot_size_sq_ft || 0) ||
+    0;
+  const lotAcres = lotSqFt ? lotSqFt / 43560 : 0;
+
+  // Prefer API images; fall back to single main
+  const images: string[] = (
+    Array.isArray(propertyData.images) && propertyData.images.length
+      ? propertyData.images
+      : propertyData.main_photo_url
+      ? [propertyData.main_photo_url]
+      : []
+  ) as string[];
 
   return (
     <>
@@ -1021,6 +1036,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(propertyJsonLd) }}
       />
       <div className="bg-neutral-50 dark:bg-slate-900 min-h-screen w-full pt-16 theme-transition">
+        {/* ====================== HERO / CAROUSEL ====================== */}
         <section className="relative overflow-hidden">
           <Carousel
             className="w-full"
@@ -1028,41 +1044,36 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
             opts={{ loop: true }}
           >
             <CarouselContent>
-              {propertyData.images.map((src, index) => (
-                <CarouselItem key={index}>
-                  <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh]">
-                    <Image
-                      src={src || "/luxury-modern-house-exterior.png"}
-                      alt={`${
-                        propertyData.title || propertyData.address
-                      } - View ${index + 1}`}
-                      fill
-                      className="object-cover transition-transform duration-700 hover:scale-105"
-                      priority={index === 0}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
-                  </div>
-                </CarouselItem>
-              ))}
-              {propertyData.images.length === 0 && (
-                <CarouselItem>
-                  <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh]">
-                    <Image
-                      src="/luxury-modern-house-exterior.png"
-                      alt="Property Image"
-                      fill
-                      className="object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  </div>
-                </CarouselItem>
+              {(images.length ? images : [FALLBACK_IMG]).map(
+                (src: string, index: number) => (
+                  <CarouselItem key={`${src}-${index}`}>
+                    <div className="relative w-full h-[50vh] sm:h-[60vh] lg:h-[70vh] xl:h-[80vh]">
+                      <Image
+                        src={src || FALLBACK_IMG}
+                        alt={`${
+                          propertyData.title || propertyData.address
+                        } - View ${index + 1}`}
+                        fill
+                        className="object-cover transition-transform duration-700 hover:scale-105"
+                        priority={index === 0}
+                        onError={(e) => {
+                          try {
+                            (e.target as HTMLImageElement).src = FALLBACK_IMG;
+                          } catch {}
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
+                    </div>
+                  </CarouselItem>
+                )
               )}
             </CarouselContent>
             <CarouselPrevious className="absolute left-6 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 dark:bg-slate-800/70 dark:hover:bg-slate-700/90 text-white border-white/30 backdrop-blur-md rounded-2xl w-14 h-14 transition-all duration-300 hover:scale-110 shadow-2xl cursor-pointer" />
             <CarouselNext className="absolute right-6 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 dark:bg-slate-800/70 dark:hover:bg-slate-700/90 text-white border-white/30 backdrop-blur-md rounded-2xl w-14 h-14 transition-all duration-300 hover:scale-110 shadow-2xl cursor-pointer" />
           </Carousel>
 
+          {/* Overlay title / price panel */}
           <div className="absolute bottom-0 left-0 right-0 z-20 p-6 lg:p-8">
             <div className="container mx-auto">
               <div className="bg-white/10 dark:bg-slate-900/20 backdrop-blur-2xl border border-white/20 dark:border-slate-700/30 rounded-3xl p-6 lg:p-8 shadow-2xl animate-fade-in-up">
@@ -1115,9 +1126,8 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                           ? "FOR RENT"
                           : "FOR SALE"}
                       </Badge>
-                      {/* ✅ unified: always show API days_on_market (e.g., 1139) */}
                       <span className="text-white/80 text-sm font-medium">
-                        {propertyData.days_on_market} days on market
+                        {propertyData.days_on_market ?? "—"} days on market
                       </span>
                     </div>
                     <h1 className="text-3xl lg:text-4xl xl:text-5xl font-display font-bold text-white mb-3 leading-tight">
@@ -1127,9 +1137,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                     </h1>
                     <div className="flex items-center text-white/90 text-lg">
                       <MapPin className="h-5 w-5 mr-2" />
-                      {/* your API maps county := state for display like "Lancaster, CA" */}
                       <span>
-                        {propertyData.city}, {propertyData.county}
+                        {propertyData.city}
+                        {propertyData.county ? `, ${propertyData.county}` : ""}
                       </span>
                     </div>
                   </div>
@@ -1150,6 +1160,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
             </div>
           </div>
 
+          {/* Floating buttons */}
           <div className="absolute top-6 right-6 z-30 flex gap-3">
             <Button
               variant="outline"
@@ -1212,9 +1223,11 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
           </div>
         </section>
 
+        {/* ====================== BODY ====================== */}
         <div className="container mx-auto py-12 lg:py-16 px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-[4fr_2fr] gap-8 lg:gap-12">
             <div className="space-y-10">
+              {/* ===== Top stat tiles (Land shows LOT SIZE; others show Living Area) ===== */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up">
                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
                   <Bed className="h-8 w-8 text-primary-500 mx-auto mb-3" />
@@ -1225,6 +1238,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                     Bedrooms
                   </div>
                 </div>
+
                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
                   <Bath className="h-8 w-8 text-accent-500 mx-auto mb-3" />
                   <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -1234,17 +1248,32 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                     Bathrooms
                   </div>
                 </div>
-                <div className="glass-card p-6 rounded-2xl text-center hover-lift">
-                  <Square className="h-8 w-8 text-gold-500 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-                    {propertyData.living_area_sqft
-                      ? propertyData.living_area_sqft.toLocaleString()
-                      : "N/A"}
+
+                {/* Conditional tile */}
+                {!isLand ? (
+                  <div className="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <Square className="h-8 w-8 text-gold-500 mx-auto mb-3" />
+                    <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                      {propertyData.living_area_sqft
+                        ? propertyData.living_area_sqft.toLocaleString()
+                        : "N/A"}
+                    </div>
+                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Sq Ft
+                    </div>
                   </div>
-                  <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Sq Ft
+                ) : (
+                  <div className="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <Square className="h-8 w-8 text-gold-500 mx-auto mb-3" />
+                    <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                      {lotSqFt ? lotSqFt.toLocaleString() : "N/A"}
+                    </div>
+                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Lot Size (Sq Ft)
+                    </div>
                   </div>
-                </div>
+                )}
+
                 <div className="glass-card p-6 rounded-2xl text-center hover-lift">
                   <Calendar className="h-8 w-8 text-success-500 mx-auto mb-3" />
                   <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -1256,6 +1285,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                 </div>
               </div>
 
+              {/* ===== Overview ===== */}
               <div className="glass-card p-8 rounded-3xl animate-slide-in-left">
                 <h2 className="text-2xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-6 flex items-center gap-3">
                   <Building2 className="h-7 w-7 text-primary-500" />
@@ -1288,6 +1318,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                 )}
               </div>
 
+              {/* ===== Home Details ===== */}
               <div className="glass-card p-8 rounded-3xl animate-scale-in">
                 <h2 className="text-2xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-8 flex items-center gap-3">
                   <Building2 className="h-7 w-7 text-primary-500" />
@@ -1308,6 +1339,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       </div>
                     )}
                   </div>
+
                   <div className="bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900/20 dark:to-accent-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
                     <Calendar className="h-8 w-8 text-accent-500 mx-auto mb-3" />
                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
@@ -1319,12 +1351,12 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                     <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                       {propertyData.year_built
                         ? `${
-                            new Date().getFullYear() -
-                            Number(propertyData.year_built)
+                            new Date().getFullYear() - propertyData.year_built
                           } years old`
                         : ""}
                     </div>
                   </div>
+
                   <div className="bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-success-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
                     <Car className="h-8 w-8 text-success-500 mx-auto mb-3" />
                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
@@ -1339,20 +1371,24 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         : "info not available"}
                     </div>
                   </div>
-                  {/* ✅ Lot size unified */}
+
                   <div className="bg-gradient-to-br from-gold-50 to-gold-100 dark:from-gold-900/20 dark:to-gold-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
                     <Square className="h-8 w-8 text-gold-500 mx-auto mb-3" />
                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
                       Lot Size
                     </div>
                     <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                      {lotAcres !== null
-                        ? `${lotAcres} acres`
-                        : lotSqft
-                        ? `${lotSqft.toLocaleString()} sq ft`
-                        : "N/A"}
+                      {lotSqFt ? lotSqFt.toLocaleString() : "N/A"}
+                    </div>
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                      {lotSqFt > 0
+                        ? lotSqFt > 43560
+                          ? "acres"
+                          : "square feet"
+                        : ""}
                     </div>
                   </div>
+
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
                     <School className="h-8 w-8 text-purple-500 mx-auto mb-3" />
                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
@@ -1365,17 +1401,21 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       public schools
                     </div>
                   </div>
+
                   <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 text-center hover-lift transition-all duration-300 min-h-[140px] flex flex-col justify-center">
                     <TrendingUp className="h-8 w-8 text-orange-500 mx-auto mb-3" />
                     <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
                       Days on Market
                     </div>
-                    {/* ✅ always the API value */}
                     <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                      {propertyData.days_on_market || "N/A"}
+                      {propertyData.days_on_market ?? "N/A"}
                     </div>
                     <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                      {propertyData.days_on_market ? "established listing" : ""}
+                      {propertyData.days_on_market != null
+                        ? propertyData.days_on_market < 30
+                          ? "recently listed"
+                          : "established listing"
+                        : ""}
                     </div>
                   </div>
                 </div>
@@ -1405,6 +1445,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       )}
                     </div>
                   </div>
+
                   <div className="glass-card p-6 rounded-2xl hover-lift">
                     <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2 mb-4">
                       <Building className="h-5 w-5 text-accent-500" />
@@ -1419,17 +1460,18 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                           {propertyData.mls_status}
                         </span>
                       </div>
-                      {/* ❌ remove recomputation; ✅ use API days_on_market to avoid 1487 vs 1139 mismatch */}
+                      {/* Use unified days_on_market here for consistency */}
                       <div className="flex justify-between">
                         <span className="text-neutral-600 dark:text-neutral-400">
                           Days on Market:
                         </span>
                         <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                          {propertyData.days_on_market} days
+                          {propertyData.days_on_market ?? "N/A"} days
                         </span>
                       </div>
                     </div>
                   </div>
+
                   <div className="glass-card p-6 rounded-2xl hover-lift">
                     <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2 mb-4">
                       <Square className="h-5 w-5 text-gold-500" />
@@ -1449,6 +1491,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                   </div>
                 </div>
 
+                {/* Interior / features */}
                 <div className="glass-card p-8 rounded-3xl mt-16">
                   <h3 className="text-xl font-display font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-3 mb-6">
                     <Bath className="h-7 w-7 text-primary-500" />
@@ -1466,21 +1509,18 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                           </div>
                         </div>
                       )}
-                    {/* ✅ show lot size consistently here too */}
-                    {lotSqft > 0 && (
+
+                    {lotSqFt > 0 && (
                       <div className="text-center p-4 bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900/20 dark:to-accent-800/20 rounded-xl">
                         <div className="text-2xl font-bold text-accent-600 dark:text-accent-400">
-                          {lotAcres !== null
-                            ? lotAcres
-                            : lotSqft.toLocaleString()}
+                          {lotSqFt.toLocaleString()}
                         </div>
                         <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {lotAcres !== null
-                            ? "Lot Size Acres"
-                            : "Lot Size Sq Ft"}
+                          Lot Size {lotSqFt > 43560 ? "Acres" : "Sq Ft"}
                         </div>
                       </div>
                     )}
+
                     {propertyData.stories && (
                       <div className="text-center p-4 bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-success-800/20 rounded-xl">
                         <div className="text-2xl font-bold text-success-600 dark:text-success-400">
@@ -1491,6 +1531,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         </div>
                       </div>
                     )}
+
                     {propertyData.pool_features && (
                       <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl">
                         <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
@@ -1502,6 +1543,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       </div>
                     )}
                   </div>
+
                   {propertyData.interior_features && (
                     <div className="mt-6 p-4 bg-neutral-50 dark:bg-slate-800/50 rounded-2xl">
                       <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
@@ -1514,6 +1556,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                   )}
                 </div>
 
+                {/* ===== Community ===== */}
                 <div className="glass-card p-8 rounded-3xl animate-scale-in">
                   <h2 className="text-2xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-8 flex items-center gap-3">
                     <Building2 className="h-7 w-7 text-primary-500" />
@@ -1529,28 +1572,32 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         {propertyData.subdivision_name || "No subdivision info"}
                       </p>
                     </div>
+
                     <div className="bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900/20 dark:to-accent-800/20 rounded-2xl p-6 text-center hover-lift">
                       <Utensils className="h-8 w-8 text-accent-500 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
                         Amenities
                       </h3>
                       <div className="space-y-1">
-                        {propertyData.other_info?.CommunityFeatures?.split(
-                          ","
-                        ).map((v: string, i: number) => (
-                          <p
-                            key={i}
-                            className="text-neutral-700 dark:text-neutral-300 text-sm"
-                          >
-                            {v.trim()}
-                          </p>
-                        )) || (
+                        {propertyData.other_info?.CommunityFeatures ? (
+                          propertyData.other_info.CommunityFeatures.split(
+                            ","
+                          ).map((v: string, i: number) => (
+                            <p
+                              key={i}
+                              className="text-neutral-700 dark:text-neutral-300 text-sm"
+                            >
+                              {v.trim()}
+                            </p>
+                          ))
+                        ) : (
                           <p className="text-neutral-600 dark:text-neutral-400 text-sm italic">
                             No specific amenities listed
                           </p>
                         )}
                       </div>
                     </div>
+
                     <div className="bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-accent-800/20 rounded-2xl p-6 text-center hover-lift">
                       <TreePine className="h-8 w-8 text-success-500 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
@@ -1565,6 +1612,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                 </div>
               </div>
 
+              {/* ===== Map ===== */}
               <div className="glass-card p-8 rounded-3xl animate-scale-in mt-16">
                 <h2 className="text-2xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-6 flex items-center gap-3">
                   <MapPin className="h-7 w-7 text-primary-500" />
@@ -1634,19 +1682,9 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                     </div>
                   </div>
                 )}
-                {process.env.NODE_ENV === "development" && (
-                  <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl text-sm">
-                    <strong>Debug Info:</strong>
-                    <br />
-                    Latitude: {propertyData.latitude || "undefined"}
-                    <br />
-                    Longitude: {propertyData.longitude || "undefined"}
-                    <br />
-                    Address: {propertyData.address || "undefined"}
-                  </div>
-                )}
               </div>
 
+              {/* ===== Mortgage & FAQ ===== */}
               <Card className="mb-6 sm:p-8 rounded-xl shadow-medium space-y-6">
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-4">Mortgage Calculator</h3>
@@ -1656,7 +1694,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         Home Price
                       </p>
                       <div className="font-medium">
-                        ${(propertyData.list_price || 0).toLocaleString()}
+                        ${propertyData.list_price.toLocaleString()}
                       </div>
                     </div>
                     <div>
@@ -1664,10 +1702,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         Down Payment (20%)
                       </p>
                       <div className="font-medium">
-                        $
-                        {(
-                          (propertyData.list_price || 0) * 0.2
-                        ).toLocaleString()}
+                        ${(propertyData.list_price * 0.2).toLocaleString()}
                       </div>
                     </div>
                     <div>
@@ -1675,10 +1710,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                         Loan Amount
                       </p>
                       <div className="font-medium">
-                        $
-                        {(
-                          (propertyData.list_price || 0) * 0.8
-                        ).toLocaleString()}
+                        ${(propertyData.list_price * 0.8).toLocaleString()}
                       </div>
                     </div>
                     <div>
@@ -1694,7 +1726,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                       </div>
                     </div>
                     <MortgageCalculatorModal
-                      propertyPrice={propertyData.list_price || 0}
+                      propertyPrice={propertyData.list_price}
                       propertyTaxRate={0.0125}
                       insuranceRate={0.0035}
                       hoaFees={0.05}
@@ -1715,6 +1747,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
               )}
             </div>
 
+            {/* ===== Contact card ===== */}
             <div>
               <div className="space-y-6 lg:sticky lg:top-24">
                 <div className="glass-card p-8 rounded-3xl">

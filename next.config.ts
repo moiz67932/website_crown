@@ -1,3 +1,4 @@
+// /next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -6,27 +7,34 @@ const nextConfig: NextConfig = {
   },
 
   images: {
-    // Using unoptimized images in component, but keep remotePatterns for any future optimized usage
-    unoptimized: true, // disable Next.js optimizer globally to silence upstream fetch errors during dev
+    // We still keep unoptimized true, but Next/Image will
+    // continue to enforce allowed remote domains/patterns.
+    unoptimized: true,
     remotePatterns: [
-      // { protocol: "https", hostname: "api-trestle.corelogic.com" },
-      // { protocol: "https", hostname: "storage.googleapis.com" },
-      { protocol: "https", hostname: "media.crmls.org" },
-      { protocol: "https", hostname: "images.unsplash.com" },
+      // Public GCS bucket with your pre-rendered property images
       {
         protocol: "https",
         hostname: "storage.googleapis.com",
-        pathname: "**",
+        pathname: "/**", // <-- IMPORTANT: must start with a slash
       },
-            {
-        protocol: 'https',
-        hostname: 'api-trestle.corelogic.com',
-        pathname: '/**',
+      // Direct Trestle image URLs (kept for any listings that still use them)
+      {
+        protocol: "https",
+        hostname: "api-trestle.corelogic.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "media.crmls.org",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
       },
     ],
   },
-
-  // reactStrictMode: true,
 };
 
 export default nextConfig;
