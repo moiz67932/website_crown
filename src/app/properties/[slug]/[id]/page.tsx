@@ -500,8 +500,17 @@ import PropertyDetailClient from "./page.client"
 // prevent Next from static-optimizing this route
 export const dynamic = "force-dynamic"
 
-export default function Page({ params, searchParams }: { params: { id: string; slug?: string }; searchParams?: any }) {
-  return <PropertyDetailClient params={params} searchParams={searchParams} />
+// Next.js 15 may provide `params` as a Promise in RSC type checks.
+// Accept the Promise and unwrap it here to satisfy the generated PageProps.
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string; slug?: string }>
+  searchParams?: any
+}) {
+  const resolvedParams = await params
+  return <PropertyDetailClient params={resolvedParams} searchParams={searchParams} />
 }
 
 
