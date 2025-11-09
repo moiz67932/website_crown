@@ -196,13 +196,14 @@
 
 
 
-
-// /src/app/api/properties/[id]/route.ts
-import { NextResponse } from "next/server";
+// /src/app/api/properties/[listingKey]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import {
   getPropertyByListingKey,
   getPropertyMediaByListingKey,
 } from "@/lib/db/property-repo";
+
+// ---- helpers ---------------------------------------------------------------
 
 function parseMaybeJSON<T>(raw: any): T | null {
   if (!raw) return null;
@@ -215,118 +216,214 @@ function parseMaybeJSON<T>(raw: any): T | null {
   }
 }
 
-function num(n: any): number | null {
+function toNum(n: any): number | null {
   if (n === null || n === undefined || n === "") return null;
   const v = Number(n);
   return Number.isFinite(v) ? v : null;
 }
 
+// ---- route ----------------------------------------------------------------
+
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  ctx: { params: { listingKey: string } }
 ) {
   try {
-    const listingKey = params.id;
+    const { listingKey } = ctx.params;
 
-    const p = await getPropertyByListingKey(listingKey);
-    if (!p) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!listingKey || listingKey === "undefined") {
+      return NextResponse.json(
+        { success: false, error: "Valid listing key is required" },
+        { status: 400 }
+      );
     }
 
-    // Prefer media table (GCS public URLs).
+    // Base row from properties
+    const row = await getPropertyByListingKey(listingKey);
+    if (!row) {
+      return NextResponse.json(
+        { success: false, error: "Property not found" },
+        { status: 404 }
+      );
+    }
+
+    // Prefer media from property_media (GCS public URLs), fallback to properties.media_urls, then main_photo_url
     const media = await getPropertyMediaByListingKey(listingKey);
     const mediaUrlsFromMedia = parseMaybeJSON<string[]>(media?.media_urls);
-    const mediaUrlsFromProps = parseMaybeJSON<string[]>(p.media_urls);
+    const mediaUrlsFromProps = parseMaybeJSON<string[]>(row?.media_urls);
 
-    const images: string[] =
-      (mediaUrlsFromMedia && mediaUrlsFromMedia.length > 0
+    const images: string[] = (
+      (mediaUrlsFromMedia && mediaUrlsFromMedia.length
         ? mediaUrlsFromMedia
-        : mediaUrlsFromProps && mediaUrlsFromProps.length > 0
+        : mediaUrlsFromProps && mediaUrlsFromProps.length
         ? mediaUrlsFromProps
-        : p.main_photo_url
-        ? [p.main_photo_url]
-        : []
-      ).filter(Boolean);
+        : row?.main_photo_url
+        ? [row.main_photo_url]
+        : []) as string[]
+    ).filter(Boolean);
 
-    // Build a normalized payload for the client
-    const living_area_sqft = num(p.living_area);
-    const lot_size_sqft = num(p.lot_size_sq_ft);
+    // Derive address (keep your previous logic)
+    let derivedAddress: string =
+      (row as any).unparsed_address || (row as any).address || "";
+    let raw: any = (row as any).raw_json;
+    if (raw && typeof raw === "string") {
+      try {
+        raw = JSON.parse(raw);
+      } catch {
+        /* ignore */
+      }
+    }
+    if (!derivedAddress && raw) {
+      derivedAddress = raw.UnparsedAddress || raw.unparsed_address || "";
+    }
+    if (!derivedAddress && raw) {
+      const num = raw.StreetNumber || raw.street_number || raw.StreetNumberNumeric || "";
+      const name = raw.StreetName || raw.street_name || "";
+      const suffix = raw.StreetSuffix || raw.street_suffix || "";
+      const unit = raw.UnitNumber || raw.unit_number || "";
+      const pieces = [num, name, suffix].filter(Boolean).join(" ").trim();
+      if (pieces) {
+        derivedAddress = pieces + (unit ? ` #${unit}` : "");
+      }
+    }
+    if (!derivedAddress) {
+      const city = (row as any).city || raw?.City || "";
+      const state = (row as any).state_or_province || raw?.StateOrProvince || "";
+      if (city || state) derivedAddress = [city, state].filter(Boolean).join(", ");
+    }
+    if (!derivedAddress) derivedAddress = (row as any).listing_key;
 
-    const normalized = {
-      // identifiers
-      listing_key: p.listing_key,
-      listing_id: p.listing_id,
+    // Normalize numbers
+    const list_price = toNum(row.list_price) ?? 0;
+    const bedrooms = toNum((row as any).bedrooms_total) ?? 0;
+    const bathrooms = toNum((row as any).bathrooms_total) ?? 0;
+    const living_area_sqft =
+      toNum((row as any).living_area) ??
+      toNum((row as any).living_area_sqft) ??
+      0;
+    const lot_size_sqft =
+      toNum((row as any).lot_size_sqft) ??
+      toNum((row as any).lot_size_sq_ft) ??
+      0;
+    const year_built = toNum((row as any).year_built) ?? 0;
 
-      // naming / address
-      title: p.unparsed_address || p.cleaned_address || null,
-      h1_heading: null,
-      seo_title: null,
-      address: p.unparsed_address || p.cleaned_address || null,
-      city: p.city || null,
-      // Map state_or_province to both "state" and "county" so your UI line "{city}, {county}" shows something useful.
-      state: p.state_or_province || null,
-      county: p.state_or_province || null,
-      postal_code: p.postal_code || null,
-      country: p.country || "US",
+    // Days on market: map cumulative_days_on_market -> days_on_market for your UI
+    const days_on_market =
+      toNum((row as any).cumulative_days_on_market) ??
+      toNum((row as any).days_on_market) ??
+      0;
 
-      // geo
-      latitude: num(p.latitude),
-      longitude: num(p.longitude),
+    // State/county: your UI shows "{city}, {county}". Map county := state_or_province so it renders like "Lancaster, CA".
+    const county =
+      (row as any).county || (row as any).state_or_province || "";
 
-      // classification
-      status: p.status,
-      mls_status: p.mls_status,
-      property_type: p.property_type,
-      property_sub_type: p.property_sub_type,
+    const detail = {
+      _id: row.listing_key,
+      listing_key: row.listing_key,
+      listing_id: row.listing_key,
 
-      // measurements
-      bedrooms: num(p.bedrooms_total),
-      bathrooms: num(p.bathrooms_total),
+      list_price,
+      previous_list_price: (row as any).previous_list_price || null,
+      lease_amount: null,
+
+      address: derivedAddress,
+      city: (row as any).city || "",
+      // keep both; UI uses county, search may use state
+      state: (row as any).state_or_province || "",
+      county,
+      postal_code: (row as any).postal_code || "",
+
+      latitude: toNum((row as any).latitude) ?? 0,
+      longitude: toNum((row as any).longitude) ?? 0,
+
+      property_type: (row as any).property_type || "Residential",
+      property_sub_type: (row as any).property_sub_type || "",
+
+      bedrooms,
+      bathrooms,
       living_area_sqft,
       lot_size_sqft,
-      year_built: num(p.year_built),
+      year_built,
 
-      // pricing
-      list_price: num(p.list_price),
-      original_list_price: num(p.original_list_price),
-      price_per_sq_ft: num(p.price_per_sq_ft),
+      zoning: null,
 
-      // dates
-      listed_at: p.listed_at || null,
-      modification_timestamp: p.modification_timestamp || null,
-      on_market_timestamp: p.on_market_date || p.listed_at || null,
-      price_change_timestamp: p.price_change_timestamp || null,
-      close_date: p.close_date || null,
-      close_price: num(p.close_price),
+      status: (row as any).status || "",
+      mls_status: (row as any).mls_status || (row as any).status || "",
+      days_on_market,
 
-      // days on market (rename to what UI expects)
-      days_on_market: num(p.cumulative_days_on_market),
+      listing_contract_date: (row as any).listing_contract_date || "",
+      public_remarks:
+        (row as any).public_remarks ||
+        (raw?.PublicRemarks ?? "") ||
+        "",
 
-      // misc
-      association_fee: num(p.association_fee),
-      tax_annual_amount: num(p.tax_annual_amount),
-      walk_score: num(p.walk_score),
-      school_district_name: p.school_district_name || null,
+      subdivision_name: "",
 
-      // media
-      photos_count: num(p.photos_count),
-      main_photo_url: media?.main_photo_url || p.main_photo_url || null,
+      main_photo_url: media?.main_photo_url || (row as any).main_photo_url || null,
       images,
+      photosCount: (row as any).photos_count || images.length,
 
-      // extra slots UI references (safe defaults)
+      list_agent_full_name: (row as any).list_agent_full_name || "",
+      list_office_name: (row as any).list_office_name || "",
+
+      list_agent_email: "",
+      list_agent_phone: "",
+      lease_considered: false,
+      lease_amount_frequency: null,
+
+      modification_timestamp: (row as any).modification_timestamp || (row as any).modification_ts || "",
+      on_market_timestamp: (row as any).on_market_date || (row as any).listed_at || (row as any).first_seen_ts || "",
+
+      agent_phone: "",
+      agent_email: "",
+      agent_office_email: "",
+      agent_office_phone: "",
+      ListAgentLastName: "",
+      ListAgentURL: null,
+      possible_use: null,
+
+      price_change_timestamp: (row as any).price_change_timestamp || (row as any).price_change_ts || null,
+      VirtualTourURLUnbranded: null,
+      view: (row as any).view || "",
+
+      Utilities: null,
+      LotFeatures: null,
+      ShowingContactName: null,
+
+      current_price: list_price,
+
+      // SEO / CMS fields your UI already references
+      seo_title: null,
+      faq_content: null,
+      h1_heading: null,
+      amenities_content: null,
+      page_content: null,
+      meta_description: null,
+      title: null,
+
       other_info: {},
-      interior_features: null,
-      pool_features: null,
-      view: null,
-      stories: null,
-      subdivision_name: null,
+
+      interior_features: (row as any).interior_features || "",
+      stories: (row as any).stories || 1,
+      pool_features: (row as any).pool_features || "",
+      parking_total: (row as any).parking_total?.toString() || "0",
+      garage_size: (row as any).garage_spaces?.toString() || "0",
+      heating: (row as any).heating || "",
+      cooling: (row as any).cooling || "",
+      security_features: (row as any).security_features || "",
+      parking_features: (row as any).parking_features || "",
+      laundry_features: (row as any).laundry_features || "",
     };
 
-    return NextResponse.json(normalized, { status: 200 });
-  } catch (err: any) {
-    console.error("[api/properties/:id] error", err);
+    return NextResponse.json({ success: true, data: detail }, { status: 200 });
+  } catch (error: any) {
+    console.error("❌ Error fetching property detail:", error);
     return NextResponse.json(
-      { error: "Internal Server Error", detail: err?.message },
+      {
+        success: false,
+        error: "Failed to fetch property",
+        message: error?.message,
+      },
       { status: 500 }
     );
   }
