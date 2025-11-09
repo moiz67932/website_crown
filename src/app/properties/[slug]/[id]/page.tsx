@@ -493,24 +493,196 @@
 
 
 
+"use client"
+
 // @ts-nocheck
-// ✅ server wrapper that ensures params reach the client component
-import PropertyDetailClient from "./page.client"
 
-// prevent Next from static-optimizing this route
-export const dynamic = "force-dynamic"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import {
+  Bed,
+  Bath,
+  Square,
+  MapPin,
+  Heart,
+  Share2,
+  Calendar,
+  Building,
+  Maximize,
+  School,
+  TreePine,
+  TrendingUp,
+  Building2,
+  Car,
+  Eye,
+  Utensils,
+} from "lucide-react"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { PropertyDetail, usePropertyDetail } from "@/hooks/queries/useGetDetailProperty"
+import Loading from "@/components/shared/loading"
+import ContactForm from "@/components/contact-form"
+import { Card, CardContent } from "@/components/ui/card"
+import MortgageCalculatorModal from "./mortage-calculator-modal"
+import PropertyFAQ from "./property-faq"
+import nextDynamic from "next/dynamic"
 
-// Next.js 15 may provide `params` as a Promise in RSC type checks.
-// Accept the Promise and unwrap it here to satisfy the generated PageProps.
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string; slug?: string }>
-  searchParams?: any
-}) {
-  const resolvedParams = await params
-  return <PropertyDetailClient params={resolvedParams} searchParams={searchParams} />
+// ✅ Dynamic import for map (avoids SSR crash)
+const PropertyMap = nextDynamic(() => import("./property-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-96 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-slate-800 dark:to-slate-700 rounded-2xl flex items-center justify-center animate-pulse">
+      <div className="text-center">
+        <div className="w-12 h-12 bg-primary-500 rounded-xl mx-auto mb-4 animate-spin flex items-center justify-center">
+          <MapPin className="h-6 w-6 text-white" />
+        </div>
+        <p className="text-neutral-600 dark:text-neutral-400 font-medium">Loading Interactive Map...</p>
+      </div>
+    </div>
+  ),
+})
+
+// ✅ JSON-LD generator
+const generatePropertyJsonLd = (property: PropertyDetail | undefined) => {
+  const siteUrl = "https://www.crowncoastalhomes.com"
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: property?.seo_title,
+    description: property?.public_remarks,
+    image: property?.images?.map((img) => (img?.startsWith("http") ? img : `${siteUrl}${img}`)),
+    url: `${siteUrl}/properties/${property?.address?.replace(/ /g, "-")}/${property?.listing_key}`,
+    datePosted: property?.on_market_timestamp,
+    availability: "A",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: property?.address?.split(",")[0]?.trim(),
+      addressLocality: property?.city,
+      addressRegion: property?.county,
+      postalCode: property?.postal_code,
+      addressCountry: "US",
+    },
+    offers: {
+      "@type": "Offer",
+      price: property?.list_price,
+      priceCurrency: "USD",
+    },
+  }
+}
+
+// ✅ Props type
+type PropertyDetailPageProps = {
+  params: { id: string; slug?: string }
+}
+
+export default function PropertyDetailPage({ params }: PropertyDetailPageProps) {
+  const { data: propertyData, isLoading, isError } = usePropertyDetail(params.id)
+
+  const faqs = propertyData?.faq_content ? JSON.parse(propertyData.faq_content) : []
+  const propertyJsonLd = generatePropertyJsonLd(propertyData)
+
+  if (isLoading) return <Loading />
+  if (isError)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <span className="text-red-500 text-lg">Error loading property</span>
+      </div>
+    )
+  if (!propertyData)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <span className="text-gray-500 text-lg">Property not found</span>
+      </div>
+    )
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(propertyJsonLd) }} />
+
+      {/* === UI CONTENT === */}
+      <div className="bg-neutral-50 dark:bg-slate-900 min-h-screen w-full pt-16 theme-transition">
+        {/* === IMAGE CAROUSEL === */}
+        <section className="relative overflow-hidden">
+          <Carousel className="w-full" data-carousel="main" opts={{ loop: true }}>
+            <CarouselContent>
+              {propertyData.images?.length ? (
+                propertyData.images.map((src, index) => (
+                  <CarouselItem key={index}>
+                    <div className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[80vh]">
+                      <Image
+                        src={src || "/luxury-modern-house-exterior.png"}
+                        alt={`${propertyData.title || propertyData.address} - ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        priority={index === 0}
+                      />
+                    </div>
+                  </CarouselItem>
+                ))
+              ) : (
+                <CarouselItem>
+                  <Image src="/luxury-modern-house-exterior.png" alt="Property" fill className="object-cover" />
+                </CarouselItem>
+              )}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </section>
+
+        {/* === INFO SECTION (Rest of UI unchanged) === */}
+        <div className="container mx-auto py-12 px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl lg:text-4xl font-display font-bold mb-3">{propertyData.address}</h1>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              {propertyData.city}, {propertyData.county}
+            </p>
+            <p className="text-2xl font-bold text-primary-600 mt-4">
+              ${propertyData.list_price?.toLocaleString()}
+            </p>
+          </div>
+
+          {propertyData.latitude && propertyData.longitude && (
+            <div className="mb-10">
+              <PropertyMap
+                location={{ lat: propertyData.latitude, lng: propertyData.longitude }}
+                address={propertyData.address}
+              />
+            </div>
+          )}
+
+          {faqs?.length > 0 && (
+            <div className="bg-brand-white p-6 sm:p-8 rounded-xl shadow-medium">
+              <PropertyFAQ faqs={faqs} propertyType={propertyData.property_type} propertyAddress={propertyData.address} />
+            </div>
+          )}
+
+          <Card className="my-10">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-4">Mortgage Calculator</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Home Price</p>
+                  <div className="font-medium">${propertyData.list_price?.toLocaleString()}</div>
+                </div>
+                <MortgageCalculatorModal
+                  propertyPrice={propertyData.list_price}
+                  propertyTaxRate={0.0125}
+                  insuranceRate={0.0035}
+                  hoaFees={0.05}
+                  buttonText="Full Calculator"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="p-8 rounded-3xl bg-neutral-100 dark:bg-slate-800">
+            <ContactForm propertyId={propertyData.listing_key} proertyData={propertyData} />
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
 
 
