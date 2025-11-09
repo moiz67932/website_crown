@@ -226,10 +226,10 @@ function toNum(n: any): number | null {
 
 export async function GET(
   _request: NextRequest,
-  ctx: { params: { listingKey: string } }
+  { params }: { params: { listingKey: string } }
 ) {
   try {
-    const { listingKey } = ctx.params;
+    const { listingKey } = params;
 
     if (!listingKey || listingKey === "undefined") {
       return NextResponse.json(
