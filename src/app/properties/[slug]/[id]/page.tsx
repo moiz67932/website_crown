@@ -12,25 +12,23 @@
 //   Share2,
 // @ts-nocheck
 // Minimal server wrapper that defers to the client component in page.client.tsx
-import PropertyDetailClient from "./page.client"
 
-// prevent Next from static-optimizing this route
-export const dynamic = "force-dynamic"
+// import PropertyDetailClient from "./page.client"
 
-// Accept params as a Promise to satisfy Next.js generated PageProps
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string; slug?: string }>
-  searchParams?: any
-}) {
-  const resolvedParams = await params
-  return <PropertyDetailClient params={resolvedParams} searchParams={searchParams} />
-}
+// // prevent Next from static-optimizing this route
+// export const dynamic = "force-dynamic"
 
-
-
+// // Accept params as a Promise to satisfy Next.js generated PageProps
+// export default async function Page({
+//   params,
+//   searchParams,
+// }: {
+//   params: Promise<{ id: string; slug?: string }>
+//   searchParams?: any
+// }) {
+//   const resolvedParams = await params
+//   return <PropertyDetailClient params={resolvedParams} searchParams={searchParams} />
+// }
 
 
 
@@ -39,8 +37,11 @@ export default async function Page({
 
 
 
-// @ts-nocheck
+
+
+
 "use client"
+// @ts-nocheck
 
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
