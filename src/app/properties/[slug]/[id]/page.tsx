@@ -32,10 +32,6 @@ import MortgageCalculatorModal from "./mortage-calculator-modal"
 import PropertyFAQ from "./property-faq"
 import nextDynamic from "next/dynamic"
 
-// Optional: keep these route flags if you need to avoid static optimization
-export const dynamic = "force-dynamic"
-export const revalidate = 0
-
 const PropertyMap = nextDynamic(() => import("./property-map"), {
   ssr: false,
   loading: () => (
@@ -377,7 +373,7 @@ export default function Page(props: any) {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-2xl p-6 text-center hover-lift"><Building2 className="h-8 w-8 text-primary-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Subdivision</h3><p className="text-neutral-700 dark:text-neutral-300">{propertyData.subdivision_name || 'No subdivision info'}</p></div>
                     <div className="bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900/20 dark:to-accent-800/20 rounded-2xl p-6 text-center hover-lift"><Utensils className="h-8 w-8 text-accent-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Amenities</h3><div className="space-y-1">{propertyData.other_info?.CommunityFeatures?.split(',').map((v: string, i: number) => <p key={i} className="text-neutral-700 dark:text-neutral-300 text-sm">{v.trim()}</p>) || <p className="text-neutral-600 dark:text-neutral-400 text-sm italic">No specific amenities listed</p>}</div></div>
-                    <div className="bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-success-800/20 rounded-2xl p-6 text-center hover-lift"><TreePine className="h-8 w-8 text-success-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Recreation</h3><p className="text-neutral-700 dark:text-neutral-300 text-sm">{propertyData.other_info?.RecreationFeatures || 'Recreation info not available'}</p></div>
+                    <div className="bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-accent-800/20 rounded-2xl p-6 text-center hover-lift"><TreePine className="h-8 w-8 text-success-500 mx-auto mb-4" /><h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Recreation</h3><p className="text-neutral-700 dark:text-neutral-300 text-sm">{propertyData.other_info?.RecreationFeatures || 'Recreation info not available'}</p></div>
                   </div>
                 </div>
               </div>
