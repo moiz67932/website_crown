@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin!Passw0rd#2025';
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'emamajbargh@gmail.com';
 
+    console.log('Login attempt for:', email);
+    console.log('Admin username check:', email.toLowerCase() === ADMIN_USERNAME.toLowerCase());
+
     // Check if this is an admin login
     if (email.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
       if (password !== ADMIN_PASSWORD) {
@@ -72,7 +75,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Regular user login with Supabase
+    console.log('Attempting Supabase login for:', email);
     const result = await SupabaseAuthService.loginUser({ email, password });
+
+    console.log('Supabase login result:', result.success, result.message);
 
     if (!result.success) {
       return NextResponse.json(
