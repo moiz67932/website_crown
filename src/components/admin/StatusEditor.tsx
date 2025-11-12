@@ -1,10 +1,12 @@
 "use client"
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function StatusEditor({ postId, currentStatus, slug }: { postId: string, currentStatus: string, slug?: string }) {
   const [status, setStatus] = useState(currentStatus)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const router = useRouter()
 
   async function save() {
     setSaving(true)
@@ -26,6 +28,11 @@ export default function StatusEditor({ postId, currentStatus, slug }: { postId: 
           method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: p })
         })))
       }
+      // Redirect to posts list after successful save
+      setTimeout(() => {
+        router.push('/admin/posts')
+        router.refresh()
+      }, 500)
     } catch (err: any) {
       setMsg('Error: ' + (err.message || String(err)))
     } finally {

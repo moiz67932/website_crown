@@ -1,5 +1,6 @@
 import { getSupabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 
 export default async function EditPost({ params }: { params: Promise<{ id: string }> }) {
   // Next.js (v15+) expects params to be a Promise in app router pages. Await it.
@@ -20,7 +21,26 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Edit Post</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Edit Post</h1>
+        <div className="flex items-center gap-3">
+          {post.status === 'published' && (
+            <Link 
+              href={`/blog/${post.slug}`} 
+              target="_blank"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              View Live →
+            </Link>
+          )}
+          <Link 
+            href="/admin/posts"
+            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+          >
+            ← Back to Posts
+          </Link>
+        </div>
+      </div>
       <div className="grid gap-4">
         <div>
           <div className="text-sm mb-1 font-medium">Primary Title</div>

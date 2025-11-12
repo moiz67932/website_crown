@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { getSupabaseClient } from '@/lib/supabase-auth'
+import { getSupabasePublic } from '@/lib/supabase-auth'
 import type { User } from '@/lib/supabase-auth'
 
 export function useSupabaseAuth() {
@@ -13,7 +13,7 @@ export function useSupabaseAuth() {
     checkAuthStatus()
     
     // Listen for auth changes
-    const supabase = getSupabaseClient()
+    const supabase = getSupabasePublic()
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
@@ -33,7 +33,7 @@ export function useSupabaseAuth() {
   const checkAuthStatus = async () => {
     setIsLoading(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = getSupabasePublic()
       if (!supabase) {
         setUser(null)
         setIsAuthenticated(false)
@@ -59,7 +59,7 @@ export function useSupabaseAuth() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = getSupabasePublic()
       if (!supabase) return
 
       const { data, error } = await supabase
@@ -86,7 +86,7 @@ export function useSupabaseAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = getSupabasePublic()
       if (!supabase) {
         throw new Error('Supabase not configured')
       }
@@ -119,7 +119,7 @@ export function useSupabaseAuth() {
     dateOfBirth: string
   }) => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = getSupabasePublic()
       if (!supabase) {
         throw new Error('Supabase not configured')
       }
@@ -149,7 +149,7 @@ export function useSupabaseAuth() {
 
   const logout = async () => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = getSupabasePublic()
       if (!supabase) {
         throw new Error('Supabase not configured')
       }
@@ -177,7 +177,7 @@ export function useSupabaseAuth() {
 
   const resetPassword = async (email: string) => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = getSupabasePublic()
       if (!supabase) {
         throw new Error('Supabase not configured')
       }

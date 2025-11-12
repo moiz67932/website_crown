@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const { firstName, lastName, email, password, dateOfBirth } = validationResult.data;
 
-    // Create user with Supabase
+    // Create user with Supabase - this will create both auth user and profile
     const result = await SupabaseAuthService.createUser({
       firstName,
       lastName,
@@ -42,22 +42,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Now log the user in to get a proper session
+    const loginResult = await SupabaseAuthService.loginUser({
+      email,
+      password
+    });
+
+    if (!loginResult.success || !loginResult.user) {
+      return NextResponse.json(
+        { success: false, message: 'User created but login failed. Please try logging in.' },
+        { status: 500 }
+      );
+    }
+
     // Generate JWT token for session management
-      const token = AuthService.generateToken({
-        userId: Number(result.userId!),
-        email,
-        name: `${firstName} ${lastName}`
-      });
+    const token = AuthService.generateToken({
+      userId: Number(loginResult.user.id),
+      email: loginResult.user.email,
+      name: `${loginResult.user.first_name} ${loginResult.user.last_name}`
+    });
 
     // Create response with cookie
     const response = NextResponse.json({
       success: true,
       message: 'Registration successful',
       user: {
-        id: result.userId,
-        name: `${firstName} ${lastName}`,
-        email,
-        dateOfBirth
+        id: loginResult.user.id,
+        name: `${loginResult.user.first_name} ${loginResult.user.last_name}`,
+        email: loginResult.user.email,
+        dateOfBirth: loginResult.user.date_of_birth
       }
     });
 
@@ -69,6 +82,8 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
+
+    console.log('Registration successful for user:', loginResult.user.email, 'Token set in cookie');
 
     return response;
 

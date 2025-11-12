@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { getSupabaseClient } from '@/lib/supabase-auth'
+import { getSupabasePublic } from '@/lib/supabase-auth'
 import type { User } from '@supabase/supabase-js'
 
 interface SupabaseContextType {
@@ -27,7 +27,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const supabase = getSupabaseClient()
+    const supabase = getSupabasePublic()
     if (!supabase) {
       setLoading(false)
       return

@@ -63,7 +63,11 @@ export default async function AdminPosts({ searchParams }: { searchParams?: Prom
               <td className="p-2 text-center">{p.published_at?.slice(0,16) || '-'}</td>
               <td className="p-2 text-center">{viewsById.get(p.id) || 0}</td>
               <td className="p-2 text-center space-x-2">
-                <Link className="underline" href={`/blog/${p.slug}`}>View</Link>
+                {p.status === 'published' ? (
+                  <Link className="underline text-blue-600" href={`/blog/${p.slug}`} target="_blank">View</Link>
+                ) : (
+                  <span className="text-gray-400 text-xs">(draft)</span>
+                )}
                 <Link className="underline" href={`/admin/posts/${p.id}`}>Edit</Link>
               </td>
             </tr>

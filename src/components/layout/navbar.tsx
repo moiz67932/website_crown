@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Menu, X, ChevronDown, User, LogOut, Settings } from "lucide-react"
+import { Menu, X, ChevronDown, User, LogOut, Settings, Heart, History, Search, Eye } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
@@ -173,6 +173,9 @@ export default function Navbar() {
           <nav className={navStyles.rightNav}>
             <Link href="/about" className={navStyles.rightNavLink}>About</Link>
             <Link href="/contact" className={navStyles.rightNavLink}>Contact</Link>
+            {isAuthenticated && (user as any)?.isAdmin && (
+              <Link href="/admin" className={navStyles.rightNavLink}>Admin</Link>
+            )}
             
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -200,8 +203,38 @@ export default function Navbar() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link href="/profile" className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile/favorites" className="flex items-center gap-2">
+                          <Heart className="h-4 w-4" />
+                          Saved Properties
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile/searches" className="flex items-center gap-2">
+                          <Search className="h-4 w-4" />
+                          Saved Searches
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile/history" className="flex items-center gap-2">
+                          <History className="h-4 w-4" />
+                          Search History
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile/viewed" className="flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          Viewed Properties
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile/settings" className="flex items-center gap-2">
                           <Settings className="h-4 w-4" />
-                          Profile Settings
+                          Settings
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -327,6 +360,16 @@ export default function Navbar() {
                   >
                     Sell
                   </Link>
+              {isAuthenticated && (user as any)?.isAdmin && (
+                <Link
+                  href="/admin"
+                  key="Admin"
+                  className={navStyles.mobileNavLink}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin
+                </Link>
+              )}
               {/* Other nav items */}
               {navItems
                 .filter(item => item.name !== "Home" && item.name !== "Buy" && item.name !== "Rent")
@@ -356,7 +399,7 @@ export default function Navbar() {
               {!isLoading && (
                 <>
                   {isAuthenticated && user ? (
-                    // User is logged in - show user info and logout
+                    // User is logged in - show user info and menu
                     <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200">
                       <div className="px-4 py-2">
                         <p className="text-sm font-medium text-slate-900">{user.name}</p>
@@ -364,8 +407,38 @@ export default function Navbar() {
                       </div>
                       <Link href="/profile">
                         <Button variant="ghost" className="w-full justify-start text-slate-700" onClick={() => setIsMobileMenuOpen(false)}>
+                          <User className="h-4 w-4 mr-2" />
+                          My Profile
+                        </Button>
+                      </Link>
+                      <Link href="/profile/favorites">
+                        <Button variant="ghost" className="w-full justify-start text-slate-700" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Heart className="h-4 w-4 mr-2" />
+                          Saved Properties
+                        </Button>
+                      </Link>
+                      <Link href="/profile/searches">
+                        <Button variant="ghost" className="w-full justify-start text-slate-700" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Search className="h-4 w-4 mr-2" />
+                          Saved Searches
+                        </Button>
+                      </Link>
+                      <Link href="/profile/history">
+                        <Button variant="ghost" className="w-full justify-start text-slate-700" onClick={() => setIsMobileMenuOpen(false)}>
+                          <History className="h-4 w-4 mr-2" />
+                          Search History
+                        </Button>
+                      </Link>
+                      <Link href="/profile/viewed">
+                        <Button variant="ghost" className="w-full justify-start text-slate-700" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Viewed Properties
+                        </Button>
+                      </Link>
+                      <Link href="/profile/settings">
+                        <Button variant="ghost" className="w-full justify-start text-slate-700" onClick={() => setIsMobileMenuOpen(false)}>
                           <Settings className="h-4 w-4 mr-2" />
-                          Profile Settings
+                          Settings
                         </Button>
                       </Link>
                       <Button 

@@ -16,8 +16,8 @@ export function getSupabaseAuth(): SupabaseClient | null {
   })
 }
 
-// Client-side Supabase client for authentication
-export function getSupabaseClient(): SupabaseClient | null {
+// Client-side Supabase client for authentication (public)
+export function getSupabasePublic(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
@@ -28,9 +28,9 @@ export function getSupabaseClient(): SupabaseClient | null {
   
   return createClient(url, anonKey, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
+      persistSession: false, // Server-side, don't persist
+      autoRefreshToken: false,
+      detectSessionInUrl: false
     }
   })
 }
@@ -71,15 +71,23 @@ export class SupabaseAuthService {
   // Create user account
   static async createUser(userData: CreateUserData): Promise<{ success: boolean; message: string; userId?: string }> {
     try {
-      const supabase = getSupabaseAuth()
+      // Use the public client for sign-up to properly create sessions
+      const supabase = getSupabasePublic()
       if (!supabase) {
         return { success: false, message: 'Supabase not configured' }
       }
 
-      // Create user in Supabase Auth (without metadata to avoid trigger issues)
+      // Create user in Supabase Auth - this will trigger the database trigger to create profile
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
-        password: userData.password
+        password: userData.password,
+        options: {
+          data: {
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            date_of_birth: userData.dateOfBirth
+          }
+        }
       })
 
       if (authError) {
@@ -91,36 +99,49 @@ export class SupabaseAuthService {
         return { success: false, message: 'Failed to create user' }
       }
 
-      // Create user profile in public.users table manually
-      const defaultPreferences = JSON.stringify({
-        currency: 'USD',
-        units: 'imperial',
-        theme: 'light'
-      })
-      
-      const defaultNotificationSettings = JSON.stringify({
-        email_alerts: true,
-        push_notifications: true,
-        weekly_digest: true,
-        marketing_emails: false
-      })
-
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          first_name: userData.firstName,
-          last_name: userData.lastName,
-          email: userData.email,
-          date_of_birth: userData.dateOfBirth,
-          is_email_verified: false,
-          preferences: defaultPreferences,
-          notification_settings: defaultNotificationSettings
+      // Use service role to ensure profile is created (in case trigger doesn't work)
+      const supabaseAdmin = getSupabaseAuth()
+      if (supabaseAdmin) {
+        const defaultPreferences = JSON.stringify({
+          currency: 'USD',
+          units: 'imperial',
+          theme: 'light'
+        })
+        
+        const defaultNotificationSettings = JSON.stringify({
+          email_alerts: true,
+          push_notifications: true,
+          weekly_digest: true,
+          marketing_emails: false
         })
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-        return { success: false, message: `Failed to create user profile: ${profileError.message}` }
+        // Check if profile already exists (from trigger)
+        const { data: existingProfile } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .eq('id', authData.user.id)
+          .single()
+
+        if (!existingProfile) {
+          // Create profile manually if trigger didn't work
+          const { error: profileError } = await supabaseAdmin
+            .from('users')
+            .insert({
+              id: authData.user.id,
+              first_name: userData.firstName,
+              last_name: userData.lastName,
+              email: userData.email,
+              date_of_birth: userData.dateOfBirth,
+              is_email_verified: false,
+              preferences: defaultPreferences,
+              notification_settings: defaultNotificationSettings
+            })
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError)
+            // Don't fail here - the user was created in auth, we can fix profile later
+          }
+        }
       }
 
       return { 
@@ -138,7 +159,8 @@ export class SupabaseAuthService {
   // Login user
   static async loginUser(loginData: LoginData): Promise<{ success: boolean; message: string; user?: Omit<User, 'password'> }> {
     try {
-      const supabase = getSupabaseAuth()
+      // Use public client for end-user login
+      const supabase = getSupabasePublic()
       if (!supabase) {
         return { success: false, message: 'Supabase not configured' }
       }
@@ -158,8 +180,14 @@ export class SupabaseAuthService {
         return { success: false, message: 'Login failed' }
       }
 
+      // Use service role to get and update user profile
+      const supabaseAdmin = getSupabaseAuth()
+      if (!supabaseAdmin) {
+        return { success: false, message: 'Server configuration error' }
+      }
+
       // Get user profile
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('id', authData.user.id)
@@ -171,7 +199,7 @@ export class SupabaseAuthService {
       }
 
       // Update last login
-      await supabase
+      await supabaseAdmin
         .from('users')
         .update({ 
           last_login_at: new Date().toISOString(),
