@@ -89,14 +89,20 @@ async function makeTcpPoolFromUrl(): Promise<Pool> {
   const url = required("DATABASE_URL");
   console.log("🌐 Using direct TCP connection via DATABASE_URL");
   
-  // Parse the connection string to check if it has SSL params
-  const urlObj = new URL(url.replace('postgres://', 'postgresql://'));
-  const hasSslMode = urlObj.searchParams.has('sslmode') || url.includes('sslmode');
+  // Check if it's a localhost/proxy connection
+  const isLocalhost = url.includes('127.0.0.1') || url.includes('localhost');
+  
+  // For Cloud SQL direct IP connections, always disable SSL cert verification
+  // For localhost/proxy connections, no SSL needed
+  let sslConfig: any = false;
+  if (!isLocalhost) {
+    sslConfig = { rejectUnauthorized: false };
+    console.log("🔓 SSL certificate verification disabled for Cloud SQL direct connection");
+  }
   
   return new Pool({
     connectionString: url,
-    // Always disable SSL certificate verification for Cloud SQL direct connections
-    ssl: hasSslMode ? { rejectUnauthorized: false } : false,
+    ssl: sslConfig,
     max: Number(process.env.PG_POOL_MAX || 8),
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 30_000),
     connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS || 15_000),

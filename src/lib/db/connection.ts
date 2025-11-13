@@ -80,15 +80,21 @@ async function createPool(): Promise<Pool> {
   if (isLocalDev && process.env.DATABASE_URL) {
     console.log('🌐 Local development detected - using direct DATABASE_URL connection');
     
-    // Parse the connection string to check if it has SSL params
+    // Parse the connection string to check if it's a remote connection
     const url = process.env.DATABASE_URL;
-    const urlObj = new URL(url.replace('postgres://', 'postgresql://'));
-    const hasSslMode = urlObj.searchParams.has('sslmode') || url.includes('sslmode');
+    const isLocalhost = url.includes('127.0.0.1') || url.includes('localhost');
+    
+    // For Cloud SQL direct IP connections, always disable SSL cert verification
+    // For localhost/proxy connections, no SSL needed
+    let sslConfig: any = false;
+    if (!isLocalhost) {
+      sslConfig = { rejectUnauthorized: false };
+      console.log('🔓 SSL certificate verification disabled for Cloud SQL direct connection');
+    }
     
     const p = new Pool({
       connectionString: url,
-      // Always disable SSL certificate verification for Cloud SQL direct connections
-      ssl: hasSslMode ? { rejectUnauthorized: false } : false,
+      ssl: sslConfig,
       max: 10,
       idleTimeoutMillis: 20_000,
       statement_timeout: 60_000,
@@ -184,12 +190,19 @@ async function createPool(): Promise<Pool> {
     console.log('🌐 Using DATABASE_URL connection (fallback)');
     
     const url = process.env.DATABASE_URL;
-    const urlObj = new URL(url.replace('postgres://', 'postgresql://'));
-    const hasSslMode = urlObj.searchParams.has('sslmode') || url.includes('sslmode');
+    const isLocalhost = url.includes('127.0.0.1') || url.includes('localhost');
+    
+    // For Cloud SQL direct IP connections, always disable SSL cert verification
+    // For localhost/proxy connections, no SSL needed
+    let sslConfig: any = false;
+    if (!isLocalhost) {
+      sslConfig = { rejectUnauthorized: false };
+      console.log('🔓 SSL certificate verification disabled for Cloud SQL direct connection');
+    }
     
     const p = new Pool({
       connectionString: url,
-      ssl: hasSslMode ? { rejectUnauthorized: false } : false,
+      ssl: sslConfig,
       max: 10,
       idleTimeoutMillis: 20_000,
       statement_timeout: 60_000,
