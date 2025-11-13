@@ -73,10 +73,63 @@ function attachPoolEvents(p: Pool, mode: string) {
 }
 
 async function createPool(): Promise<Pool> {
-  // Prefer Cloud SQL if explicitly requested OR INSTANCE_CONNECTION_NAME is present
+  // For localhost/development, prioritize DATABASE_URL to avoid OIDC token requirement
+  const isLocalDev = process.env.NODE_ENV === 'development' || process.env.VERCEL !== '1';
+  
+  // 1) Use DATABASE_URL for local development (skip Cloud SQL Connector)
+  if (isLocalDev && process.env.DATABASE_URL) {
+    console.log('🌐 Local development detected - using direct DATABASE_URL connection');
+    
+    // Parse the connection string to check if it has SSL params
+    const url = process.env.DATABASE_URL;
+    const urlObj = new URL(url.replace('postgres://', 'postgresql://'));
+    const hasSslMode = urlObj.searchParams.has('sslmode') || url.includes('sslmode');
+    
+    const p = new Pool({
+      connectionString: url,
+      // Always disable SSL certificate verification for Cloud SQL direct connections
+      ssl: hasSslMode ? { rejectUnauthorized: false } : false,
+      max: 10,
+      idleTimeoutMillis: 20_000,
+      statement_timeout: 60_000,
+      query_timeout: 60_000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 5_000,
+    } as any);
+    attachPoolEvents(p, "connection-string");
+    return p;
+  }
+
+  // 2) Use DB_HOST for local development with Cloud SQL Proxy
+  if (isLocalDev && process.env.DB_HOST) {
+    console.log('🌐 Local development detected - using DB_HOST connection (Cloud SQL Proxy)');
+    const cfg: PoolConfig = {
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT || 5432),
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      max: 10,
+      idleTimeoutMillis: 20_000,
+    };
+    if (process.env.DB_SSL === "true") {
+      (cfg as any).ssl = { rejectUnauthorized: false };
+    }
+    const p = new Pool({
+      ...cfg,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 5_000,
+      statement_timeout: 60_000,
+      query_timeout: 60_000,
+    } as any);
+    attachPoolEvents(p, "tcp");
+    return p;
+  }
+
+  // Prefer Cloud SQL if explicitly requested OR INSTANCE_CONNECTION_NAME is present (Vercel production)
   const preferCloud = process.env.DB_BACKEND === "cloudsql" || !!process.env.INSTANCE_CONNECTION_NAME;
 
-  // 1) Cloud SQL via connector (works on Vercel with OIDC or locally with ADC)
+  // 3) Cloud SQL via connector (works on Vercel with OIDC or locally with ADC)
   if (preferCloud) {
     const instanceConnectionName = process.env.INSTANCE_CONNECTION_NAME;
     if (!instanceConnectionName) {
@@ -126,10 +179,17 @@ async function createPool(): Promise<Pool> {
     return p;
   }
 
-  // 2) Connection string (Docker/local etc.)
+  // 4) Fallback: Connection string (for Vercel or other environments without local dev flag)
   if (process.env.DATABASE_URL) {
+    console.log('🌐 Using DATABASE_URL connection (fallback)');
+    
+    const url = process.env.DATABASE_URL;
+    const urlObj = new URL(url.replace('postgres://', 'postgresql://'));
+    const hasSslMode = urlObj.searchParams.has('sslmode') || url.includes('sslmode');
+    
     const p = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: url,
+      ssl: hasSslMode ? { rejectUnauthorized: false } : false,
       max: 10,
       idleTimeoutMillis: 20_000,
       statement_timeout: 60_000,
@@ -141,8 +201,9 @@ async function createPool(): Promise<Pool> {
     return p;
   }
 
-  // 3) Plain TCP (e.g., local Cloud SQL Proxy with DB_HOST=127.0.0.1)
+  // 5) Fallback: Plain TCP (for other environments)
   if (process.env.DB_HOST) {
+    console.log('🌐 Using DB_HOST connection (fallback)');
     const cfg: PoolConfig = {
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT || 5432),

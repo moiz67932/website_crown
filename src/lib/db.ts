@@ -88,9 +88,15 @@ async function makeCloudSqlPool(): Promise<Pool> {
 async function makeTcpPoolFromUrl(): Promise<Pool> {
   const url = required("DATABASE_URL");
   console.log("🌐 Using direct TCP connection via DATABASE_URL");
+  
+  // Parse the connection string to check if it has SSL params
+  const urlObj = new URL(url.replace('postgres://', 'postgresql://'));
+  const hasSslMode = urlObj.searchParams.has('sslmode') || url.includes('sslmode');
+  
   return new Pool({
     connectionString: url,
-    ssl: { rejectUnauthorized: false },
+    // Always disable SSL certificate verification for Cloud SQL direct connections
+    ssl: hasSslMode ? { rejectUnauthorized: false } : false,
     max: Number(process.env.PG_POOL_MAX || 8),
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 30_000),
     connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS || 15_000),
@@ -100,6 +106,17 @@ async function makeTcpPoolFromUrl(): Promise<Pool> {
 export async function getPool(): Promise<Pool> {
   if (pool) return pool;
   try {
+    // For localhost/development, prioritize DATABASE_URL to avoid OIDC token requirement
+    const isLocalDev = process.env.NODE_ENV === 'development' || process.env.VERCEL !== '1';
+    
+    // Localhost: Use DATABASE_URL directly (no Cloud SQL Connector needed)
+    if (isLocalDev && process.env.DATABASE_URL) {
+      console.log("🌐 Local development detected - using DATABASE_URL");
+      pool = await makeTcpPoolFromUrl();
+      return pool;
+    }
+
+    // Vercel/Production: Use Cloud SQL Connector with OIDC
     if (process.env.INSTANCE_CONNECTION_NAME) {
       console.log("☁️ Initializing Cloud SQL pool (Connector + WIF) …");
       pool = await makeCloudSqlPool();
