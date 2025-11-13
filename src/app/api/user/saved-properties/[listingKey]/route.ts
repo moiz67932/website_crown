@@ -18,6 +18,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { action, notes, isFavorite } = body;
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     if (action === 'update_notes') {
       if (notes === undefined) {
         return NextResponse.json(
@@ -27,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
 
       const result = SavedPropertiesService.updatePropertyNotes(
-        currentUser.userId,
+        userId,
         params.listingKey,
         notes
       );
@@ -46,7 +49,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
 
       const result = SavedPropertiesService.togglePropertyFavorite(
-        currentUser.userId,
+        userId,
         params.listingKey,
         isFavorite
       );
@@ -83,7 +86,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const isSaved = SavedPropertiesService.isPropertySaved(currentUser.userId, params.listingKey);
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
+    const isSaved = SavedPropertiesService.isPropertySaved(userId, params.listingKey);
 
     return NextResponse.json({
       success: true,

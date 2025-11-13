@@ -15,6 +15,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const body = await request.json();
     const { name, searchCriteria, alertFrequency, isActive } = body;
 
@@ -34,7 +37,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const result = SavedSearchesService.updateSavedSearch(
-      currentUser.userId,
+      userId,
       searchId,
       name,
       searchCriteria,
@@ -74,6 +77,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const searchId = parseInt(params.id);
     if (isNaN(searchId)) {
       return NextResponse.json(
@@ -82,7 +88,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const result = SavedSearchesService.deleteSavedSearch(currentUser.userId, searchId);
+    const result = SavedSearchesService.deleteSavedSearch(userId, searchId);
 
     if (!result.success) {
       return NextResponse.json(

@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const savedSearches = SavedSearchesService.getUserSavedSearches(currentUser.userId);
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
+    const savedSearches = SavedSearchesService.getUserSavedSearches(userId);
 
     // Parse search criteria for each saved search
     const formattedSearches = savedSearches.map(search => ({
@@ -54,6 +57,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const body = await request.json();
     const { name, searchCriteria, alertFrequency = 'daily' } = body;
 
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = SavedSearchesService.saveSearch(
-      currentUser.userId,
+      userId,
       name,
       searchCriteria,
       alertFrequency

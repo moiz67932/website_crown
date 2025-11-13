@@ -13,10 +13,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const searchHistory = SearchHistoryService.getUserSearchHistory(currentUser.userId, limit);
+    const searchHistory = SearchHistoryService.getUserSearchHistory(userId, limit);
 
     // Parse search filters for each history item
     const formattedHistory = searchHistory.map(item => ({
@@ -53,6 +56,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const body = await request.json();
     const { searchQuery, searchFilters, resultsCount = 0 } = body;
 
@@ -64,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = SearchHistoryService.addSearchHistory(
-      currentUser.userId,
+      userId,
       searchQuery,
       searchFilters,
       resultsCount
@@ -102,7 +108,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = SearchHistoryService.clearUserSearchHistory(currentUser.userId);
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
+    const result = SearchHistoryService.clearUserSearchHistory(userId);
 
     if (!result.success) {
       return NextResponse.json(

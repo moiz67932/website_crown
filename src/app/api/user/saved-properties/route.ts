@@ -13,12 +13,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const { searchParams } = new URL(request.url);
     const onlyFavorites = searchParams.get('favorites') === 'true';
 
     const savedProperties = onlyFavorites 
-      ? SavedPropertiesService.getUserFavoriteProperties(currentUser.userId)
-      : SavedPropertiesService.getUserSavedProperties(currentUser.userId);
+      ? SavedPropertiesService.getUserFavoriteProperties(userId)
+      : SavedPropertiesService.getUserSavedProperties(userId);
 
     // Parse property data for each saved property
     const formattedProperties = savedProperties.map(saved => ({
@@ -59,6 +62,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const body = await request.json();
     const { property, isFavorite = false, notes, tags } = body;
 
@@ -70,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = SavedPropertiesService.saveProperty(
-      currentUser.userId,
+      userId,
       property,
       isFavorite,
       notes,
@@ -109,6 +115,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const { searchParams } = new URL(request.url);
     const listingKey = searchParams.get('listingKey');
 
@@ -119,7 +128,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = SavedPropertiesService.removeSavedProperty(currentUser.userId, listingKey);
+    const result = SavedPropertiesService.removeSavedProperty(userId, listingKey);
 
     if (!result.success) {
       return NextResponse.json(

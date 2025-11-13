@@ -13,10 +13,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const viewedProperties = ViewedPropertiesService.getUserViewedProperties(currentUser.userId, limit);
+    const viewedProperties = ViewedPropertiesService.getUserViewedProperties(userId, limit);
 
     // Parse property data for each viewed property
     const formattedProperties = viewedProperties.map(viewed => ({
@@ -54,6 +57,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
     const body = await request.json();
     const { property, viewDuration = 0 } = body;
 
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = ViewedPropertiesService.addViewedProperty(
-      currentUser.userId,
+      userId,
       property,
       viewDuration
     );
@@ -102,7 +108,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = ViewedPropertiesService.clearUserViewedProperties(currentUser.userId);
+    // Ensure userId is a number
+    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+
+    const result = ViewedPropertiesService.clearUserViewedProperties(userId);
 
     if (!result.success) {
       return NextResponse.json(
