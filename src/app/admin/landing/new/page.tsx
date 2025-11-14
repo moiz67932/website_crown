@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, RefreshCw } from "lucide-react";
+import { ArrowLeft, Save, RefreshCw, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 interface LandingPageFormData {
@@ -21,6 +21,7 @@ interface LandingPageFormData {
 export default function NewLandingPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [page, setPage] = useState<LandingPageFormData>({
     city: "",
     state: "CA",
@@ -34,13 +35,32 @@ export default function NewLandingPage() {
     status: "draft",
   });
 
+  // Auto-generate slug when city or page_type changes
+  useEffect(() => {
+    if (page.city && page.page_type) {
+      const citySlug = page.city.toLowerCase().replace(/\s+/g, "-");
+      setPage(prev => ({ ...prev, slug: `/${citySlug}/${page.page_type}` }));
+    }
+  }, [page.city, page.page_type]);
+
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Transform form data to database format
+      const pageData = {
+        city: page.city,
+        page_type: page.page_type,
+        title: page.title,
+        description: page.description,
+        content: page.content,
+        meta_title: page.meta_title,
+        meta_description: page.meta_description,
+      };
+
       const response = await fetch("/api/admin/landing-pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(page),
+        body: JSON.stringify(pageData),
       });
 
       if (response.ok) {
@@ -48,7 +68,8 @@ export default function NewLandingPage() {
         alert("Landing page created successfully!");
         router.push(`/admin/landing/${data.page.id}/edit`);
       } else {
-        alert("Failed to create landing page");
+        const errorData = await response.json();
+        alert(`Failed to create landing page: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error creating landing page:", error);
@@ -58,10 +79,52 @@ export default function NewLandingPage() {
     }
   };
 
-  // Auto-generate slug from city and page type
-  const updateSlug = (city: string, pageType: string) => {
-    const citySlug = city.toLowerCase().replace(/\s+/g, "-");
-    setPage({ ...page, slug: `/${citySlug}/${pageType}` });
+  const handleGenerateAI = async () => {
+    if (!page.city || !page.page_type) {
+      alert("Please enter a city and select a page type first");
+      return;
+    }
+
+    if (page.content && !confirm("This will overwrite existing content. Continue?")) {
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      // Call the API to generate AI content
+      const response = await fetch("/api/admin/landing-pages/generate-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city: page.city,
+          kind: page.page_type,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update the form with generated content
+        setPage({
+          ...page,
+          content: data.content || "",
+          title: data.title || page.title,
+          meta_title: data.meta_title || page.meta_title,
+          meta_description: data.meta_description || page.meta_description,
+          description: data.description || page.description,
+        });
+        
+        alert("AI content generated successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to generate content: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error generating AI content:", error);
+      alert("Error generating AI content");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -77,28 +140,55 @@ export default function NewLandingPage() {
             <p className="text-slate-600 mt-1">Create a new SEO-optimized landing page</p>
           </div>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving || !page.city || !page.title}
-          className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
-        >
-          {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-          {saving ? "Creating..." : "Create Page"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleGenerateAI}
+            disabled={generating || !page.city || !page.page_type}
+            className="flex items-center gap-2 px-4 py-2 border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Generate content with AI"
+          >
+            {generating ? (
+              <RefreshCw size={18} className="animate-spin" />
+            ) : (
+              <Sparkles size={18} />
+            )}
+            {generating ? "Generating..." : "Generate with AI"}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !page.city || !page.title}
+            className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            {saving ? "Creating..." : "Create Page"}
+          </button>
+        </div>
       </div>
 
       {/* Form */}
       <div className="bg-white rounded-xl border shadow-sm p-6 space-y-6">
+        {/* AI Generation Info */}
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Sparkles className="text-purple-600 mt-0.5" size={20} />
+            <div className="flex-1">
+              <h3 className="font-semibold text-purple-900 mb-1">AI Content Generation</h3>
+              <p className="text-sm text-purple-700">
+                Enter a city and select a page type, then click "Generate with AI" to automatically create 
+                SEO-optimized content, meta tags, and descriptions using advanced AI. The content will be 
+                tailored to your selected city and property type with local market insights.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">City *</label>
             <input
               type="text"
               value={page.city}
-              onChange={(e) => {
-                setPage({ ...page, city: e.target.value });
-                updateSlug(e.target.value, page.page_type);
-              }}
+              onChange={(e) => setPage({ ...page, city: e.target.value })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="e.g., Orange"
               required
@@ -120,10 +210,7 @@ export default function NewLandingPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Page Type</label>
             <select
               value={page.page_type}
-              onChange={(e) => {
-                setPage({ ...page, page_type: e.target.value });
-                updateSlug(page.city, e.target.value);
-              }}
+              onChange={(e) => setPage({ ...page, page_type: e.target.value })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="homes-for-sale">Homes for Sale</option>

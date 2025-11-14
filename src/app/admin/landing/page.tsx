@@ -63,17 +63,44 @@ export default function LandingPagesManagementPage() {
   };
 
   const handleGeneratePages = async () => {
-    if (confirm("Generate landing pages for all cities? This may take a while.")) {
+    if (confirm("Generate landing pages for all California cities? This may take a while.")) {
+      setLoading(true);
       try {
         const response = await fetch("/api/admin/generate-landing-pages", {
           method: "POST",
         });
         if (response.ok) {
-          alert("Landing page generation started!");
+          const result = await response.json();
+          alert(`Landing page generation complete! Created ${result.successCount} pages.`);
           fetchLandingPages();
+        } else {
+          const error = await response.json();
+          alert(`Failed to generate pages: ${error.error || 'Unknown error'}`);
         }
       } catch (error) {
         console.error("Error generating pages:", error);
+        alert("Error generating landing pages");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleRegenerateContent = async (pageId: string, city: string, kind: string) => {
+    if (confirm(`Regenerate AI content for ${city} - ${kind}?`)) {
+      try {
+        const response = await fetch(`/api/admin/landing-pages/${pageId}/regenerate`, {
+          method: "POST",
+        });
+        if (response.ok) {
+          alert("Content regenerated successfully!");
+          fetchLandingPages();
+        } else {
+          alert("Failed to regenerate content");
+        }
+      } catch (error) {
+        console.error("Error regenerating content:", error);
+        alert("Error regenerating content");
       }
     }
   };
@@ -115,6 +142,21 @@ export default function LandingPagesManagementPage() {
         <StatCard title="Total Views" value={stats.totalViews} color="purple" />
       </div>
 
+      {/* Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <Home className="text-blue-600 mt-0.5" size={20} />
+          <div className="flex-1">
+            <h3 className="font-semibold text-blue-900 mb-1">AI-Generated Landing Pages</h3>
+            <p className="text-sm text-blue-700">
+              Landing pages are automatically generated for California cities using AI. Each page includes SEO-optimized content,
+              property listings, and local insights. Click "Generate Pages" to create pages for all configured cities,
+              or use the regenerate button to refresh AI content for individual pages.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="bg-white rounded-xl border p-4 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4">
@@ -140,6 +182,9 @@ export default function LandingPagesManagementPage() {
             <option value="condos-for-sale">Condos for Sale</option>
             <option value="luxury-homes">Luxury Homes</option>
             <option value="homes-with-pool">Homes with Pool</option>
+            <option value="homes-under-500k">Homes Under $500k</option>
+            <option value="homes-over-1m">Homes Over $1M</option>
+            <option value="2-bedroom-apartments">2-Bedroom Apartments</option>
           </select>
         </div>
       </div>
@@ -211,6 +256,13 @@ export default function LandingPagesManagementPage() {
                         >
                           <Eye size={16} className="text-slate-600" />
                         </Link>
+                        <button
+                          onClick={() => handleRegenerateContent(page.id, page.city, page.page_type)}
+                          className="p-2 hover:bg-slate-100 rounded-lg transition"
+                          title="Regenerate AI Content"
+                        >
+                          <RefreshCw size={16} className="text-slate-600" />
+                        </button>
                         <Link
                           href={`/admin/landing/${page.id}/edit`}
                           className="p-2 hover:bg-slate-100 rounded-lg transition"
@@ -255,9 +307,11 @@ function StatusBadge({ status }: { status: string }) {
     draft: "bg-orange-100 text-orange-700 border-orange-200",
   }[status] || "bg-slate-100 text-slate-700 border-slate-200";
 
+  const label = status === "published" ? "Published" : "Draft (No AI Content)";
+
   return (
     <span className={`px-2 py-1 text-xs font-medium border rounded ${colors}`}>
-      {status}
+      {label}
     </span>
   );
 }

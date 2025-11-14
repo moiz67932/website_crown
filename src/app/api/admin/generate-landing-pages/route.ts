@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { CA_CITIES } from "@/lib/seo/cities";
+import { LANDINGS } from "@/lib/landing/defs";
+import { getAIDescription } from "@/lib/landing/ai";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/admin/generate-landing-pages
- * Generate landing pages for all cities
+ * Generate landing pages for California cities with AI content
  */
 export async function POST(request: NextRequest) {
   try {
@@ -14,72 +17,85 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
     }
 
-    // Get unique cities from properties
-    const { data: cities, error: citiesError } = await supabase
-      .from("properties")
-      .select("city, state")
-      .not("city", "is", null)
-      .order("city");
-
-    if (citiesError) {
-      console.error("Error fetching cities:", citiesError);
-      return NextResponse.json({ error: citiesError.message }, { status: 500 });
-    }
-
-    // Remove duplicates
-    const uniqueCities = Array.from(
-      new Set(cities?.map((c: { city: string; state: string }) => `${c.city}, ${c.state}`))
-    );
-
-    const pageTypes = [
-      "homes-for-sale",
-      "condos-for-sale",
-      "luxury-homes",
-      "homes-with-pool",
-      "homes-under-500k",
-      "homes-over-1m",
-    ];
-
     const pagesToCreate = [];
+    let successCount = 0;
+    let errorCount = 0;
 
-    for (const cityState of uniqueCities) {
-      const cityStateStr = cityState as string;
-      const [city, state] = cityStateStr.split(", ");
-      
-      for (const pageType of pageTypes) {
-        const slug = `/${city.toLowerCase().replace(/\s+/g, "-")}/${pageType}`;
-        const title = `${pageType.replace(/-/g, " ")} in ${city}, ${state}`;
-        
-        pagesToCreate.push({
-          city,
-          state,
-          slug,
-          page_type: pageType,
-          title,
-          description: `Find the best ${pageType.replace(/-/g, " ")} in ${city}, ${state}. Browse our comprehensive listings.`,
-          status: "published",
-        });
+    // Generate pages for each CA city and landing type
+    for (const citySlug of CA_CITIES) {
+      const cityName = citySlug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      for (const landing of LANDINGS) {
+        try {
+          // Check if page already exists
+          const { data: existing } = await supabase
+            .from("landing_pages")
+            .select("id")
+            .eq("city", cityName)
+            .eq("page_name", landing.slug)
+            .maybeSingle();
+
+          if (existing) {
+            console.log(`Page already exists: ${cityName} - ${landing.slug}`);
+            continue;
+          }
+
+          // Generate AI description (this will also cache it)
+          let aiDescription: string | undefined;
+          try {
+            aiDescription = await getAIDescription(cityName, landing.slug as any);
+          } catch (aiError) {
+            console.error(`AI generation failed for ${cityName} - ${landing.slug}:`, aiError);
+            aiDescription = undefined;
+          }
+
+          const pageData = {
+            city: cityName,
+            page_name: landing.slug,
+            kind: landing.slug,
+            ai_description_html: aiDescription || null,
+            seo_metadata: {
+              title: landing.title(cityName),
+              description: landing.description(cityName),
+            },
+          };
+
+          pagesToCreate.push(pageData);
+        } catch (err) {
+          console.error(`Error processing ${cityName} - ${landing.slug}:`, err);
+          errorCount++;
+        }
       }
     }
 
     // Insert pages in batches
-    const batchSize = 100;
-    for (let i = 0; i < pagesToCreate.length; i += batchSize) {
-      const batch = pagesToCreate.slice(i, i + batchSize);
-      
-      const { error: insertError } = await supabase
-        .from("landing_pages")
-        .upsert(batch, { onConflict: "slug" });
+    if (pagesToCreate.length > 0) {
+      const batchSize = 50;
+      for (let i = 0; i < pagesToCreate.length; i += batchSize) {
+        const batch = pagesToCreate.slice(i, i + batchSize);
+        
+        const { error: insertError } = await supabase
+          .from("landing_pages")
+          .upsert(batch, { onConflict: "city,page_name" });
 
-      if (insertError) {
-        console.error("Error inserting landing pages:", insertError);
+        if (insertError) {
+          console.error("Error inserting landing pages batch:", insertError);
+          errorCount += batch.length;
+        } else {
+          successCount += batch.length;
+        }
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Generated ${pagesToCreate.length} landing pages`,
-      count: pagesToCreate.length,
+      message: `Generated ${successCount} landing pages`,
+      successCount,
+      errorCount,
+      totalAttempted: pagesToCreate.length,
     });
   } catch (error) {
     console.error("Error in POST /api/admin/generate-landing-pages:", error);

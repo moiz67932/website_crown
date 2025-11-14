@@ -44,7 +44,21 @@ export default function EditLandingPageClient({ id }: { id: string }) {
       const response = await fetch(`/api/admin/landing-pages/${id}`);
       if (response.ok) {
         const data = await response.json();
-        setPage(data.page);
+        const dbPage = data.page;
+        
+        // Transform database format to form format
+        setPage({
+          city: dbPage.city || "",
+          state: "CA",
+          slug: `/california/${(dbPage.city || "").toLowerCase().replace(/\s+/g, '-')}/${dbPage.kind || dbPage.page_name}`,
+          page_type: dbPage.kind || dbPage.page_name || "homes-for-sale",
+          title: dbPage.seo_metadata?.title || generateTitle(dbPage.city, dbPage.kind || dbPage.page_name),
+          description: dbPage.seo_metadata?.description || "",
+          content: dbPage.ai_description_html || "",
+          meta_title: dbPage.seo_metadata?.title || "",
+          meta_description: dbPage.seo_metadata?.description || "",
+          status: "published", // Always published in the current schema
+        });
       }
     } catch (error) {
       console.error("Error fetching landing page:", error);
@@ -53,13 +67,34 @@ export default function EditLandingPageClient({ id }: { id: string }) {
     }
   };
 
+  const generateTitle = (city: string, kind: string): string => {
+    const cityTitle = city?.replace(/\b\w/g, (c) => c.toUpperCase()) || "";
+    const kindTitle = (kind || "")
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+    return `${kindTitle} in ${cityTitle}, CA`;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Transform form data to database format
+      const updateData = {
+        city: page.city,
+        page_name: page.page_type,
+        kind: page.page_type,
+        ai_description_html: page.content,
+        seo_metadata: {
+          title: page.meta_title || page.title,
+          description: page.meta_description || page.description,
+        },
+      };
+
       const response = await fetch(`/api/admin/landing-pages/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(page),
+        body: JSON.stringify(updateData),
       });
 
       if (response.ok) {
@@ -71,6 +106,32 @@ export default function EditLandingPageClient({ id }: { id: string }) {
     } catch (error) {
       console.error("Error saving landing page:", error);
       alert("Error saving landing page");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRegenerateContent = async () => {
+    if (!confirm("Regenerate AI content? This will overwrite the current content.")) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/admin/landing-pages/${id}/regenerate`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPage({ ...page, content: data.ai_description_html || "" });
+        alert("Content regenerated successfully!");
+      } else {
+        alert("Failed to regenerate content");
+      }
+    } catch (error) {
+      console.error("Error regenerating content:", error);
+      alert("Error regenerating content");
     } finally {
       setSaving(false);
     }
@@ -98,6 +159,14 @@ export default function EditLandingPageClient({ id }: { id: string }) {
           </div>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={handleRegenerateContent}
+            disabled={saving}
+            className="px-4 py-2 border rounded-lg hover:bg-slate-50 disabled:opacity-50 flex items-center gap-2"
+          >
+            <RefreshCw size={18} className={saving ? "animate-spin" : ""} />
+            Regenerate AI
+          </button>
           <Link
             href={page.slug}
             target="_blank"

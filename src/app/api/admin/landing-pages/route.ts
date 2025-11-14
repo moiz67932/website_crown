@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/admin/landing-pages
- * Fetch all landing pages with optional filtering
+ * Fetch all landing pages with optional filtering and property counts
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("landing_pages")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
 
+    // Filter by kind/page_name (the actual column in the database)
     if (type && type !== "all") {
-      query = query.eq("page_type", type);
+      query = query.eq("kind", type);
     }
 
     const { data: pages, error } = await query;
@@ -33,7 +34,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ pages: pages || [] });
+    // Get property counts for each city
+    const propertyCounts: Record<string, number> = {};
+    if (pages && pages.length > 0) {
+      const cities = [...new Set(pages.map((p: any) => p.city))];
+      
+      for (const city of cities) {
+        const { count } = await supabase
+          .from("properties")
+          .select("*", { count: "exact", head: true })
+          .ilike("city", city);
+        
+        propertyCounts[city] = count || 0;
+      }
+    }
+
+    // Transform the data to match the frontend expectations
+    const transformedPages = (pages || []).map((page: any) => ({
+      id: page.id,
+      city: page.city,
+      state: "CA", // Most pages are CA
+      slug: `/california/${page.city.toLowerCase().replace(/\s+/g, '-')}/${page.kind || page.page_name}`,
+      page_type: page.kind || page.page_name,
+      title: page.seo_metadata?.title || generateTitle(page.city, page.kind || page.page_name),
+      description: page.seo_metadata?.description || extractDescription(page.ai_description_html),
+      property_count: propertyCounts[page.city] || 0,
+      views: 0, // TODO: Track views
+      status: page.ai_description_html ? "published" : "draft",
+      created_at: page.created_at,
+      updated_at: page.updated_at,
+    }));
+
+    return NextResponse.json({ pages: transformedPages });
   } catch (error) {
     console.error("Error in GET /api/admin/landing-pages:", error);
     return NextResponse.json(
@@ -41,6 +73,23 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Helper function to generate title from city and kind
+function generateTitle(city: string, kind: string): string {
+  const cityTitle = city.replace(/\b\w/g, (c) => c.toUpperCase());
+  const kindTitle = kind
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  return `${kindTitle} in ${cityTitle}, CA`;
+}
+
+// Helper function to extract description from HTML
+function extractDescription(html: string | null): string {
+  if (!html) return "";
+  const stripped = html.replace(/<[^>]*>/g, "");
+  return stripped.slice(0, 200);
 }
 
 /**
@@ -56,9 +105,21 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    // Transform the frontend data to match the database schema
+    const pageData = {
+      city: body.city,
+      page_name: body.page_type,
+      kind: body.page_type,
+      ai_description_html: body.content || null,
+      seo_metadata: {
+        title: body.meta_title || body.title,
+        description: body.meta_description || body.description,
+      },
+    };
+
     const { data, error } = await supabase
       .from("landing_pages")
-      .insert(body)
+      .insert(pageData)
       .select()
       .single();
 

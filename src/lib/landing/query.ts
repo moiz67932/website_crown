@@ -92,7 +92,7 @@ export async function getLandingStats(cityOrState: string, kind: LandingKind): P
   const kindFilter = buildKindFilter(kind)
   const selectDays = hasDaysOnMarketColumn
     ? 'ROUND(AVG(days_on_market)) AS days_on_market'
-    : "ROUND(AVG(GREATEST(1, EXTRACT(DAY FROM (NOW() - first_seen_ts))))) AS days_on_market" // fallback heuristic
+    : "ROUND(AVG(GREATEST(1, EXTRACT(DAY FROM (NOW() - COALESCE(on_market_date, listed_at, modification_timestamp, NOW())))))) AS days_on_market" // fallback heuristic using available date columns
   // Base filter built dynamically depending on whether token is state.
   let locationPredicate = ''
   if (stateInfo.isState) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, Search, Filter, Eye, Edit, Trash2, RefreshCw, Upload, Download } from "lucide-react";
+import { Building2, Search, Eye, Edit, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
 interface Property {
@@ -20,8 +20,17 @@ interface Property {
   images?: string[];
 }
 
+interface PropertyStats {
+  total: number;
+  active: number;
+  sold: number;
+  pending: number;
+}
+
 export default function PropertiesManagementPage() {
   const [properties, setProperties] = useState<Property[]>([]);
+  const [stats, setStats] = useState<PropertyStats>({ total: 0, active: 0, sold: 0, pending: 0 });
+  const [totalProperties, setTotalProperties] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -30,19 +39,22 @@ export default function PropertiesManagementPage() {
 
   useEffect(() => {
     fetchProperties();
-  }, [statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter, searchQuery]);
 
   const fetchProperties = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
+      if (searchQuery) params.append("search", searchQuery);
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (typeFilter !== "all") params.append("type", typeFilter);
       
-      const response = await fetch(`/api/properties?${params.toString()}`);
+      const response = await fetch(`/api/admin/properties?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setProperties(data.properties || []);
+        setStats(data.stats || { total: 0, active: 0, sold: 0, pending: 0 });
+        setTotalProperties(data.pagination?.totalProperties || 0);
       }
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -69,20 +81,6 @@ export default function PropertiesManagementPage() {
     }
   };
 
-  const filteredProperties = properties.filter((property) =>
-    searchQuery === "" ||
-    property.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    property.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    property.zipcode?.includes(searchQuery)
-  );
-
-  const stats = {
-    total: properties.length,
-    active: properties.filter(p => p.status?.toLowerCase() === 'active').length,
-    sold: properties.filter(p => p.status?.toLowerCase() === 'sold').length,
-    pending: properties.filter(p => p.status?.toLowerCase() === 'pending').length,
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -92,7 +90,9 @@ export default function PropertiesManagementPage() {
             <Building2 className="text-primary-600" size={32} />
             Property Management
           </h1>
-          <p className="text-slate-600 mt-1">Manage all properties from Trestle API</p>
+          <p className="text-slate-600 mt-1">
+            {loading ? 'Loading...' : `Showing ${properties.length} of ${totalProperties.toLocaleString()} properties`}
+          </p>
         </div>
         <div className="flex gap-3">
           <button
@@ -103,22 +103,24 @@ export default function PropertiesManagementPage() {
             <RefreshCw size={18} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Syncing..." : "Sync Properties"}
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-slate-50">
-            <Upload size={18} />
-            Import
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-slate-50">
-            <Download size={18} />
-            Export
-          </button>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard title="Total Properties" value={stats.total} color="blue" />
-        <StatCard title="Active Listings" value={stats.active} color="green" />
-        <StatCard title="Sold" value={stats.sold} color="purple" />
+        <StatCard 
+          title="Active Listings" 
+          value={stats.active} 
+          subtitle={stats.active === stats.total ? "All" : undefined}
+          color="green" 
+        />
+        <StatCard 
+          title="Sold" 
+          value={stats.sold} 
+          subtitle={stats.sold > 0 ? undefined : "None"}
+          color="purple" 
+        />
         <StatCard title="Pending" value={stats.pending} color="orange" />
       </div>
 
@@ -133,6 +135,11 @@ export default function PropertiesManagementPage() {
                 placeholder="Search by address, city, or ZIP..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    fetchProperties();
+                  }
+                }}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
@@ -168,10 +175,15 @@ export default function PropertiesManagementPage() {
             <RefreshCw className="animate-spin mx-auto mb-4 text-primary-600" size={32} />
             <p className="text-slate-600">Loading properties...</p>
           </div>
-        ) : filteredProperties.length === 0 ? (
+        ) : properties.length === 0 ? (
           <div className="p-12 text-center">
             <Building2 className="mx-auto mb-4 text-slate-300" size={48} />
             <p className="text-slate-600">No properties found</p>
+            <p className="text-slate-500 text-sm mt-2">
+              {searchQuery || statusFilter !== 'all' || typeFilter !== 'all' 
+                ? 'Try adjusting your filters' 
+                : 'Start by syncing properties from Trestle API'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -188,7 +200,7 @@ export default function PropertiesManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredProperties.map((property) => (
+                {properties.map((property) => (
                   <tr key={property.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">{property.address}</div>
@@ -242,7 +254,17 @@ export default function PropertiesManagementPage() {
   );
 }
 
-function StatCard({ title, value, color }: { title: string; value: number; color: string }) {
+function StatCard({ 
+  title, 
+  value, 
+  color,
+  subtitle 
+}: { 
+  title: string; 
+  value: number; 
+  color: string;
+  subtitle?: string;
+}) {
   const colorClasses = {
     blue: "from-blue-500 to-blue-600",
     green: "from-green-500 to-green-600",
@@ -253,8 +275,15 @@ function StatCard({ title, value, color }: { title: string; value: number; color
   return (
     <div className="bg-white rounded-xl border p-6 shadow-sm">
       <div className="text-sm font-medium text-slate-600 mb-1">{title}</div>
-      <div className={`text-3xl font-bold bg-gradient-to-r ${colorClasses} bg-clip-text text-transparent`}>
-        {value.toLocaleString()}
+      <div className="flex items-baseline gap-2">
+        <div className={`text-3xl font-bold bg-gradient-to-r ${colorClasses} bg-clip-text text-transparent`}>
+          {value.toLocaleString()}
+        </div>
+        {subtitle && (
+          <div className="text-sm font-medium text-slate-500">
+            {subtitle}
+          </div>
+        )}
       </div>
     </div>
   );
