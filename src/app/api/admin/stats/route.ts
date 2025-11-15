@@ -1,6 +1,9 @@
 // API endpoint to get REAL admin statistics from database
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { getPgPool } from "@/lib/db/connection";
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -14,64 +17,88 @@ export async function GET() {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    // Get real data from database tables
+    // Fetch properties from PostgreSQL (same source as admin properties page)
+    let propertyStats = { total: 0, active: 0, sold: 0, pending: 0 };
+    let propertiesPreviousCount = 0;
+    
+    try {
+      const pool = await getPgPool();
+      
+      // Get current property stats
+      const statsQuery = `
+        SELECT 
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE LOWER(status) = 'active') as active,
+          COUNT(*) FILTER (WHERE LOWER(status) = 'sold') as sold,
+          COUNT(*) FILTER (WHERE LOWER(status) IN ('pending', 'under contract', 'contingent')) as pending
+        FROM properties
+      `;
+      const statsResult = await pool.query(statsQuery);
+      propertyStats = {
+        total: parseInt(statsResult.rows[0]?.total || '0'),
+        active: parseInt(statsResult.rows[0]?.active || '0'),
+        sold: parseInt(statsResult.rows[0]?.sold || '0'),
+        pending: parseInt(statsResult.rows[0]?.pending || '0'),
+      };
+
+      // Get previous period count for trend
+      const previousQuery = `
+        SELECT COUNT(*) as count 
+        FROM properties 
+        WHERE created_at < $1 AND created_at >= $2
+      `;
+      const previousResult = await pool.query(previousQuery, [thirtyDaysAgo.toISOString(), sixtyDaysAgo.toISOString()]);
+      propertiesPreviousCount = parseInt(previousResult.rows[0]?.count || '0');
+    } catch (error) {
+      console.error("Error fetching properties from PostgreSQL:", error);
+    }
+
+    // Get real data from Supabase tables
     const [
-      propertiesData,
       postsData,
       landingPagesData,
       leadsData,
       pageViewsData,
-      usersData,
       // Previous period data for trends
-      propertiesPrevious,
       postsPrevious,
       landingPagesPrevious,
     ] = await Promise.all([
-      // Properties stats
-      supabase.from("properties").select("id, status, created_at", { count: "exact" }),
+      // Blog posts stats - no views column in posts table
+      supabase.from("posts").select("id, status, created_at", { count: "exact" }),
       
-      // Blog posts stats
-      supabase.from("posts").select("id, status, views", { count: "exact" }),
-      
-      // Landing pages stats
-      supabase.from("landing_pages").select("id, status, views, created_at", { count: "exact" }),
+      // Landing pages stats - no created_at column exists, select only id and ai_description_html
+      supabase.from("landing_pages").select("id, ai_description_html", { count: "exact" }),
       
       // Leads stats (last 30 days for "this month")
       supabase.from("leads").select("id, status, created_at", { count: "exact" }),
       
       // Page views for traffic stats
       supabase.from("page_views").select("*"),
-      
-      // Users count
-      supabase.from("auth.users").select("id", { count: "exact", head: true }),
 
       // Previous period data
-      supabase.from("properties").select("id", { count: "exact", head: true }).lt("created_at", thirtyDaysAgo.toISOString()).gte("created_at", sixtyDaysAgo.toISOString()),
       supabase.from("posts").select("id", { count: "exact", head: true }).eq("status", "published").lt("created_at", thirtyDaysAgo.toISOString()).gte("created_at", sixtyDaysAgo.toISOString()),
-      supabase.from("landing_pages").select("id", { count: "exact", head: true }).eq("status", "published").lt("created_at", thirtyDaysAgo.toISOString()).gte("created_at", sixtyDaysAgo.toISOString()),
+      // Landing pages don't have created_at, skip previous period comparison
+      Promise.resolve({ count: 0 }),
     ]);
 
-    // Calculate real property stats
-    const properties = propertiesData.data || [];
-    const propertiesThisMonth = properties.filter((p: any) => 
-      p.created_at && new Date(p.created_at) >= thirtyDaysAgo
-    ).length;
-    const propertiesPreviousCount = propertiesPrevious.count || 0;
+    // Log errors if any
+    if (postsData.error) console.error("Posts error:", postsData.error);
+    if (landingPagesData.error) console.error("Landing pages error:", landingPagesData.error);
+    if (leadsData.error) console.error("Leads error:", leadsData.error);
+    if (pageViewsData.error) console.error("Page views error:", pageViewsData.error);
+
+    // Get page views data once for reuse
+    const pageViews = pageViewsData.data || [];
+
+    // Calculate property trend
+    const propertiesThisMonth = propertyStats.total; // Current active properties
     const propertyTrend = propertiesPreviousCount > 0
       ? Math.round(((propertiesThisMonth - propertiesPreviousCount) / propertiesPreviousCount) * 100)
       : (propertiesThisMonth > 0 ? 100 : 0);
 
-    const propertyStats = {
-      total: propertiesData.count || 0,
-      active: properties.filter((p: any) => 
-        p.status === 'Active' || p.status === 'active' || p.status === 'for_sale'
-      ).length,
-      sold: properties.filter((p: any) => 
-        p.status === 'Sold' || p.status === 'sold'
-      ).length,
-      pending: properties.filter((p: any) => 
-        p.status === 'Pending' || p.status === 'pending' || p.status === 'under_contract'
-      ).length,
+    // Add trend to property stats
+    const finalPropertyStats = {
+      ...propertyStats,
       trend: propertyTrend,
     };
 
@@ -83,30 +110,30 @@ export async function GET() {
       ? Math.round(((postsPublished - postsPreviousCount) / postsPreviousCount) * 100)
       : (postsPublished > 0 ? 100 : 0);
 
+    // Calculate blog views from page_views table
+    const blogViews = pageViews.filter((v: any) => v.post_id).length;
+
     const blogStats = {
       total: postsData.count || 0,
       published: postsPublished,
       draft: posts.filter((p: any) => p.status === 'draft').length,
-      views: posts.reduce((sum: number, p: any) => sum + (p.views || 0), 0),
+      views: blogViews,
       trend: blogTrend,
     };
 
     // Calculate real landing page stats
     const landingPages = landingPagesData.data || [];
-    const landingPagesPublished = landingPages.filter((p: any) => p.status === 'published').length;
-    const landingPagesThisMonth = landingPages.filter((p: any) => 
-      p.created_at && new Date(p.created_at) >= thirtyDaysAgo && p.status === 'published'
-    ).length;
+    // Landing pages are "published" if they have ai_description_html content
+    const landingPagesPublished = landingPages.filter((p: any) => p.ai_description_html && p.ai_description_html.trim() !== '').length;
     const landingPagesPreviousCount = landingPagesPrevious.count || 0;
-    const landingTrend = landingPagesPreviousCount > 0
-      ? landingPagesThisMonth - landingPagesPreviousCount
-      : landingPagesThisMonth;
+    // Since no created_at, can't calculate this month trend, just show change from baseline
+    const landingTrend = landingPagesPublished - landingPagesPreviousCount;
 
     const landingStats = {
       total: landingPagesData.count || 0,
       published: landingPagesPublished,
-      views: landingPages.reduce((sum: number, p: any) => sum + (p.views || 0), 0),
-      trend: landingTrend, // Show absolute number for landing pages
+      views: 0, // TODO: Track landing page views
+      trend: landingTrend,
     };
 
     // Calculate real lead stats
@@ -138,7 +165,6 @@ export async function GET() {
     };
 
     // Calculate real traffic stats
-    const pageViews = pageViewsData.data || [];
     const uniqueVisitors = new Set(pageViews.map((v: any) => v.visitor_id || v.session_id)).size;
     
     // Calculate average session time (in seconds)
@@ -163,7 +189,7 @@ export async function GET() {
     };
 
     return NextResponse.json({
-      properties: propertyStats,
+      properties: finalPropertyStats,
       blog: blogStats,
       landing: landingStats,
       leads: leadStats,

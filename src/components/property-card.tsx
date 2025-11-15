@@ -75,10 +75,27 @@ export function PropertyCard({
     return addr.trim().replace(/^0+\s+/, '').replace(/\s{2,}/g, ' ');
   };
 
+  // Format lot size - convert to acres if >= 1 acre (43,560 sq ft)
+  // Fallback to living_area_sqft if lot_size_sqft is not available
+  const formatLotSize = () => {
+    const lotSizeSqFt = displayData.lot_size_sqft || displayData.living_area_sqft;
+    if (!lotSizeSqFt) return null;
+
+    const SQFT_PER_ACRE = 43560;
+    
+    if (lotSizeSqFt >= SQFT_PER_ACRE) {
+      const acres = (lotSizeSqFt / SQFT_PER_ACRE).toFixed(2);
+      return { value: acres, unit: 'acres' };
+    }
+    
+    return { value: lotSizeSqFt.toLocaleString(), unit: 'sqft' };
+  };
+
   const address = sanitizeAddress(displayData.address || '');
   const city = displayData.city || '';
   const county = displayData.county || '';
   const isForRent = displayData.property_type === "ResidentialLease";
+  const lotSize = formatLotSize();
 
   return (
     <Link
@@ -226,10 +243,10 @@ export function PropertyCard({
               <Square className="h-4 w-4 text-gold-600 dark:text-amber-400" />
             </div>
             <span className="font-semibold text-xs">
-              {displayData.living_area_sqft ? displayData.living_area_sqft.toLocaleString() : "N/A"}
+              {lotSize ? lotSize.value : "N/A"}
             </span>
             <span className="text-neutral-400 dark:text-neutral-500 text-xs">
-              sqft
+              {lotSize ? lotSize.unit : "lot"}
             </span>
           </div>
         </div>

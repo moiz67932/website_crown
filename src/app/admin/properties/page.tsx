@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, Search, Eye, Edit, RefreshCw } from "lucide-react";
+import { Building2, Search, Eye, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
 interface Property {
@@ -233,13 +233,6 @@ export default function PropertiesManagementPage() {
                           title="View"
                         >
                           <Eye size={16} className="text-slate-600" />
-                        </Link>
-                        <Link
-                          href={`/admin/properties/${property.id}/edit`}
-                          className="p-2 hover:bg-slate-100 rounded-lg transition"
-                          title="Edit"
-                        >
-                          <Edit size={16} className="text-slate-600" />
                         </Link>
                       </div>
                     </td>
