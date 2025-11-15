@@ -473,8 +473,8 @@ export async function searchProperties(params: PropertySearchParams) {
   const countSql = `SELECT COUNT(*) FROM properties ${whereSql};`;
   const baseValuesForCount = values.slice(0, values.length - 2);
 
-  const LIST_TIMEOUT_MS = Number(process.env.PROPERTY_LIST_TIMEOUT_MS || 20000);
-  const COUNT_TIMEOUT_MS = Number(process.env.PROPERTY_COUNT_TIMEOUT_MS || 10000);
+  const LIST_TIMEOUT_MS = Number(process.env.PROPERTY_LIST_TIMEOUT_MS || 8000);
+  const COUNT_TIMEOUT_MS = Number(process.env.PROPERTY_COUNT_TIMEOUT_MS || 5000);
 
   const results: { list?: any; count?: any } = {};
 
@@ -497,7 +497,22 @@ export async function searchProperties(params: PropertySearchParams) {
     results.count = countResult;
     log("count-success", { count: countResult?.rows?.[0]?.count });
   } catch (err: any) {
-    log("list-failure", { err: err?.message, code: err?.code });
+    const errMsg = err?.message || String(err);
+    log("list-failure", { err: errMsg, code: err?.code });
+    
+    // Provide helpful error message for common connection issues
+    if (errMsg.includes('Connection terminated') || errMsg.includes('timeout') || errMsg.includes('ECONNREFUSED')) {
+      console.error('❌ Database connection failed. Common causes:');
+      console.error('   1. Cloud SQL firewall blocking direct IP connections');
+      console.error('   2. Need to use Cloud SQL Proxy instead');
+      console.error('   3. Check DATABASE_URL in .env.local');
+      console.error('');
+      console.error('💡 Solution: Use Cloud SQL Proxy');
+      console.error('   Step 1: gcloud auth login');
+      console.error('   Step 2: gcloud sql auth-proxy project-df2ac395-af0e-487d-a17:us-central1:ccos-sql --port=5432');
+      console.error('   Step 3: Update DATABASE_URL=postgres://postgres:Marwah123@127.0.0.1:5432/redata');
+    }
+    
     throw err;
   }
 

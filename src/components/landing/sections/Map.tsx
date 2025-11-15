@@ -247,10 +247,17 @@ export default function MapSection({ city }: Props) {
         const response = await fetch(`/api/properties/search?${searchParams}`);
         if (response.ok) {
           const data = await response.json();
-          setProperties(data.properties || []);
+          // Handle both response formats: { properties: [] } and { data: [] }
+          const props = data.properties || data.data || [];
+          console.log(`[map] Fetched ${props.length} properties for ${city}`);
+          setProperties(props);
+        } else {
+          console.warn(`[map] API returned ${response.status} for city: ${city}`);
         }
       } catch (error) {
         console.warn("[map] Failed to fetch properties:", error);
+        // Set empty array on error to avoid undefined issues
+        setProperties([]);
       }
     }
 

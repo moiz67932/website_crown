@@ -22,8 +22,8 @@ function buildKindFilter(kind: LandingKind): { sql: string; params: any[]; searc
     case 'condos-for-sale':
       return { sql: "AND LOWER(property_type) LIKE LOWER('%condo%')", params: [], searchParams: { propertyType: 'condo' } }
   case '2-bedroom-apartments':
-      // Treat as property_type containing apartment & exactly two beds
-      return { sql: "AND LOWER(property_type) LIKE LOWER('%apartment%') AND bedrooms = 2", params: [], searchParams: { propertyType: 'apartment', minBedrooms: 2, maxBedrooms: 2 } }
+      // Treat as 2-bedroom units (apartments, condos, etc.)
+      return { sql: "AND bedrooms_total = 2", params: [], searchParams: { minBedrooms: 2, maxBedrooms: 2 } }
     case 'homes-for-sale':
     default:
       return { sql: '', params: [], searchParams: {} }
@@ -77,34 +77,38 @@ async function ensureSchemaIntrospection() {
 }
 
 export async function getLandingStats(cityOrState: string, kind: LandingKind): Promise<LandingStats> {
+  console.log('🔍 [getLandingStats] START', { cityOrState, kind })
   await ensureSchemaIntrospection()
   // Avoid heavy DB queries during Next.js build/static export.
   // If build is detected, return empty stats quickly.
   const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
   const likelyNextBuild = argv.includes('next') && argv.includes('build')
   if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
+    console.log('⚠️  [getLandingStats] SKIPPED - build detection', { cityOrState, kind })
     if (process.env.LANDING_TRACE) console.log('[landing.stats] skipping DB stats due to build-detection', { cityOrState, kind })
     return {}
   }
-  const pool = await getPgPool()
-  const stateInfo = detectStateToken(cityOrState)
-  const baseParams: any[] = []
-  const kindFilter = buildKindFilter(kind)
-  const selectDays = hasDaysOnMarketColumn
-    ? 'ROUND(AVG(days_on_market)) AS days_on_market'
-    : "ROUND(AVG(GREATEST(1, EXTRACT(DAY FROM (NOW() - COALESCE(on_market_date, listed_at, modification_timestamp, NOW())))))) AS days_on_market" // fallback heuristic using available date columns
-  // Base filter built dynamically depending on whether token is state.
-  let locationPredicate = ''
-  if (stateInfo.isState) {
-    // Normalize full name path to abbreviation (DB likely stores abbreviation)
-    baseParams.push(stateInfo.abbr)
-    locationPredicate = 'AND LOWER(state) = LOWER($1)'
-  } else {
-    baseParams.push(cityOrState)
-    locationPredicate = 'AND LOWER(city) = LOWER($1)'
-  }
+  
+  try {
+    const pool = await getPgPool()
+    const stateInfo = detectStateToken(cityOrState)
+    const baseParams: any[] = []
+    const kindFilter = buildKindFilter(kind)
+    const selectDays = hasDaysOnMarketColumn
+      ? 'ROUND(AVG(days_on_market)) AS days_on_market'
+      : "ROUND(AVG(GREATEST(1, EXTRACT(DAY FROM (NOW() - COALESCE(on_market_date, listed_at, modification_timestamp, NOW())))))) AS days_on_market" // fallback heuristic using available date columns
+    // Base filter built dynamically depending on whether token is state.
+    let locationPredicate = ''
+    if (stateInfo.isState) {
+      // Normalize full name path to abbreviation (DB likely stores abbreviation)
+      baseParams.push(stateInfo.abbr)
+      locationPredicate = 'AND LOWER(state_or_province) = LOWER($1)'
+    } else {
+      baseParams.push(`%${cityOrState}%`)
+      locationPredicate = 'AND LOWER(city) LIKE LOWER($1)'
+    }
 
-  let sql = `SELECT
+    let sql = `SELECT
       ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY list_price)::numeric) AS median_price,
       ROUND(AVG(list_price / NULLIF(living_area,0))) AS price_per_sqft,
       ${selectDays},
@@ -113,53 +117,68 @@ export async function getLandingStats(cityOrState: string, kind: LandingKind): P
     WHERE status = 'Active'
       ${locationPredicate}`
 
-  // Inject kind-specific predicate & params (only once)
-  if (kindFilter.sql) {
-    if (kindFilter.params.length) {
-      kindFilter.params.forEach((p, idx) => {
-        baseParams.push(p)
-        const paramIndex = baseParams.length
-        sql += '\n      ' + kindFilter.sql.replace('$EXTRA' + (idx + 1), '$' + paramIndex)
-      })
-    } else {
-      sql += '\n      ' + kindFilter.sql
+    // Inject kind-specific predicate & params (only once)
+    if (kindFilter.sql) {
+      if (kindFilter.params.length) {
+        kindFilter.params.forEach((p, idx) => {
+          baseParams.push(p)
+          const paramIndex = baseParams.length
+          sql += '\n      ' + kindFilter.sql.replace('$EXTRA' + (idx + 1), '$' + paramIndex)
+        })
+      } else {
+        sql += '\n      ' + kindFilter.sql
+      }
     }
-  }
 
-  if (process.env.LANDING_DEBUG) {
-    console.log('[landing.stats.sql]', sql, baseParams)
-  }
+    console.log('📊 [getLandingStats] SQL Query:', sql)
+    console.log('📊 [getLandingStats] Parameters:', baseParams)
+    if (process.env.LANDING_DEBUG) {
+      console.log('[landing.stats.sql]', sql, baseParams)
+    }
 
-  try {
     let { rows } = await pool.query(sql, baseParams)
+    console.log('📊 [getLandingStats] Query Results:', { rowCount: rows.length, firstRow: rows[0] })
     let r = rows[0]
     // Fallback: if not state token and zero results, try city OR state match.
     if (!stateInfo.isState && (!r || !r.total_active || Number(r.total_active) === 0)) {
+      console.log('🔄 [getLandingStats] FALLBACK - trying dual predicate', { cityOrState, currentActive: r?.total_active })
       if (process.env.LANDING_DEBUG) console.log('[landing.stats.fallback] city/state dual predicate for', cityOrState)
-      const fallbackSql = sql.replace(locationPredicate, 'AND (LOWER(city)=LOWER($1) OR LOWER(state)=LOWER($1))')
+      const fallbackSql = sql.replace(locationPredicate, 'AND (LOWER(city) LIKE LOWER($1) OR LOWER(state_or_province)=LOWER($1))')
+      console.log('🔄 [getLandingStats] Fallback SQL:', fallbackSql)
       ;({ rows } = await pool.query(fallbackSql, baseParams))
+      console.log('🔄 [getLandingStats] Fallback Results:', { rowCount: rows.length, firstRow: rows[0] })
       r = rows[0]
     }
-    if (!r) return {}
-    return {
+    if (!r) {
+      console.log('❌ [getLandingStats] No results returned')
+      return {}
+    }
+    const stats = {
       medianPrice: r.median_price != null ? Number(r.median_price) : undefined,
       pricePerSqft: r.price_per_sqft != null ? Number(r.price_per_sqft) : undefined,
       daysOnMarket: r.days_on_market != null ? Number(r.days_on_market) : undefined,
       totalActive: r.total_active != null ? Number(r.total_active) : undefined
     }
+    console.log('✅ [getLandingStats] SUCCESS', stats)
+    return stats
   } catch (e) {
-    console.error('Error fetching landing stats', e)
+    console.error('❌ [getLandingStats] ERROR:', e)
+    console.error('Error fetching landing stats for', cityOrState, kind, ':', e)
     return {}
   }
 }
 
 export async function getFeaturedProperties(cityOrState: string, kind: LandingKind, limit = 12, extraFilters?: Record<string, any>): Promise<LandingPropertyCard[]> {
+  console.log('🏠 [getFeaturedProperties] START', { cityOrState, kind, limit, extraFilters })
   const kindFilter = buildKindFilter(kind)
+  console.log('🏠 [getFeaturedProperties] Kind filter:', kindFilter)
   const stateInfo = detectStateToken(cityOrState)
+  console.log('🏠 [getFeaturedProperties] State info:', stateInfo)
   // Short-circuit during build/static export
   const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
   const likelyNextBuild = argv.includes('next') && argv.includes('build')
   if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
+    console.log('⚠️  [getFeaturedProperties] SKIPPED - build detection', { cityOrState, kind })
     if (process.env.LANDING_TRACE) console.log('[landing.featured] skipping properties fetch due to build-detection', { cityOrState, kind })
     return []
   }
@@ -170,25 +189,43 @@ export async function getFeaturedProperties(cityOrState: string, kind: LandingKi
       ...kindFilter.searchParams
     }
   // Merge any additional filters (e.g., from LandingDef presets already mapped to searchProperties schema)
-  if (extraFilters) Object.assign(baseParams, extraFilters)
+  if (extraFilters) {
+    // CHANGE: Remove propertyType if it's 'apartment' - too restrictive
+    const { propertyType, ...otherFilters } = extraFilters
+    
+    // Only apply propertyType if it's a specific type like 'condo'
+    if (propertyType && propertyType !== 'apartment') {
+      Object.assign(baseParams, { propertyType })
+    }
+    Object.assign(baseParams, otherFilters)
+  }
     if (stateInfo.isState) {
       baseParams.state = stateInfo.abbr
     } else {
       baseParams.city = cityOrState
     }
+    console.log('🏠 [getFeaturedProperties] Search params:', baseParams)
+    console.log('🏠 [getFeaturedProperties] Calling searchProperties...')
     let { properties } = await searchProperties(baseParams)
+    console.log('🏠 [getFeaturedProperties] searchProperties returned:', properties.length, 'properties')
+    if (properties.length > 0) {
+      console.log('🏠 [getFeaturedProperties] First property sample:', properties[0])
+    }
     // Fallback for city: if zero results and not state token, retry with state param using possible abbreviation mapping
     if (!stateInfo.isState && properties.length === 0) {
+      console.log('🔄 [getFeaturedProperties] FALLBACK - zero results, trying state match')
       const maybeState = detectStateToken(cityOrState)
       if (maybeState.isState) {
+        console.log('🔄 [getFeaturedProperties] Retrying as state:', maybeState.abbr)
         if (process.env.LANDING_DEBUG) console.log('[landing.featured.fallback] retrying as state', maybeState.abbr)
         properties = (await searchProperties({ ...baseParams, city: undefined, state: maybeState.abbr })).properties
+        console.log('🔄 [getFeaturedProperties] Fallback returned:', properties.length, 'properties')
       }
     }
     if (process.env.LANDING_DEBUG) {
       console.log(`[landing.featured] token=${cityOrState} kind=${kind} count=${properties.length}`)
     }
-    return properties.map((p: any) => ({
+    const mapped = properties.map((p: any) => ({
       listingKey: p.listing_key,
       city: p.city,
       state: p.state,
@@ -201,7 +238,10 @@ export async function getFeaturedProperties(cityOrState: string, kind: LandingKi
       lat: p.latitude ?? undefined,
       lng: p.longitude ?? undefined
     }))
+    console.log('✅ [getFeaturedProperties] SUCCESS - returning', mapped.length, 'mapped properties')
+    return mapped
   } catch (e) {
+    console.error('❌ [getFeaturedProperties] ERROR:', e)
     console.error('Error fetching featured properties', e)
     return []
   }
@@ -209,6 +249,7 @@ export async function getFeaturedProperties(cityOrState: string, kind: LandingKi
 
 // High-level orchestrator for landing page data
 export async function getLandingData(cityOrState: string, kind: LandingKind, opts?: { landingDef?: LandingDef }): Promise<LandingData> {
+  console.log('🎯 [getLandingData] START', { cityOrState, kind, hasLandingDef: !!opts?.landingDef })
   const landingDef = opts?.landingDef
   // Derive additional filters from config (must be mapped to searchProperties accepted params)
   let extraFilters: Record<string, any> | undefined
@@ -218,7 +259,7 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
       // Map generic filters to backend param names (basic mapping kept inline for now)
       const mapped: Record<string, any> = {}
       if (preset.city) mapped.city = preset.city
-      if ((preset as any).status) mapped.status = (preset as any).status
+      // Note: status filter removed - searchProperties doesn't support it and filters by Active by default
       if ((preset as any).propertyType) {
         const pt = (preset as any).propertyType
         mapped.propertyType = Array.isArray(pt) ? pt[0] : pt
@@ -239,6 +280,9 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
       console.warn('[landingData] preset filter mapping failed', e)
     }
   }
+
+  console.log('🎯 [getLandingData] Extra filters:', extraFilters)
+  console.log('🎯 [getLandingData] Starting parallel data fetch (stats, featured, AI)...')
 
   // AI description selection override via landingDef.aiPromptKey
   let aiDescriptionPromise: Promise<string | undefined>
@@ -264,6 +308,12 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
     getFeaturedProperties(cityOrState, kind, 12, extraFilters),
     aiDescriptionPromise
   ])
+
+  console.log('🎯 [getLandingData] Parallel fetch complete:', {
+    statsKeys: Object.keys(stats || {}),
+    featuredCount: featured?.length || 0,
+    hasAiDescription: !!aiDescriptionHtml
+  })
 
   // Basic placeholder / TODO sections (external data integrations later)
   const neighborhoods: NonNullable<LandingData['neighborhoods']> = [] // TODO integrate neighborhoods API

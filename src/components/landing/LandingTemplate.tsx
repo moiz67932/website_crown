@@ -203,6 +203,15 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
   const featured = data.featured || []
   const citySlug = city.toLowerCase().replace(/\s+/g, '-')
 
+  console.log('🎨 [LandingTemplate] Rendering with data:', {
+    city,
+    kind,
+    featuredCount: featured.length,
+    hasStats: !!data.stats,
+    stats: data.stats,
+    firstFeatured: featured[0] || null
+  })
+
   return (
     <div className="flex flex-col pb-24 pt-14">
       {city && (

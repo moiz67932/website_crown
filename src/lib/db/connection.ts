@@ -79,10 +79,15 @@ async function createPool(): Promise<Pool> {
   // 1) Use DATABASE_URL for local development (skip Cloud SQL Connector)
   if (isLocalDev && process.env.DATABASE_URL) {
     console.log('🌐 Local development detected - using direct DATABASE_URL connection');
+    console.log('📍 Connecting to:', process.env.DATABASE_URL.replace(/:[^:]*@/, ':****@')); // Hide password
     
     // Parse the connection string to check if it's a remote connection
     const url = process.env.DATABASE_URL;
     const isLocalhost = url.includes('127.0.0.1') || url.includes('localhost');
+    
+    if (isLocalhost) {
+      console.log('✅ Using Cloud SQL Proxy connection (127.0.0.1)');
+    }
     
     // For Cloud SQL direct IP connections, always disable SSL cert verification
     // For localhost/proxy connections, no SSL needed
@@ -90,13 +95,16 @@ async function createPool(): Promise<Pool> {
     if (!isLocalhost) {
       sslConfig = { rejectUnauthorized: false };
       console.log('🔓 SSL certificate verification disabled for Cloud SQL direct connection');
+      console.log('⚠️  WARNING: Direct IP connections may be blocked by Cloud SQL firewall.');
+      console.log('⚠️  If you see connection timeouts, use Cloud SQL Proxy instead.');
     }
     
     const p = new Pool({
       connectionString: url,
       ssl: sslConfig,
       max: 10,
-      idleTimeoutMillis: 20_000,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
       statement_timeout: 60_000,
       query_timeout: 60_000,
       keepAlive: true,
@@ -116,7 +124,8 @@ async function createPool(): Promise<Pool> {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       max: 10,
-      idleTimeoutMillis: 20_000,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
     };
     if (process.env.DB_SSL === "true") {
       (cfg as any).ssl = { rejectUnauthorized: false };
@@ -163,8 +172,9 @@ async function createPool(): Promise<Pool> {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      max: 5,
-      idleTimeoutMillis: 20_000,
+      max: 10,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
       statement_timeout: 60_000,
       query_timeout: 60_000,
       keepAlive: true,
@@ -204,7 +214,8 @@ async function createPool(): Promise<Pool> {
       connectionString: url,
       ssl: sslConfig,
       max: 10,
-      idleTimeoutMillis: 20_000,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
       statement_timeout: 60_000,
       query_timeout: 60_000,
       keepAlive: true,
@@ -224,7 +235,8 @@ async function createPool(): Promise<Pool> {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       max: 10,
-      idleTimeoutMillis: 20_000,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
     };
     if (process.env.DB_SSL === "true") {
       (cfg as any).ssl = { rejectUnauthorized: false };
@@ -247,16 +259,29 @@ export async function getPgPool(): Promise<Pool> {
   if (pool) return pool;
   if (!initializing) {
     initializing = createPool().then(async (p) => {
-      try { await p.query("SELECT 1"); } catch {}
+      try { 
+        // Test the connection immediately
+        await p.query("SELECT 1"); 
+        console.log('✅ Database connection pool initialized successfully');
+      } catch (e) {
+        console.error('❌ Database connection test failed:', e);
+        // Don't fail initialization, let retry logic handle it
+      }
       // Auto-reset on common fatal errors
       p.on("error", (err: any) => {
         const code = (err && (err as any).code) || "";
         const low = String(err?.message || "").toLowerCase();
         const transient =
           ["connection terminated unexpectedly","econnreset","server closed the connection unexpectedly",
-           "terminating connection due to administrator command","could not receive data from server","reset by peer"]
-            .some(t => low.includes(t)) || ["57P01","57P02","57P03","53300","53400","08006","08000"].includes(code);
-        if (transient) setTimeout(() => resetPgPool("fatal-error:" + (code || low.slice(0,40))), 50);
+           "terminating connection due to administrator command","could not receive data from server","reset by peer",
+           "connection lost", "connection timeout", "network error"]
+            .some(t => low.includes(t)) || ["57P01","57P02","57P03","53300","53400","08006","08000","08003","08P01"].includes(code);
+        if (transient) {
+          console.warn('⚠️ Transient database error detected, resetting pool:', code || low.slice(0, 60));
+          setTimeout(() => resetPgPool("fatal-error:" + (code || low.slice(0,40))), 100);
+        } else {
+          console.error('❌ Database pool error:', err);
+        }
       });
       pool = p;
       return p;

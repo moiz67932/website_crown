@@ -30,7 +30,7 @@ export const LANDINGS: LandingDef[] = [
     canonicalPath: (citySlug) => `/california/${citySlug}/homes-for-sale`,
     aiPromptKey: 'ai_city_homes_for_sale',
     faqKey: 'faq_homes_for_sale',
-    filters: (city) => ({ city: up(city), status: ['for_sale'] })
+    filters: (city) => ({ city: up(city) })
   },
   {
     slug: 'condos-for-sale',
@@ -39,7 +39,7 @@ export const LANDINGS: LandingDef[] = [
     canonicalPath: (citySlug) => `/california/${citySlug}/condos-for-sale`,
     aiPromptKey: 'ai_city_condos_for_sale',
     faqKey: 'faq_condos_for_sale',
-    filters: (city) => ({ city: up(city), status: ['for_sale'], propertyType: ['condo', 'condominium'] })
+    filters: (city) => ({ city: up(city), propertyType: ['condo', 'condominium'] })
   },
   {
     slug: 'homes-with-pool',
@@ -48,7 +48,7 @@ export const LANDINGS: LandingDef[] = [
     canonicalPath: (citySlug) => `/california/${citySlug}/homes-with-pool`,
     aiPromptKey: 'ai_city_homes_with_pool',
     faqKey: 'faq_homes_with_pool',
-    filters: (city) => ({ city: up(city), status: ['for_sale'], hasPool: true })
+    filters: (city) => ({ city: up(city), hasPool: true })
   },
   {
     slug: 'luxury-homes',
@@ -57,7 +57,7 @@ export const LANDINGS: LandingDef[] = [
     canonicalPath: (citySlug) => `/california/${citySlug}/luxury-homes`,
     aiPromptKey: 'ai_city_luxury_homes',
     faqKey: 'faq_luxury_homes',
-    filters: (city) => ({ city: up(city), status: ['for_sale'], priceRange: [1_000_000, Number.MAX_SAFE_INTEGER] })
+    filters: (city) => ({ city: up(city), priceRange: [1_000_000, Number.MAX_SAFE_INTEGER] })
   },
   {
     slug: 'homes-under-500k',
@@ -66,7 +66,7 @@ export const LANDINGS: LandingDef[] = [
     canonicalPath: (citySlug) => `/california/${citySlug}/homes-under-500k`,
     aiPromptKey: 'ai_city_homes_under_500k',
     faqKey: 'faq_homes_under_500k',
-    filters: (city) => ({ city: up(city), status: ['for_sale'], priceRange: [0, 500_000] })
+    filters: (city) => ({ city: up(city), priceRange: [0, 500_000] })
   },
   {
     slug: 'homes-over-1m',
@@ -75,7 +75,7 @@ export const LANDINGS: LandingDef[] = [
     canonicalPath: (citySlug) => `/california/${citySlug}/homes-over-1m`,
     aiPromptKey: 'ai_city_homes_over_1m',
     faqKey: 'faq_homes_over_1m',
-    filters: (city) => ({ city: up(city), status: ['for_sale'], priceRange: [1_000_000, Number.MAX_SAFE_INTEGER] })
+    filters: (city) => ({ city: up(city), priceRange: [1_000_000, Number.MAX_SAFE_INTEGER] })
   },
   {
     slug: '2-bedroom-apartments',
@@ -84,7 +84,7 @@ export const LANDINGS: LandingDef[] = [
     canonicalPath: (citySlug) => `/california/${citySlug}/2-bedroom-apartments`,
     aiPromptKey: 'ai_city_2_bed_apartments',
     faqKey: 'faq_2_bed_apartments',
-    filters: (city) => ({ city: up(city), status: ['for_sale'], propertyType: ['apartment', 'condo'], beds: '2+' })
+    filters: (city) => ({ city: up(city), propertyType: ['apartment', 'condo'], beds: '2+' })
   }
 ]
 

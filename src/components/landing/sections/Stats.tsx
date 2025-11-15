@@ -12,7 +12,16 @@ const statMeta: Array<{ key: keyof LandingStats; label: string; format: (v: numb
 ];
 
 export default function StatsSection({ stats }: Props) {
-  if (!stats) return null;
+  console.log('📊 [StatsSection] Received stats:', stats)
+  if (!stats) {
+    console.log('⚠️ [StatsSection] Stats is null/undefined - not rendering')
+    return null
+  }
+  if (Object.keys(stats).length === 0) {
+    console.log('⚠️ [StatsSection] Stats is empty object - not rendering')
+    return null
+  }
+  console.log('✅ [StatsSection] Rendering with stats:', stats)
   return (
     <section className="pt-2">
       <h2 className="text-2xl font-bold mb-6 text-brand-midnightCove">Market Snapshot</h2>
