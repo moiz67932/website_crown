@@ -4,7 +4,7 @@ import { TrestleProperty } from '@/lib/trestle-api';
 
 const trestleApi = createTrestleApiService();
 
-// Function to convert Trestle property to app format (same as main properties API)
+// Function to convert Trestle property to app format (CANONICAL field names)
 function convertTrestleToAppFormat(trestleProperty: TrestleProperty) {
   // Handle property images - use Photos array if available, otherwise generate sample image URLs
   let photos: string[];
@@ -26,34 +26,56 @@ function convertTrestleToAppFormat(trestleProperty: TrestleProperty) {
     mainImage = photos[0];
   }
   
+  // CANONICAL: Use exact field names from PropertyDetail interface
   return {
+    // Primary identifiers
+    _id: trestleProperty.ListingKey,
     id: trestleProperty.ListingKey,
     listing_key: trestleProperty.ListingKey,
-    image: mainImage,
-    property_type: trestleProperty.PropertyType || "Residential",
-    address: trestleProperty.UnparsedAddress || "Address not available",
-    location: trestleProperty.City || "Unknown",
-    county: trestleProperty.StateOrProvince || "",
+    
+    // Pricing - CANONICAL
     list_price: trestleProperty.ListPrice || 0,
-    bedrooms: trestleProperty.BedroomsTotal || 0,
-    bathrooms: trestleProperty.BathroomsTotalInteger || 0,
-    living_area_sqft: trestleProperty.LivingArea || 0,
-    lot_size_sqft: trestleProperty.LotSizeAcres ? trestleProperty.LotSizeAcres * 43560 : 0,
-    status: trestleProperty.StandardStatus === "Active" ? "FOR SALE" : (trestleProperty.StandardStatus || "UNKNOWN"),
-    statusColor: trestleProperty.StandardStatus === "Active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800",
-    publicRemarks: trestleProperty.PublicRemarks || "",
-    favorite: false,
-    _id: trestleProperty.ListingKey,
-    images: photos,
-    main_image_url: mainImage,
-    photosCount: trestleProperty.PhotosCount || 0,
+    
+    // Location - CANONICAL field names
+    address: trestleProperty.UnparsedAddress || "Address not available",
     city: trestleProperty.City || "",
-    state: trestleProperty.StateOrProvince || "",
-    zip_code: trestleProperty.PostalCode || "",
+    county: trestleProperty.StateOrProvince || "", // CANONICAL: county contains state
+    postal_code: trestleProperty.PostalCode || "",
     latitude: trestleProperty.Latitude || 0,
     longitude: trestleProperty.Longitude || 0,
+    
+    // Property characteristics - CANONICAL field names
+    property_type: trestleProperty.PropertyType || "Residential",
+    bedrooms: trestleProperty.BedroomsTotal || null, // CANONICAL: bedrooms (not BedroomsTotal)
+    bathrooms: trestleProperty.BathroomsTotalInteger || null, // CANONICAL: bathrooms
+    living_area_sqft: trestleProperty.LivingArea || null, // CANONICAL: living_area_sqft
+    lot_size_sqft: trestleProperty.LotSizeAcres ? trestleProperty.LotSizeAcres * 43560 : 0,
+    year_built: trestleProperty.YearBuilt,
+    
+    // Images - CANONICAL
+    images: photos,
+    main_image_url: mainImage,
+    image: mainImage, // Legacy support
+    
+    // Status and metadata
+    status: trestleProperty.StandardStatus === "Active" ? "FOR SALE" : (trestleProperty.StandardStatus || "UNKNOWN"),
+    statusColor: trestleProperty.StandardStatus === "Active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800",
+    days_on_market: trestleProperty.DaysOnMarket,
+    
+    // Descriptions - CANONICAL
+    public_remarks: trestleProperty.PublicRemarks || "",
+    
+    // Additional fields
+    photosCount: trestleProperty.PhotosCount || 0,
+    favorite: false,
     createdAt: trestleProperty.OnMarketDate || new Date().toISOString(),
-    updatedAt: trestleProperty.OnMarketDate || new Date().toISOString()
+    updatedAt: trestleProperty.OnMarketDate || new Date().toISOString(),
+    
+    // Legacy fields for backward compatibility
+    location: trestleProperty.City || "Unknown",
+    state: trestleProperty.StateOrProvince || "",
+    zip_code: trestleProperty.PostalCode || "",
+    publicRemarks: trestleProperty.PublicRemarks || "",
   };
 }
 

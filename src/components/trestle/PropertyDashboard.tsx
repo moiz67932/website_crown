@@ -252,8 +252,7 @@ export function PropertyDashboard() {
                 {semanticResults.slice(0, 6).map((result, index) => (
                   <PropertyCard 
                     key={result.ListingKey || index} 
-                    property={result} 
-                    similarity={result._similarity}
+                    property={result}
                   />
                 ))}
               </div>

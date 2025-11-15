@@ -155,6 +155,11 @@ import { deriveDisplayName } from '@/lib/display-name';
 export const runtime = 'nodejs';          // ensure Node runtime (not edge) for GCP libs
 export const dynamic = 'force-dynamic';   // avoid accidental SSG on this API
 
+// Sanitize address to remove leading zeros and extra whitespace
+function sanitizeAddress(addr: string): string {
+  return addr.trim().replace(/^0+\s+/, '').replace(/\s{2,}/g, ' ');
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -224,33 +229,57 @@ export async function GET(request: NextRequest) {
       }
 
       const item = {
+        // Primary identifiers - CANONICAL
+        _id: p.listing_key,
         id: p.listing_key,
         listing_key: p.listing_key,
-        image: p.main_photo_url,
-        property_type: p.property_type,
-        address: baseAddress,
-        location: p.city,
-        county: p.state_or_province,
+        
+        // Pricing - CANONICAL
         list_price: p.list_price || 0,
-        bedrooms: p.bedrooms_total || 0,
-        bathrooms: p.bathrooms_total || 0,
-        living_area_sqft: p.living_area || 0,
-        lot_size_sqft: p.lot_size_sq_ft || p.lot_size_sqft || 0,
-        status: p.status === 'Active' ? 'FOR SALE' : (p.status || 'UNKNOWN'),
-        statusColor: p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
-        publicRemarks: (p as any).public_remarks || '',
-        favorite: false,
-        _id: p.listing_key,
-        images: [],
-        main_image_url: p.main_photo_url,
-        photosCount: p.photos_count || 0,
+        
+        // Location - CANONICAL field names matching PropertyDetail
+        address: sanitizeAddress(baseAddress),
         city: p.city,
-        state: p.state_or_province,
-        zip_code: (p as any).postal_code || '',
+        county: p.state_or_province, // CANONICAL: county field contains state abbreviation
+        postal_code: (p as any).postal_code || '',
         latitude: p.latitude || 0,
         longitude: p.longitude || 0,
+        
+        // Property characteristics - CANONICAL field names
+        property_type: p.property_type,
+        bedrooms: p.bedrooms_total || null, // CANONICAL: bedrooms (not bedrooms_total)
+        bathrooms: p.bathrooms_total || null, // CANONICAL: bathrooms (not bathrooms_total)
+        living_area_sqft: p.living_area || null, // CANONICAL: living_area_sqft
+        lot_size_sqft: p.lot_size_sq_ft || p.lot_size_sqft || 0,
+        year_built: (p as any).year_built,
+        
+        // Images - CANONICAL
+        images: [],
+        main_image_url: p.main_photo_url,
+        image: p.main_photo_url, // Legacy support
+        
+        // Status and metadata
+        status: p.status === 'Active' ? 'FOR SALE' : (p.status || 'UNKNOWN'),
+        statusColor: p.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
+        days_on_market: (p as any).days_on_market,
+        
+        // Descriptions - CANONICAL
+        public_remarks: (p as any).public_remarks || '',
+        h1_heading: (p as any).h1_heading,
+        title: (p as any).title,
+        seo_title: (p as any).seo_title,
+        
+        // Additional fields
+        photosCount: p.photos_count || 0,
+        favorite: false,
         createdAt: p.created_at || new Date().toISOString(),
         updatedAt: p.updated_at || new Date().toISOString(),
+        
+        // Legacy fields for backward compatibility
+        location: p.city,
+        state: p.state_or_province,
+        zip_code: (p as any).postal_code || '',
+        publicRemarks: (p as any).public_remarks || '',
       };
 
       (item as any).display_name = deriveDisplayName({

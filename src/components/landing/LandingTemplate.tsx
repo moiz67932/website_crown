@@ -267,7 +267,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
                   main_photo_url: f.img || null,
                   status: f.status || 'Active'
                 }
-                return <PropertyCard key={f.listingKey} property={adapted} showCompareButton={false} />
+                return <PropertyCard key={f.listingKey} property={adapted} />
               })}
             </div>
           )}

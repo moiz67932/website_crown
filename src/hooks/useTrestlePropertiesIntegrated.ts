@@ -33,39 +33,67 @@ export interface UseTrestlePropertiesResult {
 }
 
 // Convert API response property to your app's Property interface
-// Note: This function now expects properties that come from the /api/properties endpoint
+// CANONICAL: Maps API fields to canonical PropertyDetail field names
 function convertTrestleToProperty(apiProperty: any): Property {
-  const base: any = {
+  const base: Property = {
+    // Primary identifiers - CANONICAL
+    _id: apiProperty._id || apiProperty.listing_key || apiProperty.id,
     id: apiProperty.id || apiProperty.listing_key,
     listing_key: apiProperty.listing_key || apiProperty.id,
-    image: apiProperty.image || "/placeholder.svg",
-    property_type: apiProperty.property_type || "Unknown",
-  // Avoid forcing generic placeholder; allow downstream UI logic to build a better display name.
-  address: apiProperty.address || apiProperty.cleaned_address || "",
-    location: apiProperty.location || apiProperty.city || "Unknown",
-    county: apiProperty.county || apiProperty.state || "",
+    
+    // Pricing - CANONICAL
     list_price: apiProperty.list_price || 0,
-    bedrooms: apiProperty.bedrooms || 0,
-    bathrooms: apiProperty.bathrooms || 0,
-    living_area_sqft: apiProperty.living_area_sqft || "-",
-    lot_size_sqft: apiProperty.lot_size_sqft || "-",
-    status: apiProperty.status || "UNKNOWN",
-    statusColor: apiProperty.statusColor || "bg-gray-100 text-gray-800",
-    publicRemarks: apiProperty.publicRemarks || "",
-    favorite: false,
-    _id: apiProperty._id || apiProperty.listing_key || apiProperty.id,
-    images: apiProperty.images || ["/placeholder.svg"],
-    main_image_url: apiProperty.main_image_url || "/placeholder.svg",
+    
+    // Location - CANONICAL field names
+    address: apiProperty.address || "",
     city: apiProperty.city || "",
-    state: apiProperty.state || "",
-    zip_code: apiProperty.zip_code || "",
+    county: apiProperty.county || apiProperty.state || "", // CANONICAL: county
+    postal_code: apiProperty.postal_code || apiProperty.zip_code || "",
     latitude: apiProperty.latitude || 0,
     longitude: apiProperty.longitude || 0,
+    
+    // Property characteristics - CANONICAL field names
+    property_type: apiProperty.property_type || "Unknown",
+    bedrooms: apiProperty.bedrooms ?? null, // CANONICAL: bedrooms (nullable)
+    bathrooms: apiProperty.bathrooms ?? null, // CANONICAL: bathrooms (nullable)
+    living_area_sqft: apiProperty.living_area_sqft ?? null, // CANONICAL: nullable number
+    lot_size_sqft: apiProperty.lot_size_sqft || 0,
+    year_built: apiProperty.year_built,
+    
+    // Images - CANONICAL
+    images: apiProperty.images || [],
+    main_image_url: apiProperty.main_image_url,
+    image: apiProperty.image || apiProperty.main_image_url,
+    
+    // Status and metadata
+    status: apiProperty.status || "UNKNOWN",
+    statusColor: apiProperty.statusColor || "bg-gray-100 text-gray-800",
+    days_on_market: apiProperty.days_on_market,
+    
+    // Descriptions - CANONICAL
+    public_remarks: apiProperty.public_remarks || apiProperty.publicRemarks || "",
+    h1_heading: apiProperty.h1_heading,
+    title: apiProperty.title,
+    seo_title: apiProperty.seo_title,
+    
+    // Additional fields
+    favorite: false,
     createdAt: apiProperty.createdAt || new Date().toISOString(),
-    updatedAt: apiProperty.updatedAt || new Date().toISOString()
+    updatedAt: apiProperty.updatedAt || new Date().toISOString(),
+    
+    // Legacy fields for backward compatibility
+    location: apiProperty.location || apiProperty.city || "Unknown",
+    state: apiProperty.state || apiProperty.county,
+    zip_code: apiProperty.zip_code || apiProperty.postal_code || "",
+    publicRemarks: apiProperty.publicRemarks || apiProperty.public_remarks || "",
   };
-  if (apiProperty.display_name) base.display_name = apiProperty.display_name;
-  return base as Property;
+  
+  // Preserve display_name if provided by API
+  if (apiProperty.display_name) {
+    (base as any).display_name = apiProperty.display_name;
+  }
+  
+  return base;
 }
 
 export function useTrestlePropertiesIntegrated(
