@@ -4,6 +4,11 @@ import { getLandingData } from '@/lib/landing/query'
 import { CA_CITIES, cityToTitle, slugToCity } from '@/lib/seo/cities'
 import { getOrGenerateFaqs } from '@/lib/faqs'
 
+// Force dynamic rendering - do not statically pre-render these pages
+// This ensures DB queries and stats are fetched at request time in production
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Pre-render only CA cities for launch
 export async function generateStaticParams() {
   return CA_CITIES.map(city => ({ city }))

@@ -1,4 +1,5 @@
 import { getSupabase } from '@/lib/supabase'
+import { isBuildPhase } from '@/lib/env/buildDetection'
 
 // Simple in-memory cache (per server runtime)
 const memCache = new Map<string, string | null>()
@@ -21,14 +22,15 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
   const loweredCity = city.toLowerCase()
   const key = `${loweredCity}::${kind}`
   const trace = !!process.env.LANDING_TRACE
-  // Detect build environments (npm lifecycle or next build) and skip external fetches
-  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
-  const likelyNextBuild = argv.includes('next') && argv.includes('build')
-  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
-    if (trace) console.log('[landing.hero] skipping unsplash due to build-detection', { key })
+  
+  // Skip external fetches (Unsplash) during build phase only
+  // At runtime (even on Vercel), we can fetch hero images if needed
+  if (isBuildPhase()) {
+    if (trace) console.log('[landing.hero] skipping unsplash due to build phase', { key })
     memCache.set(key, null)
     return undefined
   }
+  
   if (trace) console.log('[landing.hero] START', { city: loweredCity, kind })
   if (memCache.has(key)) {
     const cached = memCache.get(key)
@@ -65,11 +67,10 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
     }
 
     // 2. External fetch (Unsplash)
-    // Allow builds to opt-out of making external network calls (Unsplash) by
-    // setting SKIP_LANDING_EXTERNAL_FETCHES=1. We still respect Supabase cache
-    // above, but avoid doing a potentially slow external request during static
-    // generation or CI builds.
-    if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1') {
+    // During build phase, we skip Unsplash fetches (already handled at top of function)
+    // At runtime, we can fetch from Unsplash if API key is available
+    // Optionally, users can set SKIP_LANDING_EXTERNAL_FETCHES=1 to disable this at runtime too
+    if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1') {
       if (trace) console.log('[landing.hero] skipping unsplash due to SKIP_LANDING_EXTERNAL_FETCHES', { key })
       memCache.set(key, null)
       return undefined

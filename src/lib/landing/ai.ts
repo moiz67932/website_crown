@@ -2,6 +2,7 @@ import { getPgPool } from '@/lib/db'
 import type { LandingKind } from '@/types/landing'
 import { getSupabase } from '@/lib/supabase'
 import OpenAI from 'openai'
+import { isBuildPhase } from '@/lib/env/buildDetection'
 
 // Memory cache (runtime only)
 const memCache = new Map<string, string>()
@@ -229,11 +230,10 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
     return pending.get(key)!
   }
 
-  // Detect build environments and skip OpenAI generation during static export/build.
-  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
-  const likelyNextBuild = argv.includes('next') && argv.includes('build')
-  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
-    if (trace || debug) console.warn('[ai.desc] skipping OpenAI generation due to build-detection or skip-flag', { key, hasKey: !!process.env.OPENAI_API_KEY })
+  // Skip OpenAI generation during build phase only
+  // At runtime (even on Vercel), we can generate AI descriptions if needed
+  if (isBuildPhase()) {
+    if (trace || debug) console.warn('[ai.desc] skipping OpenAI generation due to build phase', { key, hasKey: !!process.env.OPENAI_API_KEY })
     return undefined
   }
 
@@ -337,11 +337,11 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
 
   const executor = async (): Promise<string | undefined> => {
     // 3. Generate (requires OpenAI key)
-    // During static builds the AI generation can be slow or hit rate limits.
-    // Allow builds to skip external OpenAI work by setting
-    // SKIP_LANDING_EXTERNAL_FETCHES=1. If OPENAI key is missing we also skip.
-    if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || !process.env.OPENAI_API_KEY) {
-      if (trace || debug) console.warn('[ai.desc] skipping OpenAI generation (SKIP_LANDING_EXTERNAL_FETCHES|VERCEL or missing OPENAI_API_KEY)', { city: loweredCity, kind, hasKey: !!process.env.OPENAI_API_KEY, isVercel: !!process.env.VERCEL })
+    // During build phase we skip OpenAI (already handled at top of function)
+    // At runtime, we can generate if OpenAI key is available
+    // Optionally, users can set SKIP_LANDING_EXTERNAL_FETCHES=1 to disable this at runtime too
+    if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || !process.env.OPENAI_API_KEY) {
+      if (trace || debug) console.warn('[ai.desc] skipping OpenAI generation (SKIP_LANDING_EXTERNAL_FETCHES or missing OPENAI_API_KEY)', { city: loweredCity, kind, hasKey: !!process.env.OPENAI_API_KEY })
       return undefined
     }
   const prompt = opts.customPrompt || `You are a real estate SEO assistant. Write a 2–3 paragraph description of ${city} ${kind.replace(/-/g,' ')}, highlighting lifestyle, housing trends, and buyer appeal. Keep it factual, local, and professional.`

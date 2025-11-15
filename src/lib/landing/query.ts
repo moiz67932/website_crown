@@ -7,6 +7,7 @@ import { getPgPool } from '@/lib/db'
 import { getAIDescription } from './ai'
 import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
 import type { LandingDef } from './defs'
+import { isBuildPhase } from '@/lib/env/buildDetection'
 
 // Map landing kind to additional filter predicates for SQL aggregates
 function buildKindFilter(kind: LandingKind): { sql: string; params: any[]; searchParams: Record<string, any> } {
@@ -79,13 +80,12 @@ async function ensureSchemaIntrospection() {
 export async function getLandingStats(cityOrState: string, kind: LandingKind): Promise<LandingStats> {
   console.log('🔍 [getLandingStats] START', { cityOrState, kind })
   await ensureSchemaIntrospection()
-  // Avoid heavy DB queries during Next.js build/static export.
-  // If build is detected, return empty stats quickly.
-  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
-  const likelyNextBuild = argv.includes('next') && argv.includes('build')
-  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
-    console.log('⚠️  [getLandingStats] SKIPPED - build detection', { cityOrState, kind })
-    if (process.env.LANDING_TRACE) console.log('[landing.stats] skipping DB stats due to build-detection', { cityOrState, kind })
+  
+  // Skip heavy DB queries during Next.js build phase only
+  // At runtime (even on Vercel), we want to run these queries
+  if (isBuildPhase()) {
+    console.log('⚠️  [getLandingStats] SKIPPED - build phase detected', { cityOrState, kind })
+    if (process.env.LANDING_TRACE) console.log('[landing.stats] skipping DB stats due to build phase', { cityOrState, kind })
     return {}
   }
   
@@ -174,14 +174,14 @@ export async function getFeaturedProperties(cityOrState: string, kind: LandingKi
   console.log('🏠 [getFeaturedProperties] Kind filter:', kindFilter)
   const stateInfo = detectStateToken(cityOrState)
   console.log('🏠 [getFeaturedProperties] State info:', stateInfo)
-  // Short-circuit during build/static export
-  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
-  const likelyNextBuild = argv.includes('next') && argv.includes('build')
-  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
-    console.log('⚠️  [getFeaturedProperties] SKIPPED - build detection', { cityOrState, kind })
-    if (process.env.LANDING_TRACE) console.log('[landing.featured] skipping properties fetch due to build-detection', { cityOrState, kind })
+  
+  // Skip during build phase only - at runtime (even on Vercel), fetch from DB
+  if (isBuildPhase()) {
+    console.log('⚠️  [getFeaturedProperties] SKIPPED - build phase detected', { cityOrState, kind })
+    if (process.env.LANDING_TRACE) console.log('[landing.featured] skipping properties fetch due to build phase', { cityOrState, kind })
     return []
   }
+  
   try {
     const baseParams: any = {
       limit,

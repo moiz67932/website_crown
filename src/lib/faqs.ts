@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import { getSupabase } from '@/lib/supabase'
 import { getPgPool } from '@/lib/db'
+import { isBuildPhase } from '@/lib/env/buildDetection'
 import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
 
 export type FAQItem = { question: string; answer: string }
@@ -86,11 +87,10 @@ Rules:
 }
 
 export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ faqs: FAQItem[]; markdown: string; jsonLd: any; meta?: SEOMeta } | null> {
-  // Detect build/static-export and skip heavy DB/OpenAI work during npm build/next build
-  const argv = Array.isArray(process.argv) ? process.argv.join(' ') : ''
-  const likelyNextBuild = argv.includes('next') && argv.includes('build')
-  if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || process.env.VERCEL === '1' || process.env.NEXT_BUILD === '1' || process.env.npm_lifecycle_event === 'build' || process.env.NPM_LIFECYCLE_EVENT === 'build' || likelyNextBuild) {
-    if (process.env.LANDING_TRACE) console.log('[faqs] skipping FAQ generation due to build-detection')
+  // Skip heavy DB/OpenAI work during build phase only
+  // At runtime (even on Vercel), we can generate FAQs if needed
+  if (isBuildPhase()) {
+    if (process.env.LANDING_TRACE) console.log('[faqs] skipping FAQ generation due to build phase')
     return null
   }
 

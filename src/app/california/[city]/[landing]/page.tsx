@@ -6,6 +6,11 @@ import { getLandingData } from '@/lib/landing/query'
 import { getSupabase } from '@/lib/supabase'
 import { getOrGenerateFaqs } from '@/lib/faqs'
 
+// Force dynamic rendering - do not statically pre-render these pages
+// This ensures DB queries and stats are fetched at request time in production
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Pre-render all CA city x landing combos
 export async function generateStaticParams() {
   const params: Array<{ city: string; landing: LandingSlug }> = []
