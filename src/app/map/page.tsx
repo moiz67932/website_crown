@@ -104,8 +104,12 @@ function MapViewPage() {
     return rawProperties.map(prop => ({
       ...prop,
       title: prop.address || 'Property',
-      square_feet: typeof prop.living_area_sqft === 'number' ? prop.living_area_sqft : parseInt(prop.living_area_sqft as string) || 0,
-      _id: prop.id,
+      square_feet: typeof prop.living_area_sqft === 'number' ? prop.living_area_sqft : (prop.living_area_sqft ? parseInt(prop.living_area_sqft as string) : 0) || 0,
+      _id: prop.id || prop.listing_key || '',
+      status: prop.status || 'Active',
+      location: prop.location || prop.city || '',
+      bedrooms: prop.bedrooms || 0,
+      bathrooms: prop.bathrooms || 0,
     }))
   }, [rawProperties])
   

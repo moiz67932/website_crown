@@ -430,7 +430,7 @@ export default function PropertyComparison({
   const getPricePerSqft = (property: Property) => {
     const sqft = typeof property.living_area_sqft === 'number' 
       ? property.living_area_sqft 
-      : parseInt(property.living_area_sqft?.toString() || '0')
+      : (property.living_area_sqft ? parseInt(String(property.living_area_sqft)) : 0)
     return sqft > 0 ? property.list_price / sqft : 0
   }
 
