@@ -73,8 +73,8 @@ export default function OfficeLocation() {
           return
         }
 
-        // Office coordinates (San Francisco - you can change these to your actual office location)
-        const officeLocation = { lat: 37.7749, lng: -122.4194 }
+        // Office coordinates (San Diego - Crown Coastal office location)
+        const officeLocation = { lat: 32.7157, lng: -117.1611 }
 
         const map = new window.google.maps.Map(mapRef.current, {
           center: officeLocation,
@@ -138,7 +138,7 @@ export default function OfficeLocation() {
                 <AlertCircle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
                 <p className="text-sm text-slate-600 mb-2">{mapError}</p>
                 <a
-                  href="https://maps.google.com/?q=San+Francisco,+CA+94105"
+                  href="https://maps.google.com/?q=702+Broadway+San+Diego+CA+92101"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
@@ -157,12 +157,14 @@ export default function OfficeLocation() {
             <div>
               <h3 className="font-medium">Address</h3>
               <p className="text-slate-600">
-                CA DRE #02211952
+                702 Broadway
+                <br />
+                San Diego, CA 92101
                 <br />
                 United States
               </p>
               <a
-                href="https://maps.google.com/?q=San+Francisco,+CA+94105"
+                href="https://maps.google.com/?q=702+Broadway+San+Diego+CA+92101"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center text-sm text-slate-700 hover:text-slate-900 mt-1"

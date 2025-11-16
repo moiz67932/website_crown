@@ -299,12 +299,12 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
 
         <section className="mt-4">
           <h3 className="text-lg font-semibold mb-4">Related California Cities</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {CA_CITIES.slice(0, 12).map(c => (
               <Link
                 key={c}
                 href={`/california/${c}/homes-for-sale`}
-                className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-accent transition-colors"
+                className="rounded-full border px-5 py-3 min-h-[44px] flex items-center text-sm font-medium hover:bg-accent transition-colors active:scale-95"
               >
                 {cityToTitle(c)}
               </Link>
