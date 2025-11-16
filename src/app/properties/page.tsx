@@ -60,10 +60,10 @@ function PropertiesPageContent() {
   const [showSemanticResults, setShowSemanticResults] = useState(false)
 
   // Updated to use the new PropertyFilters interface
-  // DEFAULT: Show all residential homes, no price filtering
+  // DEFAULT: Show ALL properties (no filters) - Land, Commercial, Residential, etc.
   const [filters, setFilters] = useState<PropertyFilters>({
-    propertyType: ["Residential"],
-    status: ["for_sale"], // Default to Buy properties
+    propertyType: undefined, // No filter - show ALL property types
+    status: undefined, // No status filter - show both for_sale and for_rent
     priceRange: undefined, // No price filter - show all properties
     beds: undefined,
     baths: undefined,
@@ -78,7 +78,7 @@ function PropertiesPageContent() {
   })
 
   // Legacy filter state for backward compatibility with existing API
-  // DEFAULT: Residential homes, no price filter
+  // DEFAULT: No filters - show ALL properties
   const [legacyFilters, setLegacyFilters] = useState<{
     propertyType: string;
     propertyCategory: string;
@@ -93,8 +93,8 @@ function PropertiesPageContent() {
     min_sqft: number | undefined;
     sortBy: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc";
   }>({
-    propertyType: "Residential",
-    propertyCategory: "", // Empty means all residential types (house, condo, townhouse) except land
+    propertyType: "", // Empty = show ALL property types
+    propertyCategory: "", // Empty = show all categories
     minPrice: undefined, // No min price - show all
     maxPrice: undefined, // No max price - show all
     city: "",
@@ -198,8 +198,8 @@ function PropertiesPageContent() {
       const hasUrlParams = searchParams && searchParams.toString().length > 0;
       
       if (!hasUrlParams) {
-        // No URL params - use default filters (All residential homes, no price filter)
-        console.log('📌 Using default filters: All residential homes');
+        // No URL params - use default filters (show ALL properties)
+        console.log('📌 Using default filters: Show all properties (no type filter)');
         return; // Keep the initialized default state
       }
 
@@ -235,7 +235,7 @@ function PropertiesPageContent() {
         }
 
         const legacyFiltersFromUrl = {
-          propertyType: propertyTypeFromStatus || "Residential", // Default to Residential
+          propertyType: propertyTypeFromStatus || "", // Empty = show all types
           propertyCategory: searchParams?.get("propertyCategory") || "",
           minPrice: searchParams?.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
           maxPrice: searchParams?.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
@@ -254,9 +254,9 @@ function PropertiesPageContent() {
         // Convert to new format
         const newFilters: PropertyFilters = {
           searchQuery: searchParams?.get("search") || "",
-          propertyType: legacyFiltersFromUrl.propertyType ? [legacyFiltersFromUrl.propertyType] : ["Residential"],
+          propertyType: legacyFiltersFromUrl.propertyType ? [legacyFiltersFromUrl.propertyType] : undefined,
           propertyCategory: legacyFiltersFromUrl.propertyCategory ? [legacyFiltersFromUrl.propertyCategory] : [],
-          status: searchParams?.get("status") ? [searchParams.get("status")!] : ["for_sale"],
+          status: searchParams?.get("status") ? [searchParams.get("status")!] : undefined,
           priceRange: legacyFiltersFromUrl.minPrice || legacyFiltersFromUrl.maxPrice ? 
             [legacyFiltersFromUrl.minPrice || 0, legacyFiltersFromUrl.maxPrice || 10000000] : undefined,
           city: legacyFiltersFromUrl.city,
