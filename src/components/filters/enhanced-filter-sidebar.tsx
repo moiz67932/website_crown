@@ -98,40 +98,17 @@ export default function EnhancedFilterSidebar({
   }, []);
 
   // Debounced filter updates using useCallback and useEffect
+  // DISABLED: Only apply filters when "Apply Filters" button is clicked
   const debouncedFilterUpdate = useCallback(() => {
-    if (!isMounted.current) return;
-
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-      debounceTimeout.current = null;
-    }
-
-    debounceTimeout.current = setTimeout(() => {
-      if (!isMounted.current) return;
-      
-      const newFilters = {
-        ...filters,
-        priceRange: priceRange[0] !== 0 || priceRange[1] !== 5000000 ? priceRange : undefined,
-        areaRange: areaRange[0] !== 0 || areaRange[1] !== 10000 ? areaRange : undefined,
-        lotSizeRange: lotSizeRange[0] !== 0 || lotSizeRange[1] !== 50000 ? lotSizeRange : undefined,
-        yearBuiltRange: yearBuiltRange[0] !== 1900 || yearBuiltRange[1] !== new Date().getFullYear() ? yearBuiltRange : undefined,
-        features: activeFeatures.length > 0 ? activeFeatures : [],
-        propertyType: selectedPropertyTypes.length > 0 ? selectedPropertyTypes : [],
-        status: selectedStatus.length > 0 ? selectedStatus : [],
-      };
-      
-      console.log('Enhanced Filter Sidebar sending filters:', newFilters);
-      onFilterChange(newFilters);
-    }, 300);
-  }, [
-    filters, priceRange, areaRange, lotSizeRange, yearBuiltRange, 
-    activeFeatures, selectedPropertyTypes, selectedStatus, onFilterChange
-  ]);
+    // Auto-update disabled - filters only applied on button click
+    return;
+  }, []);
 
   // Effect to trigger debounced updates when dependencies change
+  // DISABLED: Only apply filters when "Apply Filters" button is clicked
   useEffect(() => {
-    debouncedFilterUpdate();
-  }, [debouncedFilterUpdate]);
+    // Auto-update disabled - filters only applied on button click
+  }, []);
 
   const handlePropertyTypeToggle = (type: string) => {
     const newTypes = selectedPropertyTypes.includes(type)
@@ -777,7 +754,22 @@ export default function EnhancedFilterSidebar({
         <div className="flex gap-3">
           <Button 
             className="flex-1 bg-gradient-primary hover:shadow-strong font-semibold rounded-2xl" 
-            onClick={() => closeDrawer?.()}
+            onClick={() => {
+              // Apply the current filters before closing
+              const newFilters = {
+                ...filters,
+                priceRange: priceRange[0] !== 0 || priceRange[1] !== 5000000 ? priceRange : undefined,
+                areaRange: areaRange[0] !== 0 || areaRange[1] !== 10000 ? areaRange : undefined,
+                lotSizeRange: lotSizeRange[0] !== 0 || lotSizeRange[1] !== 50000 ? lotSizeRange : undefined,
+                yearBuiltRange: yearBuiltRange[0] !== 1900 || yearBuiltRange[1] !== new Date().getFullYear() ? yearBuiltRange : undefined,
+                features: activeFeatures.length > 0 ? activeFeatures : [],
+                propertyType: selectedPropertyTypes.length > 0 ? selectedPropertyTypes : [],
+                status: selectedStatus.length > 0 ? selectedStatus : [],
+              };
+              console.log('Apply Filters clicked - sending filters:', newFilters);
+              onFilterChange(newFilters);
+              closeDrawer?.();
+            }}
           >
             Apply Filters
             {getActiveFiltersCount() > 0 && (

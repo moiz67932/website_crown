@@ -47,6 +47,11 @@ export async function GET(request: Request) {
       );
     }
 
+    // Log the raw row data to verify list_agent_dre is present
+    console.log('🔍 Raw DB row for listing_key:', listingKey);
+    console.log('📋 list_agent_dre from DB:', (row as any).list_agent_dre);
+    console.log('📋 list_agent_full_name from DB:', (row as any).list_agent_full_name);
+
     // Prefer media from property_media (GCS URLs), fallback to properties.media_urls, then main_photo_url
     const media = await getPropertyMediaByListingKey(listingKey);
     const mediaUrlsFromMedia = parseMaybeJSON<string[]>(media?.media_urls);
@@ -162,8 +167,9 @@ export async function GET(request: Request) {
       images,
       photosCount: (row as any).photos_count || images.length,
 
-      list_agent_full_name: (row as any).list_agent_full_name || "",
-      list_office_name: (row as any).list_office_name || "",
+      list_agent_full_name: "",
+      list_office_name: "",
+      list_agent_dre: (row as any).list_agent_dre || null,
 
       list_agent_email: "",
       list_agent_phone: "",
@@ -213,16 +219,22 @@ export async function GET(request: Request) {
       other_info: {},
 
       interior_features: (row as any).interior_features || "",
-      stories: (row as any).stories || 1,
-      pool_features: (row as any).pool_features || "",
-      parking_total: (row as any).parking_total?.toString() || "0",
-      garage_size: (row as any).garage_spaces?.toString() || "0",
+      stories: (row as any).stories_total || 1,
+      pool_features: "",
+      parking_total: "0",
+      garage_size: "0",
       heating: (row as any).heating || "",
       cooling: (row as any).cooling || "",
-      security_features: (row as any).security_features || "",
-      parking_features: (row as any).parking_features || "",
-      laundry_features: (row as any).laundry_features || "",
+      security_features: "",
+      parking_features: "",
+      laundry_features: "",
     };
+
+    // Log the final detail object to verify list_agent_dre is included
+    console.log('✅ Final API response detail object:');
+    console.log('   list_agent_dre:', detail.list_agent_dre);
+    console.log('   list_agent_full_name:', detail.list_agent_full_name);
+    console.log('   list_office_name:', detail.list_office_name);
 
     return NextResponse.json({ success: true, data: detail }, { status: 200 });
   } catch (error: any) {

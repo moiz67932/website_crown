@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
-import { SavedPropertiesService } from '@/lib/database';
+import { SupabaseSavedPropertiesService } from '@/lib/supabase-saved-properties';
 
 interface RouteParams { params: any }
 
@@ -18,8 +18,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { action, notes, isFavorite } = body;
 
-    // Ensure userId is a number
-    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+    // Use userId as string for Supabase
+    const userId = String(currentUser.userId);
 
     if (action === 'update_notes') {
       if (notes === undefined) {
@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         );
       }
 
-      const result = SavedPropertiesService.updatePropertyNotes(
+      const result = await SupabaseSavedPropertiesService.updatePropertyNotes(
         userId,
         params.listingKey,
         notes
@@ -48,7 +48,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         );
       }
 
-      const result = SavedPropertiesService.togglePropertyFavorite(
+      const result = await SupabaseSavedPropertiesService.togglePropertyFavorite(
         userId,
         params.listingKey,
         isFavorite
@@ -86,10 +86,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Ensure userId is a number
-    const userId = typeof currentUser.userId === 'number' ? currentUser.userId : Number(currentUser.userId);
+    // Use userId as string for Supabase
+    const userId = String(currentUser.userId);
 
-    const isSaved = SavedPropertiesService.isPropertySaved(userId, params.listingKey);
+    const isSaved = await SupabaseSavedPropertiesService.isPropertySaved(userId, params.listingKey);
 
     return NextResponse.json({
       success: true,

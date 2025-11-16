@@ -41,6 +41,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import MortgageCalculatorModal from "./mortage-calculator-modal";
 import PropertyFAQ from "./property-faq";
 import nextDynamic from "next/dynamic";
+import { useFavoriteProperties } from "@/hooks/use-favorite-properties";
 
 const PropertyMap = nextDynamic(() => import("./property-map"), {
   ssr: false,
@@ -123,10 +124,39 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
   console.log("🏠 Fetching property detail for ID:", id);
 
   const { data: propertyData, isLoading, isError } = usePropertyDetail(id);
+  
+  // Log the received property data to check list_agent_dre
+  console.log("📦 Property data received:", propertyData);
+  console.log("🔍 list_agent_dre value:", propertyData?.list_agent_dre);
+  console.log("🔍 list_agent_full_name value:", propertyData?.list_agent_full_name);
+  
+  const { isFavorite, toggleFavorite, isLoading: favoritesLoading } = useFavoriteProperties();
   const faqs = propertyData?.faq_content
     ? JSON.parse(propertyData.faq_content)
     : [];
   const propertyJsonLd = generatePropertyJsonLd(propertyData);
+
+  const handleFavoriteClick = async () => {
+    if (!propertyData) return;
+    
+    await toggleFavorite(propertyData.listing_key, {
+      listing_key: propertyData.listing_key,
+      address: propertyData.address,
+      city: propertyData.city,
+      county: propertyData.county,
+      state: propertyData.state,
+      postal_code: propertyData.postal_code,
+      list_price: propertyData.list_price,
+      property_type: propertyData.property_type,
+      bedrooms: propertyData.bedrooms,
+      bathrooms: propertyData.bathrooms,
+      living_area_sqft: propertyData.living_area_sqft,
+      lot_size_sqft: propertyData.lot_size_sqft,
+      year_built: propertyData.year_built,
+      main_photo_url: propertyData.main_photo_url,
+      images: propertyData.images,
+    });
+  };
 
   if (isLoading) return <Loading />;
   if (isError)
@@ -312,13 +342,20 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
             <Button
               variant="outline"
               size="icon"
-              onClick={() =>
-                console.log("Added to favorites:", propertyData.listing_key)
-              }
+              onClick={handleFavoriteClick}
+              disabled={favoritesLoading}
               className="bg-white/20 hover:bg-white/30 dark:bg-slate-800/70 dark:hover:bg-slate-700/90 text-white border-white/30 backdrop-blur-md rounded-2xl w-12 h-12 transition-all duration-300 hover:scale-110 shadow-xl cursor-pointer group"
             >
-              <Heart className="h-5 w-5 group-hover:fill-current transition-all duration-300" />
-              <span className="sr-only">Add to Favorites</span>
+              <Heart 
+                className={`h-5 w-5 transition-all duration-300 ${
+                  propertyData && isFavorite(propertyData.listing_key)
+                    ? 'fill-rose-500 text-rose-500'
+                    : 'group-hover:fill-current'
+                }`}
+              />
+              <span className="sr-only">
+                {propertyData && isFavorite(propertyData.listing_key) ? 'Remove from Favorites' : 'Add to Favorites'}
+              </span>
             </Button>
             <Button
               variant="outline"
@@ -599,6 +636,16 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                           {propertyData.days_on_market ?? "N/A"} days
                         </span>
                       </div>
+                      {propertyData.list_agent_dre && (
+                        <div className="flex justify-between">
+                          <span className="text-neutral-600 dark:text-neutral-400">
+                            Agent DRE #:
+                          </span>
+                          <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                            {propertyData.list_agent_dre}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

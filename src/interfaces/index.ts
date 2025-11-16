@@ -25,8 +25,9 @@ export interface Property {
   longitude?: number;
   
   // Property characteristics - canonical field names
-  property_type: string;
+  property_type: string; // e.g., "Residential", "Land", "Commercial"
   property_sub_type?: string;
+  property_category?: string; // e.g., "house", "condo", "townhouse", "manufactured"
   bedrooms: number | null; // Canonical: bedrooms (not bedrooms_total)
   bathrooms: number | null; // Canonical: bathrooms (not bathrooms_total)
   living_area_sqft: number | null; // Canonical field name

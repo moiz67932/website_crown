@@ -330,6 +330,7 @@ export interface PropertySearchParams {
   minBathrooms?: number;
   maxBathrooms?: number;
   propertyType?: string;
+  propertyCategory?: string; // Filter by category: house, condo, townhouse, manufactured
   hasPool?: boolean;
   hasView?: boolean;
   isWaterfront?: boolean;
@@ -393,10 +394,17 @@ export async function searchProperties(params: PropertySearchParams) {
     "LOWER(property_type) LIKE LOWER($IDX)",
     params.propertyType ? `%${params.propertyType}%` : undefined
   );
+  
+  // Property category filter (house, condo, townhouse, manufactured)
+  // Uses property_sub_type field from database
+  if (params.propertyCategory) {
+    add("LOWER(property_sub_type) LIKE LOWER($IDX)", `%${params.propertyCategory}%`);
+  }
 
   const whereSql = where.length ? "WHERE " + where.join(" AND ") : "";
 
-  // Sorting
+  // Sorting with special handling for recommended sort
+  // When sort is "updated" or not specified, prioritize properties in $3M-$5M range
   let orderBy = "modification_timestamp DESC NULLS LAST";
   switch (params.sort) {
     case "price_asc":
@@ -409,7 +417,15 @@ export async function searchProperties(params: PropertySearchParams) {
       orderBy = "listed_at DESC NULLS LAST";
       break;
     case "updated":
-      orderBy = "modification_timestamp DESC NULLS LAST";
+    default:
+      // Prioritize $3M-$5M properties, then show rest by modification date
+      orderBy = `
+        CASE 
+          WHEN list_price >= 3000000 AND list_price <= 5000000 THEN 0
+          ELSE 1
+        END,
+        modification_timestamp DESC NULLS LAST
+      `;
       break;
   }
 
@@ -570,6 +586,17 @@ export async function getPropertyByListingKey(listingKey: string) {
       price_per_sq_ft,
       is_luxury,
       search_keywords,
+      list_agent_dre,
+      public_remarks,
+      interior_features,
+      stories_total,
+      heating,
+      cooling,
+      zoning,
+      lot_features,
+      property_condition,
+      directions,
+      water_source,
       updated_at,
       created_at
     FROM properties

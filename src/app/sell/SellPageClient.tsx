@@ -315,7 +315,9 @@ export default function SellPageClient() {
                       <div className="bg-brand-sunsetBlush rounded-full w-16 h-16 flex items-center justify-center">
                         <step.icon className="h-8 w-8 text-white" />
                       </div>
-
+                      <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-brand-goldenHour flex items-center justify-center text-brand-midnightCove font-bold text-sm">
+                        {step.step}
+                      </div>
                     </div>
                     <div>
                       <CardTitle className="text-xl text-brand-midnightCove">{step.title}</CardTitle>
@@ -553,7 +555,7 @@ export default function SellPageClient() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {clientTestimonials.map((testimonial, index) => (
-              <Card key={index} className="bg-brand-white dark:bg-slate-800 shadow-medium transition-colors duration-300">
+              <Card key={index} className="bg-brand-white dark:bg-slate-800 shadow-medium transition-colors duration-300 flex flex-col">
                 <CardHeader>
                   <div className="flex mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
@@ -562,8 +564,8 @@ export default function SellPageClient() {
                   </div>
                   <MessageSquare className="h-8 w-8 text-brand-pacificTeal/30 mb-3" />
                 </CardHeader>
-                <CardContent>
-                  <blockquote className="text-gray-600 dark:text-slate-400 italic mb-6 leading-relaxed">"{testimonial.quote.substring(0, 300)}..."</blockquote>
+                <CardContent className="flex-grow flex flex-col">
+                  <blockquote className="text-gray-600 dark:text-slate-400 italic mb-6 leading-relaxed flex-grow">"{testimonial.quote}"</blockquote>
                   <div className="border-t border-brand-silverMist/50 pt-4">
                     <p className="font-semibold text-brand-graphitePeak">{testimonial.author}</p>
                     <p className="text-sm text-gray-500 dark:text-slate-500 mb-2">{testimonial.location}</p>

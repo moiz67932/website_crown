@@ -103,7 +103,7 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 text-white/80 animate-fade-in-up animation-delay-4000">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-accent-400 rounded-full animate-pulse-soft"></div>
-                <span className="text-sm md:text-base font-medium">1000+ Properties</span>
+                <span className="text-sm md:text-base font-medium">50000+ Properties</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gold-400 rounded-full animate-pulse-soft animation-delay-2000"></div>

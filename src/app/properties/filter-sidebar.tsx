@@ -95,9 +95,13 @@ export default function FilterSidebar({ filters, onFilterChange, closeDrawer }: 
     });
   }
   const handleApplyFilters = () => {
+    // Apply all current filter values including price and area ranges
     onFilterChange({
       ...filters,
-      sortBy: "recommended"
+      minPrice: priceRange[0] !== 0 ? priceRange[0] : undefined,
+      maxPrice: priceRange[1] !== 5000000 ? priceRange[1] : undefined,
+      min_sqft: areaRange[0] !== 0 ? areaRange[0] : undefined,
+      max_sqft: areaRange[1] !== 10000 ? areaRange[1] : undefined,
     })
     closeDrawer?.()
   }

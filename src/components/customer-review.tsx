@@ -7,9 +7,9 @@ const CustomerReview = () => {
     <div className="relative">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 hide-scrollbar">
         {testimonials.map((testimonial, index) => (
-          <Card key={index} className="overflow-hidden border border-slate-200">
+          <Card key={index} className="overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <CardContent className="p-4 md:p-8 relative">
-              <div className="absolute top-2 right-2 md:top-4 md:right-4 text-slate-200">
+              <div className="absolute top-2 right-2 md:top-4 md:right-4 text-slate-200 dark:text-slate-600">
                 <svg
                   width="40"
                   height="40"
@@ -35,7 +35,7 @@ const CustomerReview = () => {
                   />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-base md:text-lg text-slate-900">{testimonial.name}</h3>
+                  <h3 className="font-semibold text-base md:text-lg text-slate-900 dark:text-neutral-100">{testimonial.name}</h3>
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="h-3 w-3 md:h-4 md:w-4 fill-amber-400 text-amber-400" />
@@ -44,7 +44,7 @@ const CustomerReview = () => {
                 </div>
               </div>
 
-              <blockquote className="text-gray-600 italic mb-6 leading-relaxed">"{testimonial.text.substring(0,300)}..."</blockquote>
+              <blockquote className="text-gray-600 dark:text-neutral-300 italic mb-6 leading-relaxed">"{testimonial.text.substring(0,300)}..."</blockquote>
             </CardContent>
           </Card>
         ))}

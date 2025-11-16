@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Ensure environment variables are loaded
+  env: {
+    ADMIN_USERNAME: process.env.ADMIN_USERNAME,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  },
+
   images: {
     // We still keep unoptimized true, but Next/Image will
     // continue to enforce allowed remote domains/patterns.

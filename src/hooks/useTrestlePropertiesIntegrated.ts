@@ -13,6 +13,8 @@ export interface TrestlePropertyFilters {
   minBathrooms?: number;
   maxBathrooms?: number;
   propertyType?: string;
+  propertyCategory?: string; // New field for filtering by category (house, condo, townhouse, etc.)
+  sortBy?: "recommended" | "price-asc" | "price-desc" | "date-desc" | "area-desc"; // Sort option
   hasPool?: boolean;
   isWaterfront?: boolean;
   hasView?: boolean;
@@ -54,6 +56,7 @@ function convertTrestleToProperty(apiProperty: any): Property {
     
     // Property characteristics - CANONICAL field names
     property_type: apiProperty.property_type || "Unknown",
+    property_category: apiProperty.property_category || "",
     bedrooms: apiProperty.bedrooms ?? null, // CANONICAL: bedrooms (nullable)
     bathrooms: apiProperty.bathrooms ?? null, // CANONICAL: bathrooms (nullable)
     living_area_sqft: apiProperty.living_area_sqft ?? null, // CANONICAL: nullable number
@@ -131,6 +134,8 @@ export function useTrestlePropertiesIntegrated(
       if (filters.minBathrooms) params.set('minBathrooms', filters.minBathrooms.toString());
       if (filters.maxBathrooms) params.set('maxBathrooms', filters.maxBathrooms.toString());
       if (filters.propertyType) params.set('propertyType', filters.propertyType);
+      if (filters.propertyCategory) params.set('propertyCategory', filters.propertyCategory);
+      if (filters.sortBy) params.set('sortBy', filters.sortBy); // Add sortBy parameter
       if (filters.hasPool !== undefined) params.set('hasPool', filters.hasPool.toString());
       if (filters.isWaterfront !== undefined) params.set('isWaterfront', filters.isWaterfront.toString());
       if (filters.hasView !== undefined) params.set('hasView', filters.hasView.toString());
@@ -230,9 +235,30 @@ export function useTrestlePropertiesIntegrated(
   // Fetch properties when filters or page change
   useEffect(() => {
     console.log('🔄 Filters or page changed, refetching properties...');
+    console.log('🔄 Current filters:', filters);
+    console.log('🔄 Current sortBy:', filters.sortBy);
     const newOffset = (page - 1) * limit;
     fetchProperties(newOffset, false);
-  }, [JSON.stringify(filters), limit, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    filters.city,
+    filters.state,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.minBedrooms,
+    filters.maxBedrooms,
+    filters.minBathrooms,
+    filters.maxBathrooms,
+    filters.propertyType,
+    filters.propertyCategory,
+    filters.sortBy, // Explicitly track sortBy changes
+    filters.hasPool,
+    filters.isWaterfront,
+    filters.hasView,
+    JSON.stringify(filters.keywords),
+    limit,
+    page
+  ]);
 
   return {
     properties,

@@ -20,7 +20,7 @@ const Footer: FC = () => {
                 <img
                   src="/logo.png"
                   alt="Crown Coastal Homes"
-                  className="h-16 w-16 object-contain transition-all duration-300"
+                  className="h-16 w-16 object-contain transition-all duration-300 dark:invert dark:brightness-0 dark:contrast-100"
                 />
               </div>
               <div className="p-3 bg-white rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 hover:scale-105">

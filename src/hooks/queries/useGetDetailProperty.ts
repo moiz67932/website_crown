@@ -51,6 +51,7 @@ export interface PropertyDetail {
   list_office_name: string
   list_agent_email: string
   list_agent_phone: string
+  list_agent_dre: string | null
   lease_considered: boolean
   lease_amount_frequency: string | null
   modification_timestamp: string

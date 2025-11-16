@@ -16,6 +16,7 @@ import { Property } from "@/interfaces";
 import React, { useState } from "react";
 import { useComparison } from "@/contexts/comparison-context";
 import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty";
+import { useFavoriteProperties } from "@/hooks/use-favorite-properties";
 
 interface PropertyCardProps {
   property: Property;
@@ -28,9 +29,9 @@ export function PropertyCard({
   showCompareButton = true,
   onCompareClick,
 }: PropertyCardProps) {
-  const [favoriteProperties, setFavoriteProperties] = useState<string[]>([]);
   const [imageError, setImageError] = useState(false);
   const { addToComparison, isInComparison } = useComparison();
+  const { isFavorite, toggleFavorite, isLoading: favoritesLoading } = useFavoriteProperties();
 
   // Fetch full property details using the listing_key
   const listingId = property.listing_key || property.id || '';
@@ -39,15 +40,28 @@ export function PropertyCard({
   // Use propertyDetail if available, otherwise fallback to property prop
   const displayData = propertyDetail || property;
 
-  const toggleFavorite = (e: React.MouseEvent, propertyId: string) => {
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    setFavoriteProperties((prev) =>
-      prev.includes(propertyId)
-        ? prev.filter((id) => id !== propertyId)
-        : [...prev, propertyId]
-    );
+    const listingKey = displayData.listing_key || (displayData as any).id;
+    await toggleFavorite(listingKey, {
+      listing_key: listingKey,
+      address: displayData.address,
+      city: displayData.city,
+      county: displayData.county,
+      state: (displayData as any).state,
+      postal_code: displayData.postal_code,
+      list_price: displayData.list_price,
+      property_type: displayData.property_type,
+      bedrooms: displayData.bedrooms,
+      bathrooms: displayData.bathrooms,
+      living_area_sqft: displayData.living_area_sqft,
+      lot_size_sqft: displayData.lot_size_sqft,
+      year_built: displayData.year_built,
+      main_photo_url: (displayData as any).main_photo_url || (displayData as any).images?.[0],
+      images: (displayData as any).images,
+    });
   };
 
   // Reset image error state when property changes
@@ -84,11 +98,11 @@ export function PropertyCard({
     const SQFT_PER_ACRE = 43560;
     
     if (lotSizeSqFt >= SQFT_PER_ACRE) {
-      const acres = (lotSizeSqFt / SQFT_PER_ACRE).toFixed(2);
+      const acres = (lotSizeSqFt / SQFT_PER_ACRE).toFixed(1);
       return { value: acres, unit: 'acres' };
     }
     
-    return { value: lotSizeSqFt.toLocaleString(), unit: 'sqft' };
+    return { value: Math.floor(lotSizeSqFt).toLocaleString(), unit: 'sqft' };
   };
 
   const address = sanitizeAddress(displayData.address || '');
@@ -112,10 +126,10 @@ export function PropertyCard({
     >
       {/* Status badge */}
       <div
-        className={`absolute top-6 left-6 z-20 px-4 py-2 rounded-2xl text-xs font-bold backdrop-blur-sm border transition-all duration-300 group-hover:scale-105 ${
+        className={`absolute top-6 left-6 z-20 px-4 py-2 rounded-2xl text-xs font-bold backdrop-blur-sm border transition-all duration-300 group-hover:scale-105 shadow-medium ${
           isForRent
-            ? "bg-error-500/90 border-error-400/50 text-white shadow-lg"
-            : "bg-success-500/90 border-success-400/50 text-white shadow-lg"
+            ? "bg-blue-600/95 dark:bg-blue-700/95 border-blue-500/50 dark:border-blue-600/50 text-white"
+            : "bg-slate-700/95 dark:bg-slate-800/95 border-slate-600/50 dark:border-slate-700/50 text-white"
         }`}
       >
         {isForRent ? "FOR RENT" : "FOR SALE"}
@@ -133,11 +147,12 @@ export function PropertyCard({
           variant="ghost"
           size="icon"
           className="h-10 w-10 rounded-2xl bg-white/95 dark:bg-slate-800/95 hover:bg-white dark:hover:bg-slate-700 border border-neutral-200/50 dark:border-slate-600/50 text-neutral-600 dark:text-neutral-400 hover:text-rose-500 dark:hover:text-rose-400 backdrop-blur-sm shadow-medium transition-all duration-300 hover:scale-110 hover:shadow-strong theme-transition"
-          onClick={(e) => toggleFavorite(e, property._id)}
+          onClick={handleFavoriteClick}
+          disabled={favoritesLoading}
         >
           <Heart
             className={`h-5 w-5 transition-all duration-300 ${
-              favoriteProperties.includes(property._id)
+              isFavorite(displayData.listing_key || (displayData as any).id)
                 ? "fill-rose-500 text-rose-500 scale-110"
                 : "group-hover:scale-110"
             }`}
@@ -214,7 +229,7 @@ export function PropertyCard({
 
         <div className="mb-4">
           <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-1 theme-transition">
-            ${displayData.list_price?.toLocaleString()}
+            ${displayData.list_price ? Math.floor(displayData.list_price).toLocaleString() : 'N/A'}
           </div>
           <div className="text-sm text-neutral-500 dark:text-neutral-400 font-medium theme-transition">
             {isForRent ? "per month" : "listing price"}

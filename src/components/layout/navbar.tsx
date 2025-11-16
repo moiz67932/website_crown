@@ -58,19 +58,18 @@ export default function Navbar() {
 
   // Mobile menu dropdowns for Buy and Rent
   const mobileBuyItems = [
-    { label: "Houses", href: "/properties?propertyType=Residential" },
-    { label: "Townhouses", href: "/properties?propertyType=Residential" },
-    { label: "Condos", href: "/properties?propertyType=Residential" },
-    { label: "Manufactured", href: "/properties?propertyType=Residential" },
-    { label: "Lot/Land", href: "/properties?propertyType=Residential" },
-    { label: "New Homes/New Construction", href: "/properties?propertyType=Residential" },
+    { label: "Houses", href: "/buy/houses" },
+    { label: "Townhouses", href: "/buy/townhouses" },
+    { label: "Condos", href: "/buy/condos" },
+    { label: "Manufactured", href: "/buy/manufactured" },
+    { label: "Lot/Land", href: "/buy/land" },
     { label: "All Homes", href: "/properties?propertyType=Residential" },
   ];
   const mobileRentItems = [
-    { label: "Houses for Rent", href: "/properties?propertyType=ResidentialLease" },
-    { label: "Apartments for Rent", href: "/properties?propertyType=ResidentialLease" },
-    { label: "Townhomes for Rent", href: "/properties?propertyType=ResidentialLease" },
-    { label: "All Rentals", href: "/properties?propertyType=ResidentialLease" },
+    { label: "Houses for Rent", href: "/properties?status=for_rent&propertyType=Residential" },
+    { label: "Apartments for Rent", href: "/properties?status=for_rent&propertyType=Residential" },
+    { label: "Townhomes for Rent", href: "/properties?status=for_rent&propertyType=Residential" },
+    { label: "All Rentals", href: "/properties?status=for_rent" },
   ];
 
   // State for mobile dropdowns
@@ -372,7 +371,7 @@ export default function Navbar() {
               )}
               {/* Other nav items */}
               {navItems
-                .filter(item => item.name !== "Home" && item.name !== "Buy" && item.name !== "Rent")
+                .filter(item => item.name !== "Home" && item.name !== "Buy" && item.name !== "Rent" && item.name !== "Properties")
                 .map((item) => (
                   <Link
                     href={item.href}

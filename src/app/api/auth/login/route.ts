@@ -33,10 +33,18 @@ export async function POST(request: NextRequest) {
 
     console.log('Login attempt for:', email);
     console.log('Admin username check:', email.toLowerCase() === ADMIN_USERNAME.toLowerCase());
+    console.log('Environment ADMIN_USERNAME:', process.env.ADMIN_USERNAME);
+    console.log('Environment ADMIN_PASSWORD exists:', !!process.env.ADMIN_PASSWORD);
+    console.log('Using ADMIN_USERNAME:', ADMIN_USERNAME);
+    console.log('Using ADMIN_PASSWORD:', ADMIN_PASSWORD);
+    console.log('Password match:', password === ADMIN_PASSWORD);
+    console.log('Password received length:', password.length);
+    console.log('Expected password length:', ADMIN_PASSWORD.length);
 
     // Check if this is an admin login
     if (email.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
       if (password !== ADMIN_PASSWORD) {
+        console.log('Password mismatch for admin user');
         return NextResponse.json(
           { success: false, message: 'Invalid email or password' },
           { status: 401 }

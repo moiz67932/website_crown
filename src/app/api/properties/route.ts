@@ -176,9 +176,11 @@ export async function GET(request: NextRequest) {
     const minBathrooms = searchParams.get('minBathrooms') ? Number(searchParams.get('minBathrooms')) : undefined;
     const maxBathrooms = searchParams.get('maxBathrooms') ? Number(searchParams.get('maxBathrooms')) : undefined;
     const propertyType = searchParams.get('propertyType');
+    const propertyCategory = searchParams.get('propertyCategory'); // house, condo, townhouse, manufactured
     const hasPool = searchParams.get('hasPool') === 'true';
     const hasView = searchParams.get('hasView') === 'true';
     const keywords = searchParams.get('keywords') || undefined;
+    const sortBy = searchParams.get('sortBy') || 'updated'; // Sort parameter
     const limit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 20;
     const offset = searchParams.get('offset') ? Number(searchParams.get('offset')) : 0;
 
@@ -186,6 +188,25 @@ export async function GET(request: NextRequest) {
     const knownStates: Record<string, string> = { california: 'CA', 'new york': 'NY', texas: 'TX', florida: 'FL' };
     const normalizedCity = city?.toLowerCase();
     const cityLooksLikeState = normalizedCity && knownStates[normalizedCity];
+
+    // Map sortBy values to database sort options
+    const mapSortToDb = (sort: string): "price_asc" | "price_desc" | "newest" | "updated" => {
+      switch (sort) {
+        case "recommended":
+          return "updated"; // Use updated sort which now prioritizes $3M-$5M
+        case "date-desc":
+        case "newest":
+          return "newest";
+        case "price-asc":
+          return "price_asc";
+        case "price-desc":
+          return "price_desc";
+        case "area-desc":
+          return "updated"; // Fallback to updated for area sorting (handled client-side)
+        default:
+          return "updated";
+      }
+    };
 
     const result = await searchProperties({
       city: cityLooksLikeState ? undefined : (city || undefined),
@@ -197,11 +218,12 @@ export async function GET(request: NextRequest) {
       minBathrooms,
       maxBathrooms,
       propertyType: propertyType === 'All' ? undefined : (propertyType || undefined),
+      propertyCategory: propertyCategory || undefined, // Pass category filter
       hasPool: hasPool || undefined,
       hasView: hasView || undefined,
       limit,
       offset,
-      sort: 'updated',
+      sort: mapSortToDb(sortBy),
     });
 
     const data = result.properties.map((p: any) => {
@@ -247,6 +269,7 @@ export async function GET(request: NextRequest) {
         
         // Property characteristics - CANONICAL field names
         property_type: p.property_type,
+        property_category: p.property_sub_type, // CANONICAL: Maps property_sub_type to property_category
         bedrooms: p.bedrooms_total || null, // CANONICAL: bedrooms (not bedrooms_total)
         bathrooms: p.bathrooms_total || null, // CANONICAL: bathrooms (not bathrooms_total)
         living_area_sqft: p.living_area || null, // CANONICAL: living_area_sqft

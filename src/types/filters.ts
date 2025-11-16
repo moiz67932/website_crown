@@ -5,7 +5,8 @@ export interface PropertyFilters {
   searchQuery?: string;
   
   // Basic filters
-  propertyType?: string[];
+  propertyType?: string[]; // e.g., ["Residential", "Land", "Commercial"]
+  propertyCategory?: string[]; // e.g., ["house", "condo", "townhouse", "manufactured"]
   status?: string[];
   
   // Price filters
