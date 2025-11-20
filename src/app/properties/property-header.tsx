@@ -61,7 +61,7 @@ export default function PropertyListingHeader({ totalProperties, currentPage, so
 
           {/* County Map Section - Only show when county is detected */}
           {countyName && (
-            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-neutral-200/50 dark:border-slate-600/50 shadow-soft theme-transition">
+            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-neutral-200/50 dark:border-slate-600/50 shadow-soft theme-transition overflow-hidden">
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
                   📍 {countyName} Properties
@@ -70,11 +70,13 @@ export default function PropertyListingHeader({ totalProperties, currentPage, so
                   Exploring properties in {countyName}. The highlighted area shows the county boundary.
                 </p>
               </div>
-              <CountyHighlightMap 
-                countyName={countyName}
-                height="400px"
-                className="w-full"
-              />
+              <div className="w-full overflow-hidden">
+                <CountyHighlightMap 
+                  countyName={countyName}
+                  height="400px"
+                  className="w-full"
+                />
+              </div>
             </div>
           )}
 
@@ -82,8 +84,8 @@ export default function PropertyListingHeader({ totalProperties, currentPage, so
             <div className="flex items-center text-neutral-600 dark:text-neutral-300 font-medium theme-transition">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-primary-400 dark:bg-primary-300 rounded-full"></div>
-                <span>
-                  Showing <span className="font-bold text-neutral-900 dark:text-neutral-100">{startIndex}-{endIndex}</span> of <span className="font-bold text-neutral-900 dark:text-neutral-100">{totalProperties}</span> properties
+                <span className="text-sm sm:text-base">
+                  Showing <span className="font-bold text-neutral-900 dark:text-neutral-100">{startIndex}-{endIndex}</span> of <span className="font-bold text-neutral-900 dark:text-neutral-100">{totalProperties.toLocaleString()}</span> properties
                 </span>
               </div>
             </div>

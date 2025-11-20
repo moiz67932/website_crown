@@ -430,7 +430,7 @@ function PropertiesPageContent() {
   }
 
   return (
-    <main className="bg-slate-50 dark:bg-slate-900 min-h-screen pt-16 md:pt-20 theme-transition">
+    <main className="bg-slate-50 dark:bg-slate-900 min-h-screen pt-16 md:pt-20 theme-transition overflow-x-hidden">
       <PropertyListingHeader 
         currentPage={currentPage} 
         totalProperties={totalItems}
@@ -455,7 +455,7 @@ function PropertiesPageContent() {
       />
       
       {/* Advanced Search Component */}
-      <div className="bg-white dark:bg-slate-900 border-b border-neutral-200/50 dark:border-slate-700/50 theme-transition">
+      <div className="bg-white dark:bg-slate-900 border-b border-neutral-200/50 dark:border-slate-700/50 theme-transition overflow-x-hidden">
         <div className="container mx-auto px-4 md:px-6 py-6">
           <AdvancedSearch
             onSearch={handleFilterChange}
@@ -541,13 +541,13 @@ function PropertiesPageContent() {
       </section>
       */}
 
-      <section className="container mx-auto px-4 md:px-6 py-8">
+      <section className="container mx-auto px-4 md:px-6 py-8 overflow-x-hidden">
         {/* Properties Grid Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Properties
             {totalItems > 0 && (
-              <span className="ml-2 text-lg font-normal text-gray-600">
+              <span className="ml-2 text-lg font-normal text-gray-600 dark:text-gray-400">
                 ({totalItems.toLocaleString()} found)
               </span>
             )}

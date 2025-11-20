@@ -668,73 +668,8 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
                   </div>
                 </div>
 
-                {/* Interior / features */}
-                <div className="glass-card p-8 rounded-3xl mt-16">
-                  <h3 className="text-xl font-display font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-3 mb-6">
-                    <Bath className="h-7 w-7 text-primary-500" />
-                    Interior Spaces & Features
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {propertyData.living_area_sqft &&
-                      propertyData.living_area_sqft > 0 && (
-                        <div className="text-center p-4 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl">
-                          <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                            {propertyData.living_area_sqft.toLocaleString()}
-                          </div>
-                          <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                            Sq Ft Living
-                          </div>
-                        </div>
-                      )}
-
-                    {lotSqFt > 0 && (
-                      <div className="text-center p-4 bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900/20 dark:to-accent-800/20 rounded-xl">
-                        <div className="text-2xl font-bold text-accent-600 dark:text-accent-400">
-                          {lotSqFt.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                          Lot Size {lotSqFt > 43560 ? "Acres" : "Sq Ft"}
-                        </div>
-                      </div>
-                    )}
-
-                    {propertyData.stories && (
-                      <div className="text-center p-4 bg-gradient-to-br from-success-50 to-success-100 dark:from-success-900/20 dark:to-success-800/20 rounded-xl">
-                        <div className="text-2xl font-bold text-success-600 dark:text-success-400">
-                          {propertyData.stories}
-                        </div>
-                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                          Stories
-                        </div>
-                      </div>
-                    )}
-
-                    {propertyData.pool_features && (
-                      <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl">
-                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                          Pool
-                        </div>
-                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                          Features
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {propertyData.interior_features && (
-                    <div className="mt-6 p-4 bg-neutral-50 dark:bg-slate-800/50 rounded-2xl">
-                      <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-                        Interior Features
-                      </h4>
-                      <p className="text-neutral-700 dark:text-neutral-300 text-sm">
-                        {propertyData.interior_features}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
                 {/* ===== Community ===== */}
-                <div className="glass-card p-8 rounded-3xl animate-scale-in">
+                <div className="glass-card p-8 rounded-3xl animate-scale-in mt-8">
                   <h2 className="text-2xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-8 flex items-center gap-3">
                     <Building2 className="h-7 w-7 text-primary-500" />
                     Community & Neighborhood
@@ -790,7 +725,7 @@ export default function PropertyDetailPageClient({ id }: { id: string }) {
               </div>
 
               {/* ===== Map ===== */}
-              <div className="glass-card p-8 rounded-3xl animate-scale-in mt-16">
+              <div className="glass-card p-8 rounded-3xl animate-scale-in mt-8">
                 <h2 className="text-2xl font-display font-bold text-neutral-900 dark:text-neutral-100 mb-6 flex items-center gap-3">
                   <MapPin className="h-7 w-7 text-primary-500" />
                   Location & Neighborhood
