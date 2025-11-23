@@ -142,44 +142,91 @@ const pendingInline = new Map<string, Promise<InlineImg[]>>()
 export async function getLandingInlineImages(city: string, kind: string): Promise<InlineImg[]> {
   const loweredCity = city.toLowerCase()
   const key = `${loweredCity}::${kind}::inline`
+  const trace = !!process.env.LANDING_TRACE
 
-  if (memInline.has(key)) return memInline.get(key) || []
-  if (pendingInline.has(key)) return pendingInline.get(key)!
+  console.log('[landing.inline] 🎨 START fetching inline images', { city: loweredCity, kind, key })
+
+  if (memInline.has(key)) {
+    const cached = memInline.get(key) || []
+    console.log('[landing.inline] ✅ Memory cache hit', { key, count: cached.length })
+    return cached
+  }
+  
+  if (pendingInline.has(key)) {
+    console.log('[landing.inline] ⏳ Waiting for pending request', { key })
+    return pendingInline.get(key)!
+  }
 
   const p = (async (): Promise<InlineImg[]> => {
     // 1) Try Supabase cache
     try {
       const sb = getSupabase()
       if (sb) {
-        const { data } = await sb
+        console.log('[landing.inline] 🔍 Checking Supabase cache', { key })
+        const { data, error } = await sb
           .from('landing_pages')
           .select('inline_images_json')
           .eq('city', loweredCity)
           .eq('page_name', kind)
           .maybeSingle()
-        if (data?.inline_images_json && Array.isArray(data.inline_images_json) && data.inline_images_json.length) {
+        
+        if (error) {
+          console.warn('[landing.inline] ⚠️ Supabase error', { key, error: error.message })
+        } else if (data?.inline_images_json && Array.isArray(data.inline_images_json) && data.inline_images_json.length) {
+          console.log('[landing.inline] ✅ Supabase cache hit', { 
+            key, 
+            count: data.inline_images_json.length,
+            images: data.inline_images_json.map((img: any) => ({ position: img.position, url: img.url.slice(0, 50) + '...' }))
+          })
           memInline.set(key, data.inline_images_json as InlineImg[])
           return data.inline_images_json as InlineImg[]
+        } else {
+          console.log('[landing.inline] ℹ️ Supabase cache miss', { key, hasData: !!data, hasImages: !!data?.inline_images_json })
         }
+      } else {
+        console.warn('[landing.inline] ⚠️ No Supabase client available')
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error('[landing.inline] ❌ Supabase lookup exception', { key, error: (e as any)?.message })
+    }
 
     // 2) Build topic-aware queries
     const accessKey = process.env.UNSPLASH_ACCESS_KEY
-    if (!accessKey) { memInline.set(key, []); return [] }
+    if (!accessKey) {
+      console.error('[landing.inline] ❌ UNSPLASH_ACCESS_KEY missing')
+      memInline.set(key, [])
+      return []
+    }
 
+    console.log('[landing.inline] 🔍 Fetching from Unsplash', { city: loweredCity, kind })
     const prompts = buildInlinePrompts(city, kind)
+    console.log('[landing.inline] 📝 Using prompts:', prompts)
     const qs = prompts.map(q => encodeURIComponent(q))
 
-    const fetchOne = async (q: string) => {
+    const fetchOne = async (q: string, index: number) => {
       const url = `https://api.unsplash.com/search/photos?query=${q}&per_page=1&orientation=landscape&client_id=${accessKey}`
       try {
+        console.log(`[landing.inline] 🌐 Fetching image ${index + 1}/4`, { query: decodeURIComponent(q).slice(0, 60) })
         const resp = await fetch(url, { headers: { 'Accept-Version': 'v1' }, cache: 'no-store' })
+        if (!resp.ok) {
+          console.error(`[landing.inline] ❌ Unsplash HTTP error ${index + 1}`, { status: resp.status, query: decodeURIComponent(q).slice(0, 60) })
+          return undefined
+        }
         const json = await resp.json()
         const u = json?.results?.[0]?.urls?.regular || json?.results?.[0]?.urls?.full
         const alt = json?.results?.[0]?.alt_description || decodeURIComponent(q)
+        
+        if (u) {
+          console.log(`[landing.inline] ✅ Got image ${index + 1}/4`, { url: u.slice(0, 50) + '...', alt: alt.slice(0, 50) })
+        } else {
+          console.warn(`[landing.inline] ⚠️ No image found ${index + 1}/4`, { resultsCount: json?.results?.length || 0 })
+        }
+        
         return u ? { url: u as string, alt: String(alt) } : undefined
-      } catch { return undefined }
+      } catch (e) {
+        console.error(`[landing.inline] ❌ Fetch exception ${index + 1}/4`, { error: (e as any)?.message })
+        return undefined
+      }
     }
 
     const results = await Promise.all(qs.map(fetchOne))
@@ -188,21 +235,37 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
       .slice(0, 4)
       .map((r, i) => ({ url: (r as any).url, alt: (r as any).alt, position: (`inline_${i + 1}` as InlineImg['position']) }))
 
+    console.log('[landing.inline] 📊 Fetched results', { 
+      total: results.length, 
+      successful: imgs.length,
+      images: imgs.map(img => ({ position: img.position, url: img.url.slice(0, 50) + '...' }))
+    })
+
     // 3) Persist best-effort
     try {
       const sb2 = getSupabase()
-      if (sb2) {
-        await sb2.from('landing_pages').upsert({
+      if (sb2 && imgs.length > 0) {
+        console.log('[landing.inline] 💾 Persisting to Supabase', { key, count: imgs.length })
+        const { error } = await sb2.from('landing_pages').upsert({
           city: loweredCity,
           page_name: kind,
           kind,
           inline_images_json: imgs,
           updated_at: new Date().toISOString()
         }, { onConflict: 'city,page_name' })
+        
+        if (error) {
+          console.error('[landing.inline] ❌ Supabase upsert error', { key, error: error.message })
+        } else {
+          console.log('[landing.inline] ✅ Supabase upsert success', { key })
+        }
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error('[landing.inline] ❌ Supabase persist exception', { key, error: (e as any)?.message })
+    }
 
     memInline.set(key, imgs)
+    console.log('[landing.inline] ✅ DONE', { key, count: imgs.length })
     return imgs
   })().finally(() => pendingInline.delete(key))
 

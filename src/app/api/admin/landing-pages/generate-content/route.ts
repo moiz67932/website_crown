@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAIDescription } from "@/lib/landing/ai";
+import { generateAIDescription } from "@/lib/landing/ai";
 import { LANDINGS_BY_SLUG, type LandingSlug } from "@/lib/landing/defs";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Generate AI content
     let aiContent: string | undefined;
     try {
-      aiContent = await getAIDescription(city, kind as any, { 
+      aiContent = await generateAIDescription(city, kind as any, { 
         forceRegenerate: true 
       });
     } catch (aiError) {

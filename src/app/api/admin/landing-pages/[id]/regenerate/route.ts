@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
-import { getAIDescription } from "@/lib/landing/ai";
+import { generateAIDescription } from "@/lib/landing/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ export async function POST(
     }
 
     // Regenerate AI content
-    const aiDescription = await getAIDescription(
+    const aiDescription = await generateAIDescription(
       page.city,
       page.kind || page.page_name,
       { forceRegenerate: true }

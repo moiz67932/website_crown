@@ -1,5 +1,5 @@
 import { listActiveCities, getLandingData } from '../src/lib/landing/query'
-import { getAIDescription } from '../src/lib/landing/ai'
+import { generateAIDescription } from '../src/lib/landing/ai'
 
 async function main() {
   // Discover top cities from DB (fall back to a small default if DB isn't available)
@@ -13,7 +13,7 @@ async function main() {
     cities = ['san-diego', 'los-angeles', 'san-francisco']
   }
 
-  const kinds: Array<Parameters<typeof getAIDescription>[1]> = [
+  const kinds: Array<Parameters<typeof generateAIDescription>[1]> = [
     'homes-for-sale',
     'condos-for-sale',
     'homes-with-pool',
@@ -32,7 +32,7 @@ async function main() {
     for (const kind of kinds) {
       try {
         console.log(`Generating AI description for ${city} - ${kind}`)
-        const res = await getAIDescription(city, kind, { forceRegenerate: true })
+        const res = await generateAIDescription(city, kind, { forceRegenerate: true })
         console.log(`OK ${city} ${kind}: ${res ? res.slice(0, 80).replace(/\n/g, ' ') : '<no-content>'}`)
       } catch (e: any) {
         console.warn(`Failed ${city} ${kind}:`, e?.message || e)

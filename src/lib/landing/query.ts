@@ -4,7 +4,7 @@
 import { LandingKind, LandingData, LandingStats, LandingPropertyCard } from '@/types/landing'
 import { searchProperties } from '@/lib/db/property-repo'
 import { getPgPool } from '@/lib/db'
-import { getAIDescription } from './ai'
+import { generateAIDescription } from './ai'
 import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
 import type { LandingDef } from './defs'
 import { isBuildPhase } from '@/lib/env/buildDetection'
@@ -295,12 +295,12 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
       if (process.env.LANDING_TRACE) {
         console.log('[landing.ai.prompt.preview]', generatedPrompt.slice(0, 140) + '...')
       }
-      aiDescriptionPromise = getAIDescription(cityOrState, kind, { customPrompt: generatedPrompt, promptKey: landingDef.aiPromptKey })
+      aiDescriptionPromise = generateAIDescription(cityOrState, kind, { customPrompt: generatedPrompt, promptKey: landingDef.aiPromptKey })
     } else {
-      aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+      aiDescriptionPromise = generateAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
     }
   } else {
-    aiDescriptionPromise = getAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+    aiDescriptionPromise = generateAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
   }
 
   const [stats, featured, aiDescriptionHtml] = await Promise.all([

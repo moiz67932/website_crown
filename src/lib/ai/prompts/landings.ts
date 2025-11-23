@@ -56,40 +56,64 @@ Quality & Safety:
 Tone: Advisory, authoritative, approachable, and conversion-oriented.
 `,
 
-  ai_city_condos_for_sale: (city, county, region, nearby) => `Create a unique, SEO + AI optimized landing page for "Crown Coastal Homes" focused on CONDOS in ${city}.
+  ai_city_condos_for_sale: (city, county, region, nearby) => `You are an expert real estate copywriter creating a comprehensive, SEO-optimized landing page about CONDOS FOR SALE in ${city} for Crown Coastal Homes.
 
-Parameters:
+**CRITICAL REQUIREMENTS:**
+- Generate MINIMUM 1,500 words of unique, engaging content
+- NO repetitive phrases or filler text
+- Each paragraph must be 100-150 words with unique information
+- Use natural, human-like writing with varied sentence structure
+- Include specific local details about ${city} whenever possible
+
+**Parameters:**
 - City: ${city}
 - County: ${county}
 - Region: ${region}
 - Nearby Cities: ${nearby.join(', ')}
-- Focus Keywords: "condos for sale in ${city}", "${city} condos", "buy real estate in ${city}", "real estate agent ${city}", "${city} condo market"
+- Focus Keywords: "condos for sale in ${city}", "${city} condos", "${city} condo market"
 
-Rules:
-- Only factual, verifiable condo-related insights (amenities patterns, lifestyle fit, ownership considerations). No made-up HOA amounts or occupancy stats.
-- Skip building names unless widely recognizable and certain.
-- Mention typical condo buyer profiles (rightsized living, lock-and-leave, investors) without stereotypes.
+**REQUIRED CONTENT STRUCTURE (HTML Format):**
 
-Output Structure:
-1. Meta Title (include ${city}${county ? ', ' + county : ''}, ${region} + Condos For Sale)
-2. Meta Description (<=155 chars with CTA + keyword)
-3. H1 (Primary condo intent)
-4. Intro (150–200 words: positioning condos vs other housing locally)
-5. Main Content (800–1,000 words) covering:
-  - Condo Market Snapshot (qualitative; skip unverifiable pricing)
-  - Lifestyle & Amenities (gyms, pools, security, low-maintenance)
-  - Ownership & HOA Considerations (general—no fabricated fees)
-  - Popular/Typical Locations or District Types (urban core, coastal, etc. if relevant)
-  - Investment & Rental Appeal (only if generally true for region; omit specifics if unknown)
-  - Nearby Connectivity (${nearby.join(', ') || 'regional context'})
-  - Working with Crown Coastal Homes & Reza Barghlameno
-  - Why Choose Crown Coastal Homes (bulleted)
-  - Express Service Advantages
-6. 10 Condo-Specific FAQs (HOA, financing, resale factors, maintenance, insurance, pet policies (only if broadly typical), rental potential, first-time buyer tips, new vs resale, agent value)
-7. CTA
-8. JSON-LD (FAQPage, LocalBusiness, BreadcrumbList, WebPage; omit Place if unknown)
+<h2>Introduction to ${city} Condos</h2>
+<p>[150-200 words introducing the ${city} condo market. Discuss what makes ${city} attractive for condo buyers - urban lifestyle, maintenance-free living, access to amenities. Mention the diversity of condo options from high-rise luxury to mid-rise urban buildings. DO NOT use generic phrases like "offers a range of options" - be specific about what buyers actually find in ${city}.]</p>
 
-Formatting & Tone: Professional, efficient, reassuring. Avoid jargon overload.
+<h2>The ${city} Condo Market Landscape</h2>
+<p>[200-250 words describing the current condo market in ${city}. Discuss popular neighborhoods where condos are concentrated (downtown, waterfront, urban cores). Mention typical architectural styles (modern high-rises, converted lofts, mid-century buildings). Talk about the variety of price points and what buyers get at different levels. Be specific about ${city}'s unique condo characteristics.]</p>
+
+<h2>Lifestyle Benefits of Condo Living in ${city}</h2>
+<p>[200-250 words on lifestyle advantages. Cover low-maintenance living, security features, community amenities (fitness centers, pools, social spaces). Discuss the appeal for different buyer types: young professionals who travel, downsizers seeking convenience, investors. Mention walkability to ${city}'s attractions, dining, and entertainment. Talk about the lock-and-leave lifestyle.]</p>
+
+<h2>Popular Condo Neighborhoods in ${city}</h2>
+<p>[250-300 words detailing specific areas. Name 4-5 actual neighborhoods or districts in ${city} where condos are popular. For each area, describe: the neighborhood character, typical condo styles, proximity to employment/entertainment, transportation access, and what type of buyers are attracted there. Be specific about ${city}'s geography.]</p>
+
+<h2>Understanding Condo Ownership</h2>
+<p>[200-250 words on the practical aspects of condo ownership. Explain HOA fees and what they typically cover (building insurance, maintenance, amenities). Discuss how condo ownership differs from single-family homes - shared walls, common areas, CC&Rs. Cover the benefits of collective maintenance and the trade-offs of less autonomy. DO NOT invent specific HOA amounts.]</p>
+
+<h2>Investment Potential</h2>
+<p>[150-200 words on condos as investments in ${city}. Discuss rental market appeal, appreciation potential in urban markets, lower entry costs compared to houses. Mention considerations like HOA rental restrictions, tenant screening through management. Talk about ${city}'s economic drivers that support rental demand.]</p>
+
+<h2>Transportation & Connectivity</h2>
+<p>[150-200 words on how ${city} condos connect to the region. Discuss walkability scores in urban condo neighborhoods, public transit access, bike lanes. Mention proximity to major highways for car commuters. Name nearby cities (${nearby.join(', ')}) and typical commute times. Talk about how condo locations often prioritize convenience.]</p>
+
+<h2>Working with Crown Coastal Homes</h2>
+<p>[200-250 words on why buyers should work with Crown Coastal Homes for their ${city} condo search. Introduce Reza Barghlameno (DRE 02211952) as a local expert. Explain the concierge approach: personalized property tours, understanding of building differences, insights on HOA health, connection to lenders familiar with condo financing. Emphasize knowledge of ${city}'s condo inventory.]</p>
+
+<h2>Express Service Advantages</h2>
+<p>[150-200 words on Crown Coastal's Express Service. Detail rapid response times, instant property alerts when new condos hit the market, quick tour scheduling, and streamlined offer process. In competitive ${city} markets, speed matters. Mention mobile app access, document signing convenience, and direct agent access.]</p>
+
+<h2>Ready to Find Your ${city} Condo?</h2>
+<p>[150-200 words closing with a clear call-to-action. Encourage readers to browse current listings, schedule a consultation with Reza, or sign up for property alerts. Emphasize the benefits of working with local experts who know ${city}'s condo buildings inside and out. Mention flexible showing schedules and no-obligation consultations.]</p>
+
+**QUALITY STANDARDS:**
+- Every paragraph must provide NEW information - no repetition
+- Use varied vocabulary and sentence structures
+- Include transition sentences between sections
+- Make it sound like a knowledgeable human wrote it
+- Focus on buyer decision-making factors
+- NO phrases like "On neighborhood character" or "buyers should consider"
+- Be conversational but professional
+
+Generate the complete HTML content following this structure exactly. Each section should flow naturally into the next.
 `,
 
   ai_city_homes_with_pool: (city, county, region, nearby) => `Generate a specialized landing page for HOMES WITH POOL in ${city} for Crown Coastal Homes.
@@ -165,39 +189,67 @@ Output Structure:
 Tone: Elevated, discreet, advisory—not flashy.
 `,
 
-  ai_city_homes_under_500k: (city, county, region, nearby) => `Create an affordability-focused landing page for entry-level & value-conscious buyers in ${city}.
+  ai_city_homes_under_500k: (city, county, region, nearby) => `You are an expert real estate copywriter creating a comprehensive, SEO-optimized landing page about HOMES UNDER $500K in ${city} for Crown Coastal Homes.
 
-Parameters:
+**CRITICAL REQUIREMENTS:**
+- Generate MINIMUM 1,500 words of unique, engaging content
+- NO repetitive phrases or filler text
+- Each paragraph must be 100-150 words with unique information
+- Use natural, human-like writing with varied sentence structure
+- Include specific local details about ${city} whenever possible
+- AVOID phrases like "Los Angeles offers a range of options" or "buyers should consider"
+- Each section must provide NEW and DIFFERENT information
+
+**Parameters:**
 - City: ${city}
 - County: ${county}
 - Region: ${region}
 - Nearby Cities: ${nearby.join(', ')}
-- Focus Keywords: "homes under 500k ${city}", "affordable homes ${city}", "buy real estate in ${city}", "homes for sale in ${city}", "real estate agent ${city}"
+- Focus Keywords: "homes under 500k ${city}", "affordable homes ${city}", "${city} real estate under 500k"
 
-Rules:
-- DO NOT claim specific price medians or inventory counts.
-- Frame expectations: trade-offs (age, size, location, renovation potential) without exaggeration.
-- Include financing readiness & strategy (pre-approval, comparables) generically.
+**REQUIRED CONTENT STRUCTURE (HTML Format):**
 
-Output Structure:
-1. Meta Title (Homes Under $500K ${city}${county ? ', ' + county : ''}, ${region})
-2. Meta Description (<=155 chars with affordability + CTA)
-3. H1
-4. Intro (entry-level orientation)
-5. Main Content (800–1,000 words):
-  - Segment Overview (value positioning)
-  - Typical Property Characteristics (if safely generalizable)
-  - Renovation & Equity Potential
-  - Financing & Offer Strategy (generic best practices)
-  - Nearby Alternatives / Commuter Trade-offs (${nearby.join(', ') || 'regional'})
-  - Working with Crown Coastal Homes & Reza Barghlameno
-  - Why Choose Crown Coastal Homes (bulleted)
-  - Express Service (speed + clarity for first-time buyers)
-6. 10 Affordable Segment FAQs (financing prep, offer competitiveness, inspection focus, renovation budgeting, resale trajectory, HOA considerations (if condo/townhome), timing, contingencies, down payment strategy, choosing an agent)
-7. CTA
-8. JSON-LD (FAQPage, LocalBusiness, BreadcrumbList, WebPage)
+<h2>Finding Affordable Homes in ${city}</h2>
+<p>[150-200 words introducing the under-$500k market segment in ${city}. Discuss what this budget typically means in ${city} - whether it's condos, townhomes, fixer-uppers, or entry-level single-family homes. Explain how ${city}'s market compares to nearby areas. Set realistic expectations about what buyers can find at this price point without being discouraging. Mention the types of buyers who succeed in this segment: first-timers, investors, downsizers. Be specific about ${city}'s market characteristics.]</p>
 
-Tone: Supportive, empowering, realistic.
+<h2>What Your Budget Gets You in ${city}</h2>
+<p>[200-250 words detailing the actual types of properties available under $500k in ${city}. Discuss square footage ranges, typical property types (condos vs townhomes vs houses), age of construction, and condition. Talk about neighborhoods or areas where this price point is realistic. Mention trade-offs: older homes vs smaller new construction, location vs size, move-in ready vs renovation opportunities. Discuss lot sizes, parking situations, and common features. Be honest about what's competitive and what buyers might need to compromise on. Include context about ${city}'s housing stock at this price level.]</p>
+
+<h2>Best Neighborhoods for Value Buyers</h2>
+<p>[250-300 words identifying specific areas in ${city} where under-$500k homes are more common. Describe the character of these neighborhoods: are they established residential areas, up-and-coming districts, suburban pockets, or urban condos? Discuss what makes each area attractive: proximity to employment centers, schools, transit, shopping, parks. Mention commute times to major job centers. Talk about the lifestyle each area supports and which buyer types are drawn there. Include information about walkability, safety, schools, and amenities. Connect to ${city}'s geography and how different districts offer different value propositions.]</p>
+
+<h2>Financing and Affordability Strategies</h2>
+<p>[200-250 words on practical financing approaches for this price point. Discuss conventional loans, FHA loans for lower down payments, first-time buyer programs, and potential local assistance programs in ${city} or ${county}. Explain the importance of getting pre-approved before house hunting. Mention typical down payment expectations, closing costs, and ongoing ownership costs (property taxes, HOA fees, insurance, maintenance). Discuss how buyers can strengthen their offers without overpaying. Address common concerns about competing with investors or cash buyers. Provide realistic guidance on monthly payment expectations and qualifying income levels.]</p>
+
+<h2>Renovation Potential and Building Equity</h2>
+<p>[150-200 words on the opportunity side of buying at this price point. Discuss how cosmetic updates can add value, which improvements offer the best return, and how sweat equity works. Mention the difference between cosmetic fixes and structural issues. Talk about permit requirements in ${city}, contractor selection, and budgeting for improvements. Explain how buying below your max budget leaves room for upgrades. Discuss long-term appreciation potential in ${city}'s market and how entry-level properties can be stepping stones to wealth building. Emphasize the difference between a smart fixer-upper and a money pit.]</p>
+
+<h2>The Buying Process for Budget-Conscious Buyers</h2>
+<p>[200-250 words walking through the practical steps. Discuss the importance of being ready to move quickly in competitive segments. Explain how to prioritize must-haves vs nice-to-haves. Cover the role of home inspections, negotiating repairs, and protecting yourself while staying competitive. Discuss strategies for winning offers: escalation clauses, flexible closing dates, pre-inspection. Mention the value of local expertise in identifying good deals before they hit the market. Talk about timing: seasonal patterns, how long homes sit, and when to expect less competition. Include realistic timelines from search to close.]</p>
+
+<h2>Hidden Costs and Long-Term Planning</h2>
+<p>[150-200 words on the total cost of ownership. Beyond the purchase price, discuss property taxes in ${city}${county ? ' and ' + county : ''}, homeowners insurance, HOA fees for condos/townhomes, utilities, and maintenance reserves. Explain how these costs vary by property type and location within ${city}. Discuss building an emergency fund for unexpected repairs. Mention resale considerations: which improvements add value, how long to plan to stay to recoup transaction costs, and market timing. Help buyers think beyond the initial purchase to long-term financial health.]</p>
+
+<h2>Working with Crown Coastal Homes</h2>
+<p>[200-250 words on why buyers should work with Crown Coastal Homes for their ${city} under-$500k home search. Introduce Reza Barghlameno (DRE 02211952) as a local expert who understands value segments and knows where to find the best deals. Explain the concierge approach: personalized property tours, off-market opportunities, insights on neighborhood value, connections to lenders who specialize in first-time buyer programs. Emphasize knowledge of ${city}'s micro-markets and which areas offer the best long-term value. Discuss negotiation expertise that helps buyers compete effectively without overpaying. Mention access to contractor networks for pre-purchase estimates on renovations.]</p>
+
+<h2>Express Service for Time-Sensitive Opportunities</h2>
+<p>[150-200 words on Crown Coastal's Express Service. Detail rapid response times, instant property alerts when new listings under $500k hit the market, same-day tour scheduling, and streamlined offer process. Explain how in competitive ${city} markets, speed can make the difference between winning and losing a property. Mention mobile app access, electronic document signing, and direct agent access. Emphasize that Express Service gives budget-conscious buyers the same advantages that luxury buyers expect: immediate information, quick decisions, and professional representation that moves at your pace.]</p>
+
+<h2>Ready to Find Your ${city} Home Under $500k?</h2>
+<p>[150-200 words closing with a clear call-to-action. Encourage readers to browse current listings, schedule a consultation with Reza, or sign up for property alerts. Emphasize the benefits of working with local experts who know ${city}'s affordable inventory inside and out. Mention flexible showing schedules, no-obligation consultations, and personalized search strategies. Reassure buyers that finding quality homes under $500k is possible with the right guidance and patience. Close with an invitation to start the journey toward homeownership in ${city}.]</p>
+
+**QUALITY STANDARDS:**
+- Every paragraph must provide NEW information - absolutely no repetition
+- Use varied vocabulary and sentence structures throughout
+- Include natural transition sentences between sections
+- Make it sound like a knowledgeable human expert wrote it
+- Focus on practical buyer decision-making factors
+- NO generic phrases or template language
+- Be conversational but professional and authoritative
+- Each section should flow naturally into the next
+
+Generate the complete HTML content following this structure exactly. Make every paragraph unique and valuable.
 `,
 
   ai_city_homes_over_1m: (city, county, region, nearby) => `Generate a high-value property segment page for ${city} focusing on HOMES OVER $1M.

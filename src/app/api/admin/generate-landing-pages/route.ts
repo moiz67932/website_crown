@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { CA_CITIES } from "@/lib/seo/cities";
 import { LANDINGS } from "@/lib/landing/defs";
-import { getAIDescription } from "@/lib/landing/ai";
+import { generateAIDescription } from "@/lib/landing/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
           // Generate AI description (this will also cache it)
           let aiDescription: string | undefined;
           try {
-            aiDescription = await getAIDescription(cityName, landing.slug as any);
+            aiDescription = await generateAIDescription(cityName, landing.slug as any);
           } catch (aiError) {
             console.error(`AI generation failed for ${cityName} - ${landing.slug}:`, aiError);
             aiDescription = undefined;

@@ -1,18 +1,18 @@
-import { getPgPool } from '@/lib/db'
-import type { LandingKind } from '@/types/landing'
-import { getSupabase } from '@/lib/supabase'
-import OpenAI from 'openai'
-import { isBuildPhase } from '@/lib/env/buildDetection'
+import { getPgPool } from "@/lib/db";
+import type { LandingKind } from "@/types/landing";
+import { getSupabase } from "@/lib/supabase";
+import OpenAI from "openai";
+import { isBuildPhase } from "@/lib/env/buildDetection";
 
 // Memory cache (runtime only)
-const memCache = new Map<string, string>()
+const memCache = new Map<string, string>();
 // Track in-flight generations to avoid duplicate work (metadata + page render)
-const pending = new Map<string, Promise<string | undefined>>()
-let attemptedInit = false
+const pending = new Map<string, Promise<string | undefined>>();
+let attemptedInit = false;
 
 async function ensureLegacyTable(pool: any) {
-  if (attemptedInit) return
-  attemptedInit = true
+  if (attemptedInit) return;
+  attemptedInit = true;
   try {
     await pool.query(`CREATE TABLE IF NOT EXISTS landing_ai_descriptions (
       city text NOT NULL,
@@ -20,318 +20,636 @@ async function ensureLegacyTable(pool: any) {
       html text NOT NULL,
       generated_at timestamptz DEFAULT now(),
       PRIMARY KEY (city, kind)
-    )`)
+    )`);
   } catch {
-    // optional
+    // best-effort only
   }
 }
 
-interface GetOpts { forceRegenerate?: boolean; customPrompt?: string; promptKey?: string }
-
-function isPlaceholderHtml(html?: string | null): boolean {
-  if (!html) return false
-  // Detect our known placeholder marker or obvious placeholder phrasing
-  const s = String(html)
-  return s.includes('<!--placeholder-->') || /is generating\.? please refresh/i.test(s)
+export interface GenerateAIDescriptionOptions {
+  forceRegenerate?: boolean;
+  customPrompt?: string;
+  promptKey?: string;
 }
 
+function isPlaceholderHtml(html?: string | null): boolean {
+  if (!html) return false;
+  // Detect our known placeholder marker or obvious placeholder phrasing
+  const s = String(html);
+  return (
+    s.includes("<!--placeholder-->") ||
+    /is generating\.? please refresh/i.test(s)
+  );
+}
+
+// NEW deterministic fallback: exactly 10 sections, each with <h2> and 3 <p>.
 function buildFallbackDescription(city: string, kind: string): string {
-  const niceKind = kind.replace(/-/g, ' ')
-  const cityTitle = city.replace(/\b\w/g, c => c.toUpperCase())
-  return [
-    `<p><strong>${escapeHtml(cityTitle)}</strong> ${escapeHtml(niceKind)} combine lifestyle and value. This curated page highlights active listings, neighborhood feel, and what today’s buyers look for in this market.</p>`,
-    `<p>Use the featured homes and filters to explore options that match your budget, desired amenities, and commute. When you’re ready, our team can schedule private tours, provide comps, and guide your offer strategy in ${escapeHtml(cityTitle)}.</p>`
-  ].join('\n')
+  const cityTitle = city.replace(/\b\w/g, (c) => c.toUpperCase());
+  const niceKind = kind.replace(/-/g, " ");
+
+  const baseHeadings = [
+    `Living in ${cityTitle} as a ${niceKind} buyer`,
+    `${cityTitle} neighborhoods overview for ${niceKind}`,
+    `Lifestyle and amenities across ${cityTitle}`,
+    `Local market trends in ${cityTitle}`,
+    `Homes and architecture styles in ${cityTitle}`,
+    `Outdoor life and recreation in ${cityTitle}`,
+    `Schools and community in ${cityTitle}`,
+    `Getting around ${cityTitle}: commute and connectivity`,
+    `Working with local experts in ${cityTitle}`,
+    `Planning your next move in ${cityTitle}`,
+  ];
+
+  const uniqueHeadings = Array.from(new Set(baseHeadings)).slice(0, 10);
+  const neighborhoods = [
+    "La Jolla",
+    "Pacific Beach",
+    "North Park",
+    "Mission Hills",
+  ];
+
+  const sections: string[] = [];
+  uniqueHeadings.forEach((heading, idx) => {
+    const nh = neighborhoods[idx % neighborhoods.length];
+    const intro = fakerSentence(
+      `${heading} – discover how ${niceKind} opportunities in ${cityTitle} connect with daily life in ${nh}.`
+    );
+    const mid = fakerSentence(
+      `In ${nh}, residents experience a distinct blend of architecture, street life, and access to the broader ${cityTitle} region that appeals to ${niceKind} buyers looking for long‑term value.`
+    );
+    const close = fakerSentence(
+      `As you explore listings in and around ${nh}, compare how each block, building, and view line up with your budget, timing, and long‑term plans in ${cityTitle}.`
+    );
+
+    sections.push(
+      `<h2>${escapeHtml(heading)}</h2>` +
+        `\n<p>${escapeHtml(intro)}</p>` +
+        `\n<p>${escapeHtml(mid)}</p>` +
+        `\n<p>${escapeHtml(close)}</p>`
+    );
+  });
+
+  return sections.join("\n\n");
+}
+
+// Lightweight lorem-style extender to avoid external faker dependency
+function fakerSentence(seed: string): string {
+  const extra = [
+    " The streets mix everyday convenience with small moments of discovery that keep long‑time locals engaged.",
+    " Sidewalk cafés, neighborhood parks, and independent shops create a rhythm that feels lived‑in rather than staged.",
+    " Blocks shift gradually from quieter residential pockets to livelier commercial corridors, giving buyers options at different price points.",
+    " Subtle changes in elevation, tree cover, and architecture tell a story about how the area has grown over time.",
+    " Weekends often reveal how people actually use the city, from early‑morning coffee runs to late‑afternoon meetups in local gathering spots.",
+  ];
+  const idx = Math.abs(hashCode(seed)) % extra.length;
+  return seed + extra[idx];
+}
+
+function hashCode(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return h;
 }
 
 // Deterministic long-form fallback that aims for ~1000+ words split into paragraphs.
 // Helper: generate a reasonably sized paragraph for a given topic.
-function generateParagraphForTopicImpl(cityTitle: string, niceKind: string, topic: string) {
-  // Produce a neutral paragraph by composing sentences. Keep it deterministic and non-factual.
-  const sentences = [
-    `${cityTitle} offers a range of options when it comes to ${niceKind}.`,
-    `On ${topic.toLowerCase()}, buyers should consider local nuances and personal priorities.`,
-    `Experienced local agents can help prioritize the features that matter most for each buyer.`,
-    `When touring properties, focus on layout, natural light, structural condition, and how the home supports your daily routine.`,
-    `Neighborhood considerations like walkability, nearby parks, dining, and commute corridors often influence long-term satisfaction.`,
-    `Thoughtful searches that balance budget, needs, and market timing tend to produce the best outcomes for buyers in ${cityTitle}.`
-  ]
-  // Repeat once to ensure decent length without fabricating facts.
-  return sentences.join(' ') + ' ' + sentences.join(' ')
+function generateParagraphForTopicImpl(
+  cityTitle: string,
+  niceKind: string,
+  topic: string
+) {
+  // Generate unique content for each topic without repetition
+  const topicLower = topic.toLowerCase();
+
+  if (topicLower.includes("neighborhood")) {
+    return `${cityTitle} features diverse neighborhoods, each with its own character and appeal. When searching for ${niceKind}, location plays a crucial role in determining property value and lifestyle fit. Popular areas often combine convenient amenities with strong community connections. Buyers should explore different districts to understand variations in architecture, density, and local culture. Working with knowledgeable local agents helps identify neighborhoods that align with specific priorities and budget considerations.`;
+  }
+
+  if (
+    topicLower.includes("housing stock") ||
+    topicLower.includes("buyers look for")
+  ) {
+    return `The ${niceKind} market in ${cityTitle} encompasses various architectural styles and property configurations. Buyers typically prioritize factors such as layout efficiency, natural lighting, modern updates, and outdoor space. Some seek move-in ready homes with recent renovations, while others prefer properties with potential for customization. Understanding the typical inventory helps buyers set realistic expectations and identify opportunities that match their specific requirements.`;
+  }
+
+  if (
+    topicLower.includes("amenities") ||
+    topicLower.includes("schools") ||
+    topicLower.includes("lifestyle")
+  ) {
+    return `${cityTitle} provides access to a range of amenities that enhance daily life. Local schools, parks, shopping districts, and dining options vary by neighborhood and influence buyer decisions. Proximity to recreational facilities, cultural attractions, and community services often factors into long-term satisfaction. Families may prioritize school ratings and youth programs, while others focus on walkability and entertainment options. Evaluating these lifestyle elements during the search process helps ensure the chosen property supports your daily routines and future plans.`;
+  }
+
+  if (
+    topicLower.includes("market trends") ||
+    topicLower.includes("pricing") ||
+    topicLower.includes("competition")
+  ) {
+    return `The real estate market in ${cityTitle} experiences fluctuations based on inventory levels, buyer demand, and broader economic factors. Understanding current pricing trends helps buyers make informed offers and negotiate effectively. Seasonal patterns may affect competition and availability. Monitoring recent sales data and time-on-market statistics provides valuable context for evaluating individual listings. Professional guidance helps navigate market dynamics and identify optimal timing for purchases.`;
+  }
+
+  if (topicLower.includes("home search") || topicLower.includes("touring")) {
+    return `Conducting an effective search for ${niceKind} in ${cityTitle} requires a systematic approach. Begin by defining your must-have features and deal-breakers. Schedule property tours strategically to compare options directly. During visits, assess structural condition, layout functionality, and how spaces meet your specific needs. Take notes and photos to aid comparison. Pay attention to neighborhood feel during different times of day. A thorough evaluation process reduces the risk of buyer's remorse and helps identify the best fit.`;
+  }
+
+  if (topicLower.includes("financing") || topicLower.includes("working with")) {
+    return `Securing financing for ${niceKind} in ${cityTitle} involves several steps. Getting pre-approved establishes your budget and strengthens your position as a buyer. Local lenders familiar with the area can provide insights on property values and loan options. Professional real estate agents bring market expertise, negotiation skills, and access to both listed and off-market properties. Building a team of trusted advisors—including lenders, agents, and inspectors—streamlines the purchase process and helps avoid common pitfalls.`;
+  }
+
+  // Default/closing
+  return `For buyers considering ${niceKind} in ${cityTitle}, thorough preparation and local expertise make a significant difference. Working with experienced professionals provides access to market knowledge, negotiation support, and guidance throughout the transaction. Whether you're relocating to the area or seeking an investment property, taking time to understand the local market landscape helps ensure successful outcomes. Contact qualified local agents to discuss your specific goals and begin your property search with confidence.`;
 }
 
-// Deterministic long-form fallback that aims for ~1000+ words split into paragraphs.
-function buildLongFallbackDescription(city: string, kind: string, maxWords = 1000): string {
-  const cityTitle = city.replace(/\b\w/g, c => c.toUpperCase())
-  const niceKind = kind.replace(/-/g, ' ')
+// Legacy long-form fallback (kept for compatibility where used by executor).
+function buildLongFallbackDescription(
+  city: string,
+  kind: string,
+  maxWords = 1000
+): string {
+  const cityTitle = city.replace(/\b\w/g, (c) => c.toUpperCase());
+  const niceKind = kind.replace(/-/g, " ");
   const sections = [
-    `<p><strong>${escapeHtml(cityTitle)} ${escapeHtml(niceKind)}</strong> — Discover the lifestyle, neighborhoods, and housing options that make this area distinct. This introduction summarizes why buyers consider ${escapeHtml(cityTitle)} and what to expect when searching for ${escapeHtml(niceKind)}.</p>`,
-  ]
+    `<h2>Discover ${escapeHtml(cityTitle)} ${escapeHtml(niceKind)}</h2>`,
+    `<p>Welcome to your comprehensive guide to ${escapeHtml(
+      niceKind
+    )} in ${escapeHtml(
+      cityTitle
+    )}. This page highlights the lifestyle, neighborhoods, and housing options that make this market distinct. Whether you're relocating, upgrading, or investing, understanding the local landscape helps you make informed decisions.</p>`,
+  ];
 
-  // Topics to cover; we'll generate paragraphs until we reach maxWords
+  // Topics to cover with unique content for each
   const topics = [
-    'Neighborhood character and popular areas to consider',
-    'Typical housing stock and what different buyers look for',
-    'Local amenities, schools, and lifestyle attractions',
-    'Market trends and buyer considerations (pricing, competition, seasonality)',
-    'What to expect during your home search and tips for touring',
-    'Financing considerations and working with local agents',
-    'Closing thoughts and a gentle call to action to contact the team'
-  ]
+    "Neighborhood character and popular areas to consider",
+    "Typical housing stock and what different buyers look for",
+    "Local amenities, schools, and lifestyle attractions",
+    "Market trends and buyer considerations (pricing, competition, seasonality)",
+    "What to expect during your home search and tips for touring",
+    "Financing considerations and working with local agents",
+    "Closing thoughts and a gentle call to action to contact the team",
+  ];
 
-  const paras: string[] = []
-  paras.push(sections[0])
+  const paras: string[] = [...sections];
+  let accumulatedWords = paras
+    .join(" ")
+    .replace(/<[^>]+>/g, "")
+    .split(/\\s+/)
+    .filter(Boolean).length;
 
-  // Rough words per paragraph target so we can stop once maxWords reached.
-  const approxPerPara = Math.max(120, Math.floor(maxWords / Math.max(3, topics.length + 1)))
+  for (let i = 0; i < topics.length; i++) {
+    if (accumulatedWords >= maxWords) break;
 
-  let accumulatedWords = paras.join(' ').replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length
+    const topic = topics[i];
+    const body = generateParagraphForTopicImpl(cityTitle, niceKind, topic);
 
-  for (const t of topics) {
-    if (accumulatedWords >= maxWords) break
-    let body = generateParagraphForTopicImpl(cityTitle, niceKind, t)
+    // Add section heading for better structure (except first which already has intro heading)
+    const headingText = topic.split(" and ")[0]; // Take first part of topic as heading
+    const heading =
+      i > 0 && i < topics.length - 1
+        ? `<h3>${escapeHtml(headingText)}</h3>`
+        : "";
 
-    // generateParagraphForTopic tends to produce long repeated text; trim to approxPerPara
-    const trimmed = body.split(/\s+/).slice(0, approxPerPara).join(' ')
-    const paraHtml = `<p>${escapeHtml(trimmed)}</p>`
-    paras.push(paraHtml)
+    const paraHtml = `${heading}\n<p>${escapeHtml(body)}</p>`;
+    paras.push(paraHtml);
 
-    accumulatedWords += trimmed.split(/\s+/).filter(Boolean).length
+    accumulatedWords += body.split(/\\s+/).filter(Boolean).length;
   }
 
-  // If still under maxWords, append short closing paragraph up to remaining words
-  const remaining = maxWords - accumulatedWords
-  if (remaining > 20) {
-    const closing = Array(Math.min(remaining, 120)).fill(`Working with ${cityTitle} experts helps buyers navigate listings and close confidently.`).join(' ')
-    paras.push(`<p>${escapeHtml(closing.split(/\s+/).slice(0, remaining).join(' '))}</p>`)
-  }
+  console.log("[ai.desc] 📝 Generated fallback content", {
+    city: cityTitle,
+    kind: niceKind,
+    sections: paras.length,
+    words: accumulatedWords,
+  });
 
-  return paras.join('\n')
-}
-
-// Maintain stable API name used elsewhere
-function generateParagraphForTopic(cityTitle: string, niceKind: string, topic: string) {
-  return generateParagraphForTopicImpl(cityTitle, niceKind, topic)
+  return paras.join("\\n\\n");
 }
 
 // Ensure text is wrapped in <p> paragraphs. If already contains <p> tags, return as-is.
 function ensureParagraphHtml(raw: string) {
-  if (/<p[\s>]/i.test(raw)) return raw
-  const parts = String(raw).split(/\n\s*\n/).map(p => p.trim()).filter(Boolean)
-  return parts.map(p => `<p>${escapeHtml(p)}</p>`).join('\n')
+  if (/<p[\s>]/i.test(raw)) return raw;
+  const parts = String(raw)
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  return parts.map((p) => `<p>${escapeHtml(p)}</p>`).join("\n");
 }
 
 // New helper: truncate HTML by paragraph while preserving tags and closing paragraphs.
+// function truncateHtmlByParagraphs(html: string, maxWords: number): string {
+//   if (!html) return html
+//   // Extract paragraph blocks if present
+//   const paraRegex = /<p[^>]*>[\s\S]*?<\/p>/gi
+//   const paras = html.match(paraRegex)
+//   if (paras && paras.length) {
+//     const out: string[] = []
+//     let words = 0
+//     for (const p of paras) {
+//       // remove tags to count words
+//       const inner = p.replace(/<[^>]+>/g, ' ')
+//       const wcount = inner.split(/\s+/).filter(Boolean).length
+//       if (words + wcount <= maxWords) {
+//         out.push(p)
+//         words += wcount
+//       } else {
+//         // need partial paragraph
+//         const remaining = Math.max(0, maxWords - words)
+//         if (remaining > 0) {
+//           // extract plain text, take remaining words, re-wrap
+//           const text = inner.replace(/\s+/g, ' ').trim().split(/\s+/).slice(0, remaining).join(' ')
+//           out.push(`<p>${escapeHtml(text)}</p>`)
+//           words += remaining
+//         }
+//         break
+//       }
+//     }
+//     return out.join('\n')
+//   } else {
+//     // No paragraphs: fallback to plain-text truncate and wrap in one <p>
+//     const plain = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+//     const truncated = plain.split(/\s+/).slice(0, maxWords).join(' ')
+//     return `<p>${escapeHtml(truncated)}</p>`
+//   }
+// }
+
 function truncateHtmlByParagraphs(html: string, maxWords: number): string {
-  if (!html) return html
-  // Extract paragraph blocks if present
-  const paraRegex = /<p[^>]*>[\s\S]*?<\/p>/gi
-  const paras = html.match(paraRegex)
+  if (!html) return html;
+
+  // If the HTML already has structured <h2>/<h3> headings, do NOT mutilate it.
+  // We prefer slightly longer content over breaking the structure that the
+  // section parser relies on.
+  if (/<h[23][\s>]/i.test(html)) {
+    return html;
+  }
+
+  // Existing logic for plain-text / heading-free HTML
+  const paraRegex = /<p[^>]*>[\s\S]*?<\/p>/gi;
+  const paras = html.match(paraRegex);
+
   if (paras && paras.length) {
-    const out: string[] = []
-    let words = 0
+    const out: string[] = [];
+    let words = 0;
+
     for (const p of paras) {
-      // remove tags to count words
-      const inner = p.replace(/<[^>]+>/g, ' ')
-      const wcount = inner.split(/\s+/).filter(Boolean).length
+      const inner = p.replace(/<[^>]+>/g, " ");
+      const wcount = inner.split(/\s+/).filter(Boolean).length;
+
       if (words + wcount <= maxWords) {
-        out.push(p)
-        words += wcount
+        out.push(p);
+        words += wcount;
       } else {
-        // need partial paragraph
-        const remaining = Math.max(0, maxWords - words)
+        const remaining = Math.max(0, maxWords - words);
         if (remaining > 0) {
-          // extract plain text, take remaining words, re-wrap
-          const text = inner.replace(/\s+/g, ' ').trim().split(/\s+/).slice(0, remaining).join(' ')
-          out.push(`<p>${escapeHtml(text)}</p>`)
-          words += remaining
+          const text = inner
+            .replace(/\s+/g, " ")
+            .trim()
+            .split(/\s+/)
+            .slice(0, remaining)
+            .join(" ");
+
+          out.push(`<p>${escapeHtml(text)}</p>`);
+          words += remaining;
         }
-        break
+        break;
       }
     }
-    return out.join('\n')
+
+    return out.join("\n");
   } else {
-    // No paragraphs: fallback to plain-text truncate and wrap in one <p>
-    const plain = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-    const truncated = plain.split(/\s+/).slice(0, maxWords).join(' ')
-    return `<p>${escapeHtml(truncated)}</p>`
+    const plain = html
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const truncated = plain.split(/\s+/).slice(0, maxWords).join(" ");
+    return `<p>${escapeHtml(truncated)}</p>`;
   }
 }
 
-// Modify callOpenAI to accept maxTokens budget (passed as max_completion_tokens)
-async function callOpenAI(prompt: string, maxTokens?: number): Promise<string | undefined> {
-  const primaryModel = process.env.OPENAI_MODEL || 'gpt-4o-mini'
-  const fallbackModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'].filter(m => m !== primaryModel)
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), Number(process.env.OPENAI_TIMEOUT_MS || 25000))
+// Modify callOpenAI to use gpt-5-mini with fixed temperature=1
+async function callOpenAI(
+  prompt: string,
+  maxTokens?: number
+): Promise<string | undefined> {
+  const modelName = "gpt-5-mini";
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    Number(process.env.OPENAI_TIMEOUT_MS || 25000)
+  );
   try {
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
-    const maxTokensConfigured = Number(process.env.OPENAI_MAX_TOKENS || 3000)
-    const maxTokensToUse = typeof maxTokens === 'number' ? Math.min(maxTokensConfigured, Math.max(64, Math.floor(maxTokens))) : maxTokensConfigured
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const maxTokensConfigured = Number(process.env.OPENAI_MAX_TOKENS || 3000);
+    const maxTokensToUse =
+      typeof maxTokens === "number"
+        ? Math.min(maxTokensConfigured, Math.max(64, Math.floor(maxTokens)))
+        : maxTokensConfigured;
 
-      const tryModel = async (modelName: string) => {
-      const started = Date.now()
-      const completion = await client.chat.completions.create({
+    const started = Date.now();
+    console.log("[ai.desc] 🔄 Calling OpenAI API", {
+      model: modelName,
+      maxTokens: maxTokensToUse,
+      promptLength: prompt.length,
+      promptPreview: prompt.slice(0, 150) + "...",
+    });
+
+    const completion = await client.chat.completions.create(
+      {
         model: modelName,
         temperature: 1,
         max_completion_tokens: maxTokensToUse,
         messages: [
-          { role: 'system', content: 'You are a helpful assistant producing concise HTML paragraphs without a wrapping <body>. Do not exceed the requested maximum word count in the user instruction.' },
-          { role: 'user', content: prompt }
-        ]
-      }, { signal: controller.signal as any })
-      const ms = Date.now() - started
-      const content = completion.choices?.[0]?.message?.content?.trim()
-      if (process.env.LANDING_TRACE) {
-        console.log('[ai.desc] openai response', { model: modelName, ms, hasContent: !!content, contentPreview: (content||'').slice(0,80) })
-      }
-      return content
-    }
+          {
+            role: "system",
+            content:
+              "You are an expert real estate copywriter creating engaging, informative landing page content. Always return valid HTML and follow the user instructions exactly.",
+          },
+          { role: "user", content: prompt },
+        ],
+      },
+      { signal: controller.signal as any }
+    );
 
-    let content = await tryModel(primaryModel)
-    if (!content) {
-      for (const m of fallbackModels) {
-        try {
-          console.warn('[ai.desc] retrying openai with fallback model', { model: m })
-          content = await tryModel(m)
-          if (content) break
-        } catch (err: any) {
-          console.warn('[ai.desc] fallback model failed', { model: m, message: err?.message || String(err) })
-        }
-      }
-    }
-    return content
+    const ms = Date.now() - started;
+    const content = completion.choices?.[0]?.message?.content?.trim();
+    const finishReason = completion.choices?.[0]?.finish_reason;
+    const tokensUsed = completion.usage?.total_tokens || 0;
+
+    console.log("[ai.desc] ✅ OpenAI response received", {
+      model: modelName,
+      ms,
+      hasContent: !!content,
+      contentLength: content?.length || 0,
+      finishReason,
+      tokensUsed,
+      contentPreview: (content || "").slice(0, 200),
+    });
+
+    return content || undefined;
   } catch (e: any) {
-    if (e?.name === 'AbortError') {
-      console.warn('[ai.desc] openai aborted timeout', { timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || 25000) })
+    if (e?.name === "AbortError") {
+      console.error("[ai.desc] ⏱️ OpenAI request timeout", {
+        timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || 25000),
+      });
     } else {
-      console.warn('[ai.desc] openai error', e?.message || e)
+      console.error("[ai.desc] ❌ OpenAI error", {
+        message: e?.message || String(e),
+        status: e?.status,
+        type: e?.type,
+        code: e?.code,
+        param: e?.param,
+        error: e?.error,
+      });
     }
-    throw e
+    throw e;
   } finally {
-    clearTimeout(timeout)
+    clearTimeout(timeout);
   }
 }
 
 function escapeHtml(str: string) {
-  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c] as string))
+  return str.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
+        c
+      ] as string)
+  );
 }
 
-export async function getAIDescription(city: string, kind: LandingKind, opts: GetOpts = {}): Promise<string | undefined> {
-  const loweredCity = city.toLowerCase()
-  const key = `${loweredCity}::${kind}`
-  const debug = !!process.env.LANDING_DEBUG
-  const trace = !!process.env.LANDING_TRACE
+function toTitleCase(str: string): string {
+  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
-  if (trace) console.log('[ai.desc] START', { city: loweredCity, kind, force: opts.forceRegenerate, envOpenAI: !!process.env.OPENAI_API_KEY, hasCustomPrompt: !!opts.customPrompt, promptKey: opts.promptKey })
+function buildPrompt(
+  city: string,
+  kind: LandingKind,
+  customPrompt?: string
+): string {
+  const cityTitle = toTitleCase(city);
+  const niceKind = kind.replace(/-/g, " ");
+
+  if (customPrompt) return customPrompt;
+
+  return [
+    `You are an expert real estate SEO writer.`,
+    `Generate a fully-structured HTML landing page description for ${cityTitle}, focusing on "${niceKind}".`,
+
+    `HARD REQUIREMENTS:`,
+    `- Output ONLY valid HTML (no markdown, no commentary).`,
+    `- Length: 1500–2400 words.`,
+    `- EXACTLY 10 SECTIONS.`,
+    `- EVERY section MUST start with a <h2>SECTION TITLE</h2>.`,
+    `- After each <h2>, write 2–4 <p> paragraphs.`,
+    `- No <h1> allowed.`,
+    `- No duplicated paragraphs.`,
+    `- No repeated wording.`,
+    `- Every section must be unique and non-repetitive.`,
+    `- Make content specific to ${cityTitle} and ${niceKind}.`,
+    `- MUST mention and naturally integrate these neighborhoods: La Jolla, Pacific Beach, North Park, Mission Hills.`,
+
+    `THE 10 SECTIONS YOU MUST OUTPUT (IN ORDER):`,
+    `1. <h2>Introduction to ${cityTitle} ${niceKind}</h2>`,
+    `2. <h2>Lifestyle & Community Overview</h2>`,
+    `3. <h2>Major Neighborhoods</h2>`,
+    `4. <h2>Market Trends & Pricing</h2>`,
+    `5. <h2>Property Types & Architecture</h2>`,
+    `6. <h2>Amenities & Daily Living</h2>`,
+    `7. <h2>Schools & Family Appeal</h2>`,
+    `8. <h2>Outdoor Living & Recreation</h2>`,
+    `9. <h2>Buyer Strategies</h2>`,
+    `10. <h2>Final Thoughts</h2>`,
+
+    `FORMAT EXAMPLE (IMPORTANT):`,
+    `<h2>Section Title</h2>`,
+    `<p>Paragraph one.</p>`,
+    `<p>Paragraph two.</p>`,
+    `<p>Paragraph three.</p>`,
+
+    `Follow this exact structure for all 10 sections.`,
+    `Return ONLY raw HTML.`,
+  ].join("\n");
+}
+
+export async function generateAIDescription(
+  city: string,
+  kind: LandingKind,
+  opts: GenerateAIDescriptionOptions = {}
+): Promise<string | undefined> {
+  const loweredCity = city.toLowerCase();
+  const key = `${loweredCity}::${kind}`;
+  const debug = !!process.env.LANDING_DEBUG;
+  const trace = !!process.env.LANDING_TRACE;
+
+  if (trace)
+    console.log("[ai.desc] START", {
+      city: loweredCity,
+      kind,
+      force: opts.forceRegenerate,
+      envOpenAI: !!process.env.OPENAI_API_KEY,
+      hasCustomPrompt: !!opts.customPrompt,
+      promptKey: opts.promptKey,
+    });
 
   if (pending.has(key)) {
-    if (trace) console.log('[ai.desc] pending awaited', key)
-    return pending.get(key)!
+    if (trace) console.log("[ai.desc] pending awaited", key);
+    return pending.get(key)!;
   }
 
   // Skip OpenAI generation during build phase only
   // At runtime (even on Vercel), we can generate AI descriptions if needed
   if (isBuildPhase()) {
-    if (trace || debug) console.warn('[ai.desc] skipping OpenAI generation due to build phase', { key, hasKey: !!process.env.OPENAI_API_KEY })
-    return undefined
+    if (trace || debug)
+      console.warn("[ai.desc] skipping OpenAI generation due to build phase", {
+        key,
+        hasKey: !!process.env.OPENAI_API_KEY,
+      });
+    return undefined;
   }
 
   // 1. Supabase lookup (preferred)
   try {
-    const sb = getSupabase()
+    const sb = getSupabase();
     if (sb) {
       const { data, error } = await sb
-        .from('landing_pages')
-        .select('ai_description_html')
-        .eq('city', loweredCity)
-        .eq('page_name', kind)
-        .maybeSingle()
+        .from("landing_pages")
+        .select("ai_description_html")
+        .eq("city", loweredCity)
+        .eq("page_name", kind)
+        .maybeSingle();
       if (error) {
-  if (trace) console.warn('[ai.desc] supabase select error', { key, message: error.message, code: error.code })
-      } else if (data?.ai_description_html && !opts.forceRegenerate && !process.env.FORCE_AI_REGEN) {
+        if (trace)
+          console.warn("[ai.desc] supabase select error", {
+            key,
+            message: error.message,
+            code: error.code,
+          });
+      } else if (
+        data?.ai_description_html &&
+        !opts.forceRegenerate &&
+        !process.env.FORCE_AI_REGEN
+      ) {
         // If a custom prompt is provided, ensure cached HTML is sufficiently long to satisfy the prompt expectations.
-        const minLen = Number(process.env.LANDING_MIN_DESC_LENGTH || 3000)
-        const cachedLen = String(data.ai_description_html || '').length
+        const minLen = Number(process.env.LANDING_MIN_DESC_LENGTH || 3000);
+        const cachedLen = String(data.ai_description_html || "").length;
         if (isPlaceholderHtml(data.ai_description_html)) {
-          console.warn('[ai.desc] supabase value is placeholder; ignoring and regenerating', { key })
+          console.warn(
+            "[ai.desc] supabase value is placeholder; ignoring and regenerating",
+            { key }
+          );
         } else if (opts.customPrompt && cachedLen < minLen) {
-          console.warn('[ai.desc] supabase cached html too short for custom prompt; forcing regeneration', { key, cachedLen, minLen })
+          console.warn(
+            "[ai.desc] supabase cached html too short for custom prompt; forcing regeneration",
+            { key, cachedLen, minLen }
+          );
         } else {
-          memCache.set(key, data.ai_description_html)
-          if (trace) console.log('[ai.desc] supabase cache hit', key)
-          return data.ai_description_html
+          memCache.set(key, data.ai_description_html);
+          if (trace) console.log("[ai.desc] supabase cache hit", key);
+          return data.ai_description_html;
         }
       } else if (trace) {
-        console.log('[ai.desc] supabase miss', { key, hadData: !!data?.ai_description_html })
+        console.log("[ai.desc] supabase miss", {
+          key,
+          hadData: !!data?.ai_description_html,
+        });
       }
     } else if (trace) {
-      console.log('[ai.desc] no supabase client (missing env)')
+      console.log("[ai.desc] no supabase client (missing env)");
     }
   } catch (e: any) {
-    console.warn('[ai.desc] supabase lookup failed', e.message)
+    console.warn("[ai.desc] supabase lookup failed", e.message);
   }
 
   // 2. Legacy PG lookup
   if (!opts.forceRegenerate && !process.env.FORCE_AI_REGEN) {
     try {
-      const pool = await getPgPool()
-      await ensureLegacyTable(pool)
-      const { rows } = await pool.query('SELECT html FROM landing_ai_descriptions WHERE city=$1 AND kind=$2', [loweredCity, kind])
+      const pool = await getPgPool();
+      await ensureLegacyTable(pool);
+      const { rows } = await pool.query(
+        "SELECT html FROM landing_ai_descriptions WHERE city=$1 AND kind=$2",
+        [loweredCity, kind]
+      );
       if (rows[0]?.html) {
-        const legacyHtml = rows[0].html as string
+        const legacyHtml = rows[0].html as string;
         if (isPlaceholderHtml(legacyHtml)) {
-          console.warn('[ai.desc] legacy pg value is placeholder; will attempt regeneration', { key })
+          console.warn(
+            "[ai.desc] legacy pg value is placeholder; will attempt regeneration",
+            { key }
+          );
         } else {
-          memCache.set(key, legacyHtml)
-          if (trace) console.log('[ai.desc] legacy pg hit', key)
+          memCache.set(key, legacyHtml);
+          if (trace) console.log("[ai.desc] legacy pg hit", key);
           // Best effort: sync to Supabase if possible (skip if placeholder)
           try {
-            const sb2 = getSupabase()
+            const sb2 = getSupabase();
             if (sb2) {
-              if (trace) console.log('[ai.desc] syncing legacy -> supabase', { key })
-              await sb2.from('landing_pages').upsert({
-                city: loweredCity,
-                page_name: kind,
-                kind,
-                ai_description_html: legacyHtml,
-                updated_at: new Date().toISOString()
-              }, { onConflict: 'city,page_name' })
+              if (trace)
+                console.log("[ai.desc] syncing legacy -> supabase", { key });
+              await sb2.from("landing_pages").upsert(
+                {
+                  city: loweredCity,
+                  page_name: kind,
+                  kind,
+                  ai_description_html: legacyHtml,
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: "city,page_name" }
+              );
             }
           } catch (e: any) {
-            console.warn('[ai.desc] legacy->supabase sync failed', e?.message)
+            console.warn("[ai.desc] legacy->supabase sync failed", e?.message);
           }
-          return legacyHtml
+          return legacyHtml;
         }
       }
     } catch (e: any) {
-      if (!/relation .* does not exist/i.test(e.message || '')) console.warn('[ai.desc] legacy pg lookup error', e.message)
+      if (!/relation .* does not exist/i.test(e.message || ""))
+        console.warn("[ai.desc] legacy pg lookup error", e.message);
     }
   }
 
   // 2.5 memCache fallback: if we already have a runtime value, return it but also ensure Supabase is updated
-  if (!opts.forceRegenerate && !process.env.FORCE_AI_REGEN && memCache.has(key)) {
-    const cached = memCache.get(key)
-    const isPh = isPlaceholderHtml(cached)
-    if (trace) console.log('[ai.desc] memCache hit (post-lookup)', { key, isPlaceholder: isPh, willSyncSupabase: !isPh })
+  if (
+    !opts.forceRegenerate &&
+    !process.env.FORCE_AI_REGEN &&
+    memCache.has(key)
+  ) {
+    const cached = memCache.get(key);
+    const isPh = isPlaceholderHtml(cached);
+    if (trace)
+      console.log("[ai.desc] memCache hit (post-lookup)", {
+        key,
+        isPlaceholder: isPh,
+        willSyncSupabase: !isPh,
+      });
     if (isPh) {
-      console.warn('[ai.desc] cached value is placeholder; proceeding to regenerate', { key })
+      console.warn(
+        "[ai.desc] cached value is placeholder; proceeding to regenerate",
+        { key }
+      );
     } else {
       try {
-        const sb3 = getSupabase()
+        const sb3 = getSupabase();
         if (sb3 && cached) {
-          await sb3.from('landing_pages').upsert({
-            city: loweredCity,
-            page_name: kind,
-            kind,
-            ai_description_html: cached,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'city,page_name' })
+          await sb3.from("landing_pages").upsert(
+            {
+              city: loweredCity,
+              page_name: kind,
+              kind,
+              ai_description_html: cached,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "city,page_name" }
+          );
         }
       } catch (e: any) {
-        console.warn('[ai.desc] supabase upsert (from memCache) failed', e?.message)
+        console.warn(
+          "[ai.desc] supabase upsert (from memCache) failed",
+          e?.message
+        );
       }
-      return cached
+      return cached;
     }
   }
 
@@ -340,145 +658,304 @@ export async function getAIDescription(city: string, kind: LandingKind, opts: Ge
     // During build phase we skip OpenAI (already handled at top of function)
     // At runtime, we can generate if OpenAI key is available
     // Optionally, users can set SKIP_LANDING_EXTERNAL_FETCHES=1 to disable this at runtime too
-    if (process.env.SKIP_LANDING_EXTERNAL_FETCHES === '1' || !process.env.OPENAI_API_KEY) {
-      if (trace || debug) console.warn('[ai.desc] skipping OpenAI generation (SKIP_LANDING_EXTERNAL_FETCHES or missing OPENAI_API_KEY)', { city: loweredCity, kind, hasKey: !!process.env.OPENAI_API_KEY })
-      return undefined
+    if (
+      process.env.SKIP_LANDING_EXTERNAL_FETCHES === "1" ||
+      !process.env.OPENAI_API_KEY
+    ) {
+      console.warn("[ai.desc] ⚠️ Skipping OpenAI generation", {
+        reason: !process.env.OPENAI_API_KEY
+          ? "Missing API key"
+          : "SKIP_LANDING_EXTERNAL_FETCHES=1",
+        city: loweredCity,
+        kind,
+      });
+      return undefined;
     }
-  const prompt = opts.customPrompt || `You are a real estate SEO assistant. Write a 2–3 paragraph description of ${city} ${kind.replace(/-/g,' ')}, highlighting lifestyle, housing trends, and buyer appeal. Keep it factual, local, and professional.`
-  if (trace) console.log('[ai.desc] calling OpenAI', { key, model: process.env.OPENAI_MODEL || 'gpt-4o-mini', usedCustomPrompt: !!opts.customPrompt, promptPreview: prompt.slice(0, 120) })
-    let html: string | undefined
+
+    const prompt =
+      opts.customPrompt || buildPrompt(city, kind, opts.customPrompt);
+
+    console.log("[ai.desc] 📝 Preparing OpenAI call", {
+      key,
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      usedCustomPrompt: !!opts.customPrompt,
+      promptLength: prompt.length,
+      promptPreview: prompt.slice(0, 200) + "...",
+    });
+
+    let html: string | undefined;
+    let usedFallback = false; // ✅ Add this line
     try {
-      // compute desired words range (min 800, max 1000) - env overrides allowed
-      const envMin = Number(process.env.LANDING_MIN_WORDS || 800)
-      const envMax = Number(process.env.LANDING_MAX_WORDS || 1000)
-      const desiredMin = Math.max(800, Math.min(envMin, envMax))
-      const desiredMax = Math.max(desiredMin, envMax)
-  // translate words -> approximate tokens (conservative multiplier) using desiredMax
-  const approxTokens = Math.max(300, Math.ceil(desiredMax * 1.6))
-  // Ask OpenAI with token budget tuned to desiredMax words
-  html = await callOpenAI(prompt, approxTokens)
+      // compute desired words range (min 1200, max 2000 for better content) - env overrides allowed
+      const envMin = Number(process.env.LANDING_MIN_WORDS || 1200);
+      const envMax = Number(process.env.LANDING_MAX_WORDS || 2000);
+      const desiredMin = Math.max(1200, Math.min(envMin, envMax));
+      const desiredMax = Math.max(desiredMin, envMax);
+
+      console.log("[ai.desc] 📊 Target word count", { desiredMin, desiredMax });
+
+      // translate words -> approximate tokens (conservative multiplier) using desiredMax
+      const approxTokens = Math.max(800, Math.ceil(desiredMax * 1.8));
+
+      console.log("[ai.desc] 🔢 Token budget", { approxTokens });
+
+      // Ask OpenAI with token budget tuned to desiredMax words
+      html = await callOpenAI(prompt, approxTokens);
 
       // Explicit log of content preview for debugging
-      console.log('[ai.desc] openai content', { key, length: html?.length || 0, preview: (html || '').slice(0, 160) })
+      console.log("[ai.desc] 📄 OpenAI raw response", {
+        key,
+        hasContent: !!html,
+        length: html?.length || 0,
+        preview: (html || "").slice(0, 300) + "...",
+      });
 
       // Count words
       const countWords = (s?: string) => {
-        if (!s) return 0
-        const stripped = String(s).replace(/<[^>]+>/g, ' ')
-        return String(stripped).split(/\s+/).filter(Boolean).length
+        if (!s) return 0;
+        const stripped = String(s).replace(/<[^>]+>/g, " ");
+        return String(stripped).split(/\s+/).filter(Boolean).length;
+      };
+
+      // Check for repetitive content
+      const checkRepetition = (text: string): boolean => {
+        const stripped = text.replace(/<[^>]+>/g, " ").toLowerCase();
+        const sentences = stripped
+          .split(/[.!?]+/)
+          .filter((s) => s.trim().length > 20);
+        const uniqueSentences = new Set(sentences.map((s) => s.trim()));
+        const repetitionRatio = uniqueSentences.size / sentences.length;
+        const isRepetitive = repetitionRatio < 0.75;
+        console.log("[ai.desc] 🔍 Repetition check", {
+          totalSentences: sentences.length,
+          uniqueSentences: uniqueSentences.size,
+          repetitionRatio: repetitionRatio.toFixed(2),
+          isRepetitive,
+        });
+        return isRepetitive;
+      };
+
+      if (html && checkRepetition(html)) {
+        console.warn("[ai.desc] ⚠️ Detected repetitive content, will retry", {
+          key,
+        });
+        html = undefined; // Force retry
       }
-  let words = countWords(html)
+
+      let words = countWords(html);
+      console.log("[ai.desc] 📊 Initial word count", {
+        words,
+        desiredMin,
+        desiredMax,
+      });
 
       // If model produced more than desiredMax, truncate safely by paragraphs
       if (words > desiredMax) {
-        if (process.env.LANDING_TRACE) console.warn('[ai.desc] openai produced more words than max; truncating', { key, produced: words, max: desiredMax })
-        html = truncateHtmlByParagraphs(html || '', desiredMax)
-        words = countWords(html)
-        if (process.env.LANDING_TRACE) console.log('[ai.desc] truncated content words', { key, words })
+        console.warn("[ai.desc] ✂️ Content exceeds max, truncating", {
+          key,
+          produced: words,
+          max: desiredMax,
+        });
+        html = truncateHtmlByParagraphs(html || "", desiredMax);
+        words = countWords(html);
+        console.log("[ai.desc] 📊 Truncated word count", { words });
       }
 
       // If under desiredWords, retry as before (kept existing retry logic)...
-      const maxRetries = 2
+      const maxRetries = 2;
       if (words < desiredMin) {
-  for (let attempt = 1; attempt <= maxRetries && words < desiredMin; attempt++) {
+        console.warn("[ai.desc] 📉 Content below minimum, will retry", {
+          words,
+          desiredMin,
+          maxRetries,
+        });
+        for (
+          let attempt = 1;
+          attempt <= maxRetries && words < desiredMin;
+          attempt++
+        ) {
           try {
-            const retryPrompt = (opts.customPrompt || prompt) + `\n\nIMPORTANT: Output at least ${desiredMin} words and at most ${desiredMax} words. Structure the response as multiple paragraphs (use <p>...</p> for each paragraph). Start with an introductory paragraph, then provide several sections covering neighborhood, market trends, buyer appeal, amenities, and a closing CTA. Avoid fabricated numeric facts. Output HTML paragraphs only.`
-            if (trace) console.log('[ai.desc] retrying OpenAI for length', { key, attempt, desiredMin, desiredMax })
-            const retryHtml = await callOpenAI(retryPrompt, approxTokens)
+            const retryPrompt =
+              (opts.customPrompt || prompt) +
+              `\n\nIMPORTANT: Output at least ${desiredMin} words and at most ${desiredMax} words. Structure the response as multiple paragraphs (use <p>...</p> for each paragraph). Start with an introductory paragraph, then provide several sections covering neighborhood, market trends, buyer appeal, amenities, and a closing CTA. Avoid fabricated numeric facts. Output HTML paragraphs only.`;
+            console.log("[ai.desc] 🔄 Retry attempt", {
+              attempt,
+              desiredMin,
+              desiredMax,
+            });
+            const retryHtml = await callOpenAI(retryPrompt, approxTokens);
             if (retryHtml) {
               // if retry overproduces, truncate
               if (countWords(retryHtml) > desiredMax) {
-                if (trace) console.warn('[ai.desc] retry produced too many words; truncating retry result', { key, attempt })
-                html = truncateHtmlByParagraphs(retryHtml, desiredMax)
+                console.warn(
+                  "[ai.desc] ✂️ Retry produced too many words, truncating",
+                  {
+                    attempt,
+                    words: countWords(retryHtml),
+                    max: desiredMax,
+                  }
+                );
+                html = truncateHtmlByParagraphs(retryHtml, desiredMax);
               } else {
-                html = retryHtml
+                html = retryHtml;
               }
-              words = countWords(html)
-              if (trace) console.log('[ai.desc] retry produced more words', { key, attempt, words })
+              words = countWords(html);
+              console.log("[ai.desc] ✅ Retry produced content", {
+                attempt,
+                words,
+              });
+            } else {
+              console.warn("[ai.desc] ⚠️ Retry returned empty", { attempt });
             }
           } catch (e: any) {
-            console.warn('[ai.desc] retry attempt failed', { key, attempt, message: e?.message || e })
+            console.error("[ai.desc] ❌ Retry attempt failed", {
+              attempt,
+              error: e?.message || e,
+            });
           }
         }
       }
     } catch (e: any) {
-      console.warn('[ai.desc] OpenAI generation failed', e.message)
-      html = undefined
+      console.error("[ai.desc] ❌ OpenAI generation failed", {
+        error: e.message,
+        status: e?.status,
+        type: e?.type,
+      });
+      html = undefined;
     }
 
+    // if (!html || !html.trim()) {
+    //   console.warn('[ai.desc] ⚠️ OpenAI returned empty content, using fallback generator', { key })
+    //   html = buildFallbackDescription(city, kind)
+    // }
+
     if (!html || !html.trim()) {
-      console.warn('[ai.desc] OpenAI returned empty content; using fallback generator', { key })
-      // ensure fallback respects desiredWords
-      const fallbackWords = Number(process.env.LANDING_MAX_WORDS || process.env.LANDING_MIN_WORDS || 1000)
-      html = buildFallbackDescription(city, kind) // short fallback for placeholder
-      // replace with long fallback but capped
-      html = buildLongFallbackDescription(city, kind, fallbackWords)
+      console.warn(
+        "[ai.desc] ⚠️ OpenAI returned empty content, using fallback generator",
+        { key }
+      );
+      html = buildFallbackDescription(city, kind);
+      usedFallback = true;
     }
 
     // Ensure paragraphs are wrapped as HTML
     if (html) {
-      html = ensureParagraphHtml(html || '')
+      html = ensureParagraphHtml(html || "");
+      console.log("[ai.desc] ✅ HTML paragraphs ensured", {
+        length: html.length,
+      });
     }
 
     // After retries above, enforce long fallback if still too short (but now capped)
-    const finalDesiredWords = Number(process.env.LANDING_MAX_WORDS || process.env.LANDING_MIN_WORDS || 1000)
-    if ((html && html.length) && (String(html || '').replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length > finalDesiredWords)) {
+    const finalDesiredWords = Number(
+      process.env.LANDING_MAX_WORDS || process.env.LANDING_MIN_WORDS || 1200
+    );
+    const finalWordCount = (html || "")
+      .replace(/<[^>]+>/g, " ")
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+    console.log("[ai.desc] 📊 Final content check", {
+      wordCount: finalWordCount,
+      targetWords: finalDesiredWords,
+    });
+
+    if (
+      !usedFallback &&
+      html &&
+      html.length &&
+      finalWordCount > finalDesiredWords
+    ) {
       // double-safety: if anything still exceeds, truncate
-      html = truncateHtmlByParagraphs(html || '', finalDesiredWords)
+      console.warn("[ai.desc] ✂️ Final truncation", {
+        wordCount: finalWordCount,
+        max: finalDesiredWords,
+      });
+      html = truncateHtmlByParagraphs(html || "", finalDesiredWords);
     }
-  // Normalize memCache to always store a string and avoid undefined.
-  memCache.set(key, html || '')
-  if (trace) console.log('[ai.desc] generated OpenAI', { key, length: html?.length || 0 })
+
+    // Normalize memCache to always store a string and avoid undefined.
+    memCache.set(key, html || "");
+    console.log("[ai.desc] ✅ Content generation complete", {
+      key,
+      length: html?.length || 0,
+      finalWordCount: (html || "")
+        .replace(/<[^>]+>/g, " ")
+        .split(/\s+/)
+        .filter(Boolean).length,
+    });
 
     // 4. Persist to Supabase
     try {
-      const sb = getSupabase()
+      const sb = getSupabase();
       if (sb) {
-        if (trace) console.log('[ai.desc] persisting supabase', { key, willPersist: !isPlaceholderHtml(html) })
-        const usingService = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+        if (trace)
+          console.log("[ai.desc] persisting supabase", {
+            key,
+            willPersist: !isPlaceholderHtml(html),
+          });
+        const usingService = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!isPlaceholderHtml(html) && html) {
           const { error } = await sb
-            .from('landing_pages')
-            .upsert({
-              city: loweredCity,
-              page_name: kind,
-              kind,
-              ai_description_html: html,
-              updated_at: new Date().toISOString()
-            }, { onConflict: 'city,page_name' })
-            .select('id')
-            .single()
+            .from("landing_pages")
+            .upsert(
+              {
+                city: loweredCity,
+                page_name: kind,
+                kind,
+                ai_description_html: html,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "city,page_name" }
+            )
+            .select("id")
+            .single();
           if (error) {
-            console.warn('[ai.desc] supabase upsert failed', { key, msg: error.message, code: error.code, hint: error.hint, serviceRole: usingService })
+            console.warn("[ai.desc] supabase upsert failed", {
+              key,
+              msg: error.message,
+              code: error.code,
+              hint: error.hint,
+              serviceRole: usingService,
+            });
           } else if (trace) {
-            console.log('[ai.desc] supabase upsert ok', key)
+            console.log("[ai.desc] supabase upsert ok", key);
           }
         } else {
-          console.warn('[ai.desc] skipping supabase persist due to placeholder content', { key })
+          console.warn(
+            "[ai.desc] skipping supabase persist due to placeholder content",
+            { key }
+          );
         }
       }
     } catch (e: any) {
-      console.warn('[ai.desc] supabase persist exception', e.message)
+      console.warn("[ai.desc] supabase persist exception", e.message);
     }
 
     // 5. Legacy PG persistence
     try {
-      const pool2 = await getPgPool()
-      await ensureLegacyTable(pool2)
+      const pool2 = await getPgPool();
+      await ensureLegacyTable(pool2);
       if (!isPlaceholderHtml(html) && html) {
-        await pool2.query('INSERT INTO landing_ai_descriptions(city,kind,html) VALUES($1,$2,$3) ON CONFLICT (city,kind) DO UPDATE SET html=EXCLUDED.html, generated_at=now()', [loweredCity, kind, html])
+        await pool2.query(
+          "INSERT INTO landing_ai_descriptions(city,kind,html) VALUES($1,$2,$3) ON CONFLICT (city,kind) DO UPDATE SET html=EXCLUDED.html, generated_at=now()",
+          [loweredCity, kind, html]
+        );
       } else if (trace) {
-        console.log('[ai.desc] skipping legacy pg persist due to placeholder', { key })
+        console.log("[ai.desc] skipping legacy pg persist due to placeholder", {
+          key,
+        });
       }
     } catch (e: any) {
-      if (!/relation .* does not exist/i.test(e.message || '')) console.warn('[ai.desc] legacy pg persist failed', e.message)
+      if (!/relation .* does not exist/i.test(e.message || ""))
+        console.warn("[ai.desc] legacy pg persist failed", e.message);
     }
-    return html
-  }
+    return html;
+  };
 
-  const p = executor().finally(() => pending.delete(key))
-  pending.set(key, p)
-  return p
+  const p = executor().finally(() => pending.delete(key));
+  pending.set(key, p);
+  return p;
 }
 
 // The single callOpenAI implementation with optional maxTokens lives earlier in this file.
