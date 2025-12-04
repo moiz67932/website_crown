@@ -17,6 +17,12 @@ import React, { useState } from "react";
 import { useComparison } from "@/contexts/comparison-context";
 import { usePropertyDetail } from "@/hooks/queries/useGetDetailProperty";
 import { useFavoriteProperties } from "@/hooks/use-favorite-properties";
+import {
+  safeBeds,
+  safeBaths,
+  safeAcres,
+  safeCurrency,
+} from "@/lib/utils/safeField";
 
 interface PropertyCardProps {
   property: Property;
@@ -31,10 +37,14 @@ export function PropertyCard({
 }: PropertyCardProps) {
   const [imageError, setImageError] = useState(false);
   const { addToComparison, isInComparison } = useComparison();
-  const { isFavorite, toggleFavorite, isLoading: favoritesLoading } = useFavoriteProperties();
+  const {
+    isFavorite,
+    toggleFavorite,
+    isLoading: favoritesLoading,
+  } = useFavoriteProperties();
 
   // Fetch full property details using the listing_key
-  const listingId = property.listing_key || property.id || '';
+  const listingId = property.listing_key || property.id || "";
   const { data: propertyDetail, isLoading } = usePropertyDetail(listingId);
 
   // Use propertyDetail if available, otherwise fallback to property prop
@@ -59,7 +69,8 @@ export function PropertyCard({
       living_area_sqft: displayData.living_area_sqft,
       lot_size_sqft: displayData.lot_size_sqft,
       year_built: displayData.year_built,
-      main_photo_url: (displayData as any).main_photo_url || (displayData as any).images?.[0],
+      main_photo_url:
+        (displayData as any).main_photo_url || (displayData as any).images?.[0],
       images: (displayData as any).images,
     });
   };
@@ -74,42 +85,40 @@ export function PropertyCard({
     if (imageError) {
       return "/luxury-modern-house-exterior.png";
     }
-    
+
     if (displayData.listing_key) {
-      return `/api/media?listingKey=${encodeURIComponent(displayData.listing_key)}&object=1`;
+      return `/api/media?listingKey=${encodeURIComponent(
+        displayData.listing_key
+      )}&object=1`;
     }
 
-    return (displayData as any).images?.[0] || 
-           (displayData as any).main_image_url || 
-           "/luxury-modern-house-exterior.png";
+    return (
+      (displayData as any).images?.[0] ||
+      (displayData as any).main_image_url ||
+      "/luxury-modern-house-exterior.png"
+    );
   };
 
   // Sanitize address
   const sanitizeAddress = (addr: string) => {
-    return addr.trim().replace(/^0+\s+/, '').replace(/\s{2,}/g, ' ');
+    return addr
+      .trim()
+      .replace(/^0+\s+/, "")
+      .replace(/\s{2,}/g, " ");
   };
 
-  // Format lot size - convert to acres if >= 1 acre (43,560 sq ft)
-  // Fallback to living_area_sqft if lot_size_sqft is not available
-  const formatLotSize = () => {
-    const lotSizeSqFt = displayData.lot_size_sqft || displayData.living_area_sqft;
-    if (!lotSizeSqFt) return null;
-
-    const SQFT_PER_ACRE = 43560;
-    
-    if (lotSizeSqFt >= SQFT_PER_ACRE) {
-      const acres = (lotSizeSqFt / SQFT_PER_ACRE).toFixed(1);
-      return { value: acres, unit: 'acres' };
-    }
-    
-    return { value: Math.floor(lotSizeSqFt).toLocaleString(), unit: 'sqft' };
-  };
-
-  const address = sanitizeAddress(displayData.address || '');
-  const city = displayData.city || '';
-  const county = displayData.county || '';
+  const address = sanitizeAddress(displayData.address || "");
+  const city = displayData.city || "";
+  const county = displayData.county || "";
   const isForRent = displayData.property_type === "ResidentialLease";
-  const lotSize = formatLotSize();
+
+  // Use safeField utilities for proper null handling
+  const bedsDisplay = safeBeds(displayData.bedrooms);
+  const bathsDisplay = safeBaths(displayData.bathrooms);
+  const priceDisplay = safeCurrency(displayData.list_price);
+  const lotDisplay = safeAcres(
+    displayData.lot_size_sqft || displayData.living_area_sqft
+  );
 
   return (
     <Link
@@ -219,54 +228,71 @@ export function PropertyCard({
       <div className="p-6 flex flex-col flex-1">
         <div className="mb-4">
           <h3 className="text-xl font-bold text-gradient-primary bg-clip-text text-transparent mb-2 line-clamp-2 leading-tight group-hover:text-primary-600 transition-colors duration-300">
-            {address || city || 'Property'}
+            {address || city || "Property"}
           </h3>
           <div className="flex items-center text-neutral-500 dark:text-neutral-400 text-sm theme-transition">
             <MapPin className="h-4 w-4 mr-2 text-primary-400 dark:text-primary-300" />
-            <span className="font-medium">{city}{county ? `, ${county}` : ''}</span>
+            <span className="font-medium">
+              {city}
+              {county ? `, ${county}` : ""}
+            </span>
           </div>
         </div>
 
         <div className="mb-4">
           <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-1 theme-transition">
-            ${displayData.list_price ? Math.floor(displayData.list_price).toLocaleString() : 'N/A'}
+            {priceDisplay || "Contact for Price"}
           </div>
           <div className="text-sm text-neutral-500 dark:text-neutral-400 font-medium theme-transition">
             {isForRent ? "per month" : "listing price"}
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-400 text-sm mt-auto pt-4 border-t border-neutral-100 dark:border-slate-700 theme-transition">
-          <div className="flex items-center gap-1.5">
-            <div className="p-1.5 rounded-lg bg-primary-50 dark:bg-primary-900/30">
-              <Bed className="h-4 w-4 text-primary-600 dark:text-primary-400" />
+        <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-400 text-sm mt-auto pt-4 border-t border-neutral-100 dark:border-slate-700 theme-transition gap-3">
+          {/* Only show beds if available */}
+          {bedsDisplay && (
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 rounded-lg bg-primary-50 dark:bg-primary-900/30">
+                <Bed className="h-4 w-4 text-primary-600 dark:text-primary-400" />
+              </div>
+              <span className="font-semibold whitespace-nowrap">
+                {bedsDisplay}
+              </span>
             </div>
-            <span className="font-semibold">{displayData.bedrooms ?? "N/A"}</span>
-            <span className="text-neutral-400 dark:text-neutral-500">beds</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="p-1.5 rounded-lg bg-accent-50 dark:bg-cyan-900/30">
-              <Bath className="h-4 w-4 text-accent-600 dark:text-cyan-400" />
+          )}
+
+          {/* Only show baths if available */}
+          {bathsDisplay && (
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 rounded-lg bg-accent-50 dark:bg-cyan-900/30">
+                <Bath className="h-4 w-4 text-accent-600 dark:text-cyan-400" />
+              </div>
+              <span className="font-semibold whitespace-nowrap">
+                {bathsDisplay}
+              </span>
             </div>
-            <span className="font-semibold">{displayData.bathrooms ?? "N/A"}</span>
-            <span className="text-neutral-400 dark:text-neutral-500">
-              baths
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="p-1.5 rounded-lg bg-gold-50 dark:bg-amber-900/30">
-              <Square className="h-4 w-4 text-gold-600 dark:text-amber-400" />
+          )}
+
+          {/* Only show lot size if available */}
+          {lotDisplay && (
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 rounded-lg bg-gold-50 dark:bg-amber-900/30">
+                <Square className="h-4 w-4 text-gold-600 dark:text-amber-400" />
+              </div>
+              <span className="font-semibold text-xs whitespace-nowrap">
+                {lotDisplay}
+              </span>
             </div>
-            <span className="font-semibold text-xs">
-              {lotSize ? lotSize.value : "N/A"}
-            </span>
-            <span className="text-neutral-400 dark:text-neutral-500 text-xs">
-              {lotSize ? lotSize.unit : "lot"}
-            </span>
-          </div>
+          )}
+
+          {/* If no property details available, show placeholder */}
+          {!bedsDisplay && !bathsDisplay && !lotDisplay && (
+            <div className="text-neutral-400 dark:text-neutral-500 text-xs italic w-full text-center">
+              Contact for details
+            </div>
+          )}
         </div>
       </div>
     </Link>
   );
 }
-

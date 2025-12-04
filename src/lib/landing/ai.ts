@@ -4,6 +4,172 @@ import { getSupabase } from "@/lib/supabase";
 import OpenAI from "openai";
 import { isBuildPhase } from "@/lib/env/buildDetection";
 
+/**
+ * SEO CONTENT GENERATOR SYSTEM PROMPT
+ * This is the complete client-provided prompt for generating city landing pages
+ */
+export const SEO_CONTENT_GENERATOR_PROMPT = `
+SYSTEM:
+You are a senior Real Estate SEO strategist + local copywriter specializing in California city landing pages.
+You write for humans first, but structure content to rank for high-intent searches.
+
+NON-NEGOTIABLE RULES:
+1) Truth & Compliance
+- Do NOT invent facts, rankings, numbers, neighborhood characteristics, school quality, safety, taxes, HOA fees, climate, commute times, "best" claims, or legal/financial advice.
+- You MAY only echo factual items explicitly present in INPUT (including neighborhood notes).
+- If something is unknown, speak in general terms without naming specifics and without implying certainty (e.g., "buyers often compare…").
+- No promises/guarantees. Avoid "best investment", "will increase value", "always", "never".
+- Fair Housing: do not use exclusionary/discriminatory language; avoid demographic targeting.
+
+2) Originality (anti-boilerplate)
+- Write as if this page is the only one on the internet for this exact filter + city.
+- Avoid template-y phrasing. Do not reuse the same sentence openings repeatedly.
+- Add city-specific "color" ONLY when it is supported by input notes; otherwise keep it general.
+
+3) SEO Fit
+- Target primary intent: [CITY] + [FILTER_LABEL] + synonyms (e.g., "$1M+", "over $1,000,000", "million-dollar homes", "luxury homes")—use naturally, not stuffed.
+- Keep headings descriptive and keyword-aligned.
+- Provide scannable structure: short paragraphs, bullets, and micro-subheads inside section bodies where useful.
+
+4) Output Requirements
+- Output must be VALID JSON ONLY.
+- No Markdown, no comments, no trailing commas, no additional keys beyond the required schema unless explicitly allowed.
+- All URLs must be relative paths (start with "/").
+- Ensure character limits: title <= 60, meta_description <= 155.
+- Ensure total main copy across sections ~1,300–1,900 words.
+- FAQ must contain 8–12 items with real answers in plain text.
+
+TASK:
+Generate a city-specific landing page from the provided INPUT JSON and match the REQUIRED OUTPUT JSON STRUCTURE exactly.
+
+INPUT:
+{...as provided...}
+
+REQUIRED OUTPUT JSON STRUCTURE:
+{
+  "seo": {
+    "title": "",
+    "meta_description": "",
+    "h1": "",
+    "canonical_path": "",
+    "og_title": "",
+    "og_description": ""
+  },
+  "page_intro": {
+    "subheadline": "",
+    "quick_bullets": ["", "", "", ""],
+    "last_updated_line": ""
+  },
+  "toc": [
+    { "id": "market-snapshot", "label": "Market Snapshot" },
+    { "id": "featured-listings", "label": "Featured Listings" },
+    { "id": "what-1m-buys", "label": "What $1M+ Buys in CITY" },
+    { "id": "neighborhoods", "label": "Neighborhoods to Know" },
+    { "id": "property-types", "label": "Property Types & Architecture" },
+    { "id": "buyer-strategy", "label": "Buyer Strategy for $1M+ Homes" },
+    { "id": "faq", "label": "FAQ" }
+  ],
+  "sections": [
+    {
+      "id": "market-snapshot",
+      "heading": "",
+      "body": "",
+      "stats": [
+        { "label": "Median Price", "value": "" },
+        { "label": "$/Sqft", "value": "" },
+        { "label": "Days on Market", "value": "" },
+        { "label": "Active Listings", "value": "" }
+      ]
+    },
+    {
+      "id": "featured-listings",
+      "heading": "",
+      "body": ""
+    },
+    {
+      "id": "what-1m-buys",
+      "heading": "",
+      "body": ""
+    },
+    {
+      "id": "neighborhoods",
+      "heading": "",
+      "body": "",
+      "neighborhood_cards": [
+        { "name": "", "blurb": "", "best_for": ["", ""], "internal_link_text": "", "internal_link_href": "" }
+      ]
+    },
+    {
+      "id": "property-types",
+      "heading": "",
+      "body": ""
+    },
+    {
+      "id": "buyer-strategy",
+      "heading": "",
+      "body": "",
+      "cta": { "title": "", "body": "", "button_text": "Contact an agent", "button_href": "/contact" }
+    }
+  ],
+  "faq": [
+    { "q": "", "a": "" }
+  ],
+  "internal_linking": {
+    "in_body_links": [
+      { "href": "", "anchor": "", "context_note": "" }
+    ],
+    "related_pages": [],
+    "more_in_city": [],
+    "nearby_cities": []
+  },
+  "trust": {
+    "about_brand": "",
+    "agent_box": {
+      "headline": "Work with a local expert",
+      "body": "",
+      "disclaimer": "General info only. Verify details with official sources and the listing broker."
+    }
+  },
+  "schema_jsonld": {
+    "BreadcrumbList": {},
+    "FAQPage": {},
+    "ItemList": {}
+  }
+}
+
+CONTENT CONSTRAINTS (do not violate):
+- market-snapshot body: 150–220 words AND must mention data_source + last_updated_iso in the text.
+- featured-listings body: 80–140 words; if any of beds/baths/sqft are null, include a single sentence: "Details vary—open the listing for full specs."
+- what-1m-buys body: 180–260 words; explain tradeoffs (location vs size vs condition vs HOA) without adding facts.
+- neighborhoods intro body: 80–120 words; neighborhood_cards: one card per INPUT neighborhood; each blurb 70–110 words using only INPUT notes. If notes are sparse, keep it general.
+- property-types body: 160–240 words; do not assert specific architectural styles unless provided.
+- buyer-strategy body: 200–320 words; include a checklist of 8–12 bullet points inside the text (use "- " hyphen bullets).
+- faq: 8–12 items; each answer 60–110 words; no invented facts.
+
+INTERNAL LINKING RULES:
+- Populate internal_linking.related_pages, more_in_city, nearby_cities directly from INPUT.internal_links arrays (same order).
+- Create 6–10 in_body_links using the same href/anchor pairs from those arrays.
+- Each in_body_link must include a short context_note describing placement (e.g., "Place after Market Snapshot paragraph 2.").
+- All link anchors must match INPUT anchors exactly.
+
+SEO TEXT RULES:
+- Use "$1M+" plus exactly ONE synonym per section body (rotate between: "over $1,000,000", "million-dollar homes", "luxury homes").
+- The H1 must include CITY + "$1M+" wording (not "1m").
+- Canonical path must be: /[state]/[city]/[slug] using INPUT values and keep existing casing style from INPUT (e.g., /california/san-diego/homes-over-1m).
+
+SCHEMA RULES:
+- BreadcrumbList: include positions and item URLs for Home, State, City, and this Page (use canonical_path).
+- FAQPage: include all FAQ Q/A pairs.
+- ItemList: include featured_listings as ListItem elements if present (id, url, price, status). If fields are null, omit those properties.
+
+FINAL CHECK BEFORE RETURNING JSON:
+- No hallucinated facts.
+- Valid JSON.
+- Word counts within ranges.
+- Title/meta length respected.
+Return JSON only.
+`.trim();
+
 // Memory cache (runtime only)
 const memCache = new Map<string, string>();
 // Track in-flight generations to avoid duplicate work (metadata + page render)
@@ -961,3 +1127,191 @@ export async function generateAIDescription(
 // The single callOpenAI implementation with optional maxTokens lives earlier in this file.
 
 // escapeHtml already defined above; do not duplicate.
+
+/**
+ * Generate Landing Page JSON using the SEO Content Generator Prompt
+ * @param inputJson - Input data containing city, filter, neighborhoods, internal links, etc.
+ * @returns Generated landing page content in JSON format matching the required schema
+ */
+export async function generateLandingPageJSON(inputJson: any): Promise<any> {
+  console.log("[generateLandingPageJSON] Starting generation", {
+    city: inputJson.city,
+    filter: inputJson.filter_label,
+  });
+
+  // Validate input
+  if (!inputJson.city || !inputJson.filter_label) {
+    throw new Error(
+      "Input must contain at least city and filter_label properties"
+    );
+  }
+
+  // Build the complete prompt
+  const fullPrompt = `${SEO_CONTENT_GENERATOR_PROMPT}\n\nINPUT JSON:\n${JSON.stringify(
+    inputJson,
+    null,
+    2
+  )}\n\nGenerate the landing page content as valid JSON matching the required output structure exactly.`;
+
+  try {
+    // Call OpenAI with the prompt
+    const response = await callOpenAI(fullPrompt, 4000);
+
+    if (!response) {
+      throw new Error("OpenAI returned empty response");
+    }
+
+    console.log("[generateLandingPageJSON] Raw OpenAI response preview:", {
+      length: response.length,
+      preview: response.slice(0, 200),
+    });
+
+    // Extract JSON from response (in case it's wrapped in markdown code blocks)
+    let jsonText = response.trim();
+
+    // Remove markdown code fences if present
+    if (jsonText.startsWith("```json")) {
+      jsonText = jsonText.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    } else if (jsonText.startsWith("```")) {
+      jsonText = jsonText.replace(/^```\n?/, "").replace(/\n?```$/, "");
+    }
+
+    // Parse JSON
+    let parsedData;
+    try {
+      parsedData = JSON.parse(jsonText);
+    } catch (parseError: any) {
+      console.error("[generateLandingPageJSON] JSON parse error", {
+        error: parseError.message,
+        jsonPreview: jsonText.slice(0, 500),
+      });
+      throw new Error(`Failed to parse generated JSON: ${parseError.message}`);
+    }
+
+    // Validate required top-level keys
+    const requiredKeys = [
+      "seo",
+      "page_intro",
+      "toc",
+      "sections",
+      "faq",
+      "internal_linking",
+      "trust",
+      "schema_jsonld",
+    ];
+    const missingKeys = requiredKeys.filter((key) => !parsedData[key]);
+
+    if (missingKeys.length > 0) {
+      console.error(
+        "[generateLandingPageJSON] Missing required keys:",
+        missingKeys
+      );
+      throw new Error(
+        `Generated JSON is missing required keys: ${missingKeys.join(", ")}`
+      );
+    }
+
+    // Validate SEO title and meta_description lengths
+    if (parsedData.seo.title && parsedData.seo.title.length > 60) {
+      console.warn("[generateLandingPageJSON] Title exceeds 60 characters", {
+        length: parsedData.seo.title.length,
+        title: parsedData.seo.title,
+      });
+      parsedData.seo.title = parsedData.seo.title.substring(0, 57) + "...";
+    }
+
+    if (
+      parsedData.seo.meta_description &&
+      parsedData.seo.meta_description.length > 155
+    ) {
+      console.warn(
+        "[generateLandingPageJSON] Meta description exceeds 155 characters",
+        {
+          length: parsedData.seo.meta_description.length,
+          description: parsedData.seo.meta_description,
+        }
+      );
+      parsedData.seo.meta_description =
+        parsedData.seo.meta_description.substring(0, 152) + "...";
+    }
+
+    // Validate FAQ count (8-12 items)
+    if (!parsedData.faq || parsedData.faq.length < 8) {
+      console.warn(
+        "[generateLandingPageJSON] FAQ has fewer than 8 items",
+        parsedData.faq?.length || 0
+      );
+    }
+
+    if (parsedData.faq && parsedData.faq.length > 12) {
+      console.warn(
+        "[generateLandingPageJSON] FAQ has more than 12 items, truncating",
+        parsedData.faq.length
+      );
+      parsedData.faq = parsedData.faq.slice(0, 12);
+    }
+
+    console.log("[generateLandingPageJSON] ✅ Successfully generated content", {
+      city: inputJson.city,
+      filter: inputJson.filter_label,
+      sections: parsedData.sections?.length || 0,
+      faqs: parsedData.faq?.length || 0,
+      titleLength: parsedData.seo.title?.length || 0,
+      metaLength: parsedData.seo.meta_description?.length || 0,
+    });
+
+    return parsedData;
+  } catch (error: any) {
+    console.error("[generateLandingPageJSON] Generation failed", {
+      error: error.message,
+      stack: error.stack,
+      city: inputJson.city,
+      filter: inputJson.filter_label,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Generate multiple landing pages in batch
+ * @param inputs - Array of input JSON objects
+ * @returns Array of generated landing page JSONs
+ */
+export async function generateBatchLandingPages(
+  inputs: any[]
+): Promise<any[]> {
+  console.log("[generateBatchLandingPages] Starting batch generation", {
+    count: inputs.length,
+  });
+
+  const results: any[] = [];
+  const errors: any[] = [];
+
+  for (const input of inputs) {
+    try {
+      const result = await generateLandingPageJSON(input);
+      results.push(result);
+
+      // Add delay to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } catch (error: any) {
+      console.error("[generateBatchLandingPages] Failed for input", {
+        city: input.city,
+        filter: input.filter_label,
+        error: error.message,
+      });
+      errors.push({ input, error: error.message });
+    }
+  }
+
+  console.log("[generateBatchLandingPages] Batch complete", {
+    successful: results.length,
+    failed: errors.length,
+  });
+
+  if (errors.length > 0) {
+    console.error("[generateBatchLandingPages] Errors:", errors);
+  }
+
+  return results;
+}

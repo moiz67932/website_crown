@@ -43,7 +43,7 @@ async function getPropertiesServer(filters: {
   const offset = ((filters.page || 1) - 1) * perPage;
 
   if (!supabase) {
-    console.error("No Supabase client available");
+    console.error("[properties-page] No Supabase client available");
     return { properties: [], total: 0 };
   }
 

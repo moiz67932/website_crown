@@ -199,6 +199,21 @@ export async function getFeaturedProperties(cityOrState: string, kind: LandingKi
     }
     Object.assign(baseParams, otherFilters)
   }
+
+    // Apply price filtering based on landing page type
+    // For 'homes-under-500k' or 'under-500k' variants: show properties between 400k-500k
+    if (kind === 'homes-under-500k' || kind.includes('under-500k') || kind.includes('below-500k')) {
+      console.log('💰 [getFeaturedProperties] Applying under-500k price filter (400k-500k)')
+      baseParams.minPrice = 400000
+      baseParams.maxPrice = 500000
+    } 
+    // For all other landing pages: show only properties above 1 million
+    else if (kind !== 'homes-over-1m' && kind !== 'luxury-homes') {
+      console.log('💰 [getFeaturedProperties] Applying premium filter (>1M)')
+      baseParams.minPrice = 1000000
+    }
+    // For 'homes-over-1m' and 'luxury-homes', the existing kindFilter already handles this
+
     if (stateInfo.isState) {
       baseParams.state = stateInfo.abbr
     } else {
