@@ -5,6 +5,44 @@ import OpenAI from "openai";
 import { isBuildPhase } from "@/lib/env/buildDetection";
 
 /**
+ * Type representing the structure of landing page content JSON
+ * stored in the landing_pages.content column
+ */
+type LandingContent = {
+  sections?: {
+    local_areas?: { heading?: string; body?: string }
+    buyer_strategy?: { heading?: string; body?: string }
+    property_types?: { heading?: string; body?: string }
+    market_snapshot?: { heading?: string; body?: string }
+    featured_listings?: { heading?: string; body?: string }
+  }
+}
+
+/**
+ * Converts the new structured content JSON into legacy HTML format
+ * for the LandingData.aiDescriptionHtml field used by LandingTemplate
+ */
+function contentToAiDescriptionHtml(content: LandingContent | null | undefined): string {
+  if (!content || !content.sections) return ''
+  const parts: string[] = []
+
+  const add = (section?: { heading?: string; body?: string }) => {
+    if (!section) return
+    if (section.heading) parts.push(`<h2>${section.heading}</h2>`)
+    if (section.body) parts.push(`<p>${section.body}</p>`)
+  }
+
+  const s = content.sections
+  add(s.local_areas)
+  add(s.buyer_strategy)
+  add(s.property_types)
+  add(s.market_snapshot)
+  add(s.featured_listings)
+
+  return parts.join('\n\n')
+}
+
+/**
  * SEO CONTENT GENERATOR SYSTEM PROMPT
  * This is the complete client-provided prompt for generating city landing pages
  */
@@ -643,6 +681,19 @@ export async function generateAIDescription(
   kind: LandingKind,
   opts: GenerateAIDescriptionOptions = {}
 ): Promise<string | undefined> {
+  // ⚠️ DEPRECATION WARNING: This function is deprecated.
+  // Use generateLandingPageContent() from @/ai/landing.ts instead.
+  // The new generator uses:
+  // - Hybrid model fallback (gpt-5-mini → gpt-4o-mini)
+  // - Real Cloud SQL data via buildInputJson()
+  // - Strict JSON schema validation
+  // - Client-provided prompts (BASE_PROMPT + USER_PROMPT_TEMPLATE)
+  console.warn(
+    "[ai.desc] DEPRECATED: Legacy HTML generator called. " +
+    "Consider using generateLandingPageContent() from @/ai/landing.ts instead. " +
+    `City: ${city}, Kind: ${kind}`
+  );
+
   const loweredCity = city.toLowerCase();
   const key = `${loweredCity}::${kind}`;
   const debug = !!process.env.LANDING_DEBUG;
@@ -674,13 +725,13 @@ export async function generateAIDescription(
     return undefined;
   }
 
-  // 1. Supabase lookup (preferred)
+  // 1. Supabase lookup (preferred) - check content column and convert JSON to HTML
   try {
     const sb = getSupabase();
     if (sb) {
       const { data, error } = await sb
         .from("landing_pages")
-        .select("ai_description_html")
+        .select("content")
         .eq("city", loweredCity)
         .eq("page_name", kind)
         .maybeSingle();
@@ -692,32 +743,44 @@ export async function generateAIDescription(
             code: error.code,
           });
       } else if (
-        data?.ai_description_html &&
+        data?.content &&
         !opts.forceRegenerate &&
         !process.env.FORCE_AI_REGEN
       ) {
-        // If a custom prompt is provided, ensure cached HTML is sufficiently long to satisfy the prompt expectations.
-        const minLen = Number(process.env.LANDING_MIN_DESC_LENGTH || 3000);
-        const cachedLen = String(data.ai_description_html || "").length;
-        if (isPlaceholderHtml(data.ai_description_html)) {
-          console.warn(
-            "[ai.desc] supabase value is placeholder; ignoring and regenerating",
-            { key }
-          );
-        } else if (opts.customPrompt && cachedLen < minLen) {
-          console.warn(
-            "[ai.desc] supabase cached html too short for custom prompt; forcing regeneration",
-            { key, cachedLen, minLen }
-          );
+        // Parse content JSON and convert to HTML string for legacy template
+        const rawContent = data.content;
+        const content: LandingContent =
+          typeof rawContent === 'string' ? JSON.parse(rawContent) : rawContent;
+        
+        // Convert structured JSON to HTML string using helper
+        const contentValue = contentToAiDescriptionHtml(content);
+        
+        if (!contentValue) {
+          if (trace) console.log("[ai.desc] supabase miss (empty content after conversion)", { key });
         } else {
-          memCache.set(key, data.ai_description_html);
-          if (trace) console.log("[ai.desc] supabase cache hit", key);
-          return data.ai_description_html;
+          // If a custom prompt is provided, ensure cached HTML is sufficiently long to satisfy the prompt expectations.
+          const minLen = Number(process.env.LANDING_MIN_DESC_LENGTH || 3000);
+          const cachedLen = String(contentValue || "").length;
+          if (isPlaceholderHtml(contentValue)) {
+            console.warn(
+              "[ai.desc] supabase value is placeholder; ignoring and regenerating",
+              { key }
+            );
+          } else if (opts.customPrompt && cachedLen < minLen) {
+            console.warn(
+              "[ai.desc] supabase cached html too short for custom prompt; forcing regeneration",
+              { key, cachedLen, minLen }
+            );
+          } else {
+            memCache.set(key, contentValue);
+            if (trace) console.log("[ai.desc] supabase cache hit (JSON->HTML)", key);
+            return contentValue;
+          }
         }
       } else if (trace) {
         console.log("[ai.desc] supabase miss", {
           key,
-          hadData: !!data?.ai_description_html,
+          hadData: !!data?.content,
         });
       }
     } else if (trace) {
@@ -757,7 +820,7 @@ export async function generateAIDescription(
                   city: loweredCity,
                   page_name: kind,
                   kind,
-                  ai_description_html: legacyHtml,
+                  content: legacyHtml,
                   updated_at: new Date().toISOString(),
                 },
                 { onConflict: "city,page_name" }
@@ -803,7 +866,7 @@ export async function generateAIDescription(
               city: loweredCity,
               page_name: kind,
               kind,
-              ai_description_html: cached,
+              content: cached,
               updated_at: new Date().toISOString(),
             },
             { onConflict: "city,page_name" }
@@ -1069,7 +1132,7 @@ export async function generateAIDescription(
                 city: loweredCity,
                 page_name: kind,
                 kind,
-                ai_description_html: html,
+                content: html,
                 updated_at: new Date().toISOString(),
               },
               { onConflict: "city,page_name" }

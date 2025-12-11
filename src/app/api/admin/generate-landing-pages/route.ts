@@ -52,14 +52,22 @@ export async function POST(request: NextRequest) {
             aiDescription = undefined;
           }
 
+          // Store in content JSON column
           const pageData = {
             city: cityName,
             page_name: landing.slug,
             kind: landing.slug,
-            ai_description_html: aiDescription || null,
-            seo_metadata: {
-              title: landing.title(cityName),
-              description: landing.description(cityName),
+            content: aiDescription ? {
+              seo: {
+                title: landing.title(cityName),
+                meta_description: landing.description(cityName),
+              },
+              legacy_html: aiDescription, // Store legacy HTML within content for backward compatibility
+            } : {
+              seo: {
+                title: landing.title(cityName),
+                meta_description: landing.description(cityName),
+              }
             },
           };
 

@@ -89,14 +89,27 @@ export default function LandingPagesManagementPage() {
   const handleRegenerateContent = async (pageId: string, city: string, kind: string) => {
     if (confirm(`Regenerate AI content for ${city} - ${kind}?`)) {
       try {
-        const response = await fetch(`/api/admin/landing-pages/${pageId}/regenerate`, {
+        // Use the NEW JSON generator with hybrid model fallback
+        const response = await fetch("/api/admin/landing-pages/generate-content", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            city,
+            kind,
+            format: "json",
+            pageId, // Pass pageId for database update
+          }),
         });
+
         if (response.ok) {
-          alert("Content regenerated successfully!");
+          const result = await response.json();
+          const modelInfo = result._metadata?.model_used || "AI";
+          const fallbackNote = result._metadata?.fallback_attempted ? " (fallback applied)" : "";
+          alert(`Content regenerated successfully using ${modelInfo}${fallbackNote}!`);
           fetchLandingPages();
         } else {
-          alert("Failed to regenerate content");
+          const errorData = await response.json().catch(() => ({}));
+          alert(`Failed to regenerate content: ${errorData.error || errorData.details || "Unknown error"}`);
         }
       } catch (error) {
         console.error("Error regenerating content:", error);

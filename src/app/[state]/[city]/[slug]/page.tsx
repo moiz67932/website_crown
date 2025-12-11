@@ -2,11 +2,23 @@
  * SEO Landing Page - Server-Side Rendered
  * Route: /[state]/[city]/[slug]
  * Example: /california/san-diego/homes-over-1m
+ * 
+ * This page supports two content generation modes:
+ * 1. New mode (USE_NEW_AI_MODULE=true): Uses src/ai/landing.ts with client's new prompt
+ * 2. Legacy mode: Uses src/lib/landing/ai.ts with existing prompt
  */
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+// Legacy AI module
 import { generateLandingPageJSON } from "@/lib/landing/ai";
+// New AI module (client's prompts)
+import {
+  generateLandingPageContent,
+  type LandingPageContent,
+  type InputJson,
+} from "@/ai/landing";
+import { PAGE_TYPE_BY_SLUG, isValidPageTypeSlug } from "@/ai/pageTypes";
 import {
   generateBreadcrumb,
   generateFAQSchema,
@@ -27,6 +39,9 @@ import {
   TableOfContents,
 } from "@/components/landing/landing-sections";
 import { FAQAccordion } from "@/components/ui/faq-accordion";
+
+// Feature flag: Set to true to use the new AI module with client's prompts
+const USE_NEW_AI_MODULE = process.env.USE_NEW_AI_MODULE === "true";
 
 // Enable ISR with revalidation
 export const revalidate = 3600; // Revalidate every hour
@@ -67,9 +82,8 @@ export async function generateMetadata({
 
   // Try to get generated content for metadata
   try {
-    // Build input for AI generator
-    const inputJson = buildInputJson(state, city, slug);
-    const content = await generateLandingPageJSON(inputJson);
+    // Generate content using appropriate AI module
+    const content = await generateContent(state, city, slug);
 
     const title = validateMetaLength(content.seo.title, "title");
     const description = validateMetaLength(
@@ -122,9 +136,9 @@ export async function generateMetadata({
 }
 
 /**
- * Build input JSON for AI content generator
+ * Build input JSON for AI content generator (Legacy format)
  */
-function buildInputJson(state: string, city: string, slug: string) {
+function buildLegacyInputJson(state: string, city: string, slug: string) {
   // Convert URL params to readable format
   const cityName = city.replace(/-/g, " ");
   const stateName = state.replace(/-/g, " ");
@@ -182,18 +196,77 @@ function buildInputJson(state: string, city: string, slug: string) {
 }
 
 /**
+ * Build input JSON for the new AI module (client's schema)
+ */
+function buildNewInputJson(state: string, city: string, slug: string): InputJson {
+  const cityName = city.replace(/-/g, " ");
+  const cityTitle = cityName.replace(/\b\w/g, (c) => c.toUpperCase());
+
+  return {
+    city: cityTitle,
+    county: "",
+    region: "Southern California",
+    nearby_cities: ["La Jolla", "Coronado", "Del Mar", "Carlsbad"],
+    canonical_path: `/${state}/${city}/${slug}`,
+    data_source: "MLS Data",
+    last_updated_iso: new Date().toISOString(),
+    featured_listings_has_missing_specs: true,
+    market_stats_text: "",
+    property_notes: "",
+    local_areas: [
+      { name: "La Jolla", notes: "Coastal community known for beaches and upscale properties" },
+      { name: "Pacific Beach", notes: "Beach town with active lifestyle and diverse housing" },
+      { name: "North Park", notes: "Urban neighborhood with walkable streets and restaurants" },
+    ],
+    internal_links: {
+      related_pages: [
+        { href: `/${state}/${city}/condos-for-sale`, anchor: `${cityTitle} Condos for Sale` },
+        { href: `/${state}/${city}/homes-for-sale`, anchor: `${cityTitle} Homes for Sale` },
+      ],
+      more_in_city: [
+        { href: `/${state}/${city}/luxury-homes`, anchor: `${cityTitle} Luxury Homes` },
+      ],
+      nearby_cities: [
+        { href: `/${state}/la-jolla/homes-for-sale`, anchor: "La Jolla" },
+        { href: `/${state}/coronado/homes-for-sale`, anchor: "Coronado" },
+      ],
+    },
+  };
+}
+
+/**
+ * Generate content using the appropriate AI module
+ */
+async function generateContent(state: string, city: string, slug: string) {
+  if (USE_NEW_AI_MODULE && isValidPageTypeSlug(slug)) {
+    console.log("[Landing Page] Using NEW AI module with client prompts");
+    const pageTypeConfig = PAGE_TYPE_BY_SLUG[slug];
+    const inputJson = buildNewInputJson(state, city, slug);
+    return generateLandingPageContent(pageTypeConfig, inputJson);
+  } else {
+    console.log("[Landing Page] Using LEGACY AI module");
+    const inputJson = buildLegacyInputJson(state, city, slug);
+    return generateLandingPageJSON(inputJson);
+  }
+}
+
+/**
  * Main Page Component - Server-Side Rendered
+ * 
+ * Supports both new and legacy content formats:
+ * - New format: Uses client's JSON schema with sections object
+ * - Legacy format: Uses array-based sections structure
  */
 export default async function LandingPage({ params }: PageProps) {
   const resolvedParams = await params;
   const { state, city, slug } = resolvedParams;
 
   let content: any;
+  const isNewFormat = USE_NEW_AI_MODULE && isValidPageTypeSlug(slug);
 
   try {
-    // Generate AI content
-    const inputJson = buildInputJson(state, city, slug);
-    content = await generateLandingPageJSON(inputJson);
+    // Generate AI content using appropriate module
+    content = await generateContent(state, city, slug);
   } catch (error) {
     console.error("[Landing Page] Content generation failed:", error);
     // Return 404 if content generation fails
@@ -229,6 +302,197 @@ export default async function LandingPage({ params }: PageProps) {
     city.replace(/-/g, " "),
     state.replace(/-/g, " ")
   );
+
+  // Helper to get intro content based on format
+  const getIntro = () => {
+    if (isNewFormat) {
+      return {
+        subheadline: content.intro.subheadline,
+        quick_bullets: content.intro.quick_bullets,
+        last_updated_line: content.intro.last_updated_line,
+      };
+    }
+    return {
+      subheadline: content.page_intro?.subheadline || "",
+      quick_bullets: content.page_intro?.quick_bullets || [],
+      last_updated_line: content.page_intro?.last_updated_line || "",
+    };
+  };
+
+  // Render sections based on format (new = object, legacy = array)
+  const renderSections = () => {
+    if (isNewFormat) {
+      // New format: sections is an object with 11 named properties
+      const sections = content.sections;
+      return (
+        <>
+          {/* 1. Hero Overview */}
+          <section id="hero-overview">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+              {sections.hero_overview.heading}
+            </h2>
+            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+              {sections.hero_overview.body}
+            </div>
+          </section>
+
+          {/* 2. About the Area */}
+          <section id="about-area">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+              {sections.about_area.heading}
+            </h2>
+            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+              {sections.about_area.body}
+            </div>
+          </section>
+
+          {/* 3. Neighborhoods & Nearby Areas */}
+          <NeighborhoodCards
+            heading={sections.neighborhoods.heading}
+            body={sections.neighborhoods.body}
+            cards={sections.neighborhoods.cards.map((card: any) => ({
+              name: card.name,
+              blurb: card.blurb,
+              best_for: card.best_for,
+              internal_link_text: card.internal_link_text,
+              internal_link_href: card.internal_link_href,
+            }))}
+          />
+
+          {/* 4. Buyer Strategy */}
+          <BuyerStrategy
+            heading={sections.buyer_strategy.heading}
+            body={sections.buyer_strategy.body}
+            cta={sections.buyer_strategy.cta}
+          />
+
+          {/* 5. Property Types */}
+          <PropertyTypes
+            heading={sections.property_types.heading}
+            body={sections.property_types.body}
+          />
+
+          {/* 6. Market Snapshot */}
+          <MarketSnapshot
+            heading={sections.market_snapshot.heading}
+            body={sections.market_snapshot.body}
+            stats={[]} // New format mentions stats in the body text
+          />
+
+          {/* 7. Schools & Education */}
+          <section id="schools-education">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+              {sections.schools_education.heading}
+            </h2>
+            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+              {sections.schools_education.body}
+            </div>
+          </section>
+
+          {/* 8. Lifestyle & Amenities */}
+          <section id="lifestyle-amenities">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+              {sections.lifestyle_amenities.heading}
+            </h2>
+            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+              {sections.lifestyle_amenities.body}
+            </div>
+          </section>
+
+          {/* 9. Featured Listings */}
+          <section id="featured-listings">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+              {sections.featured_listings.heading}
+            </h2>
+            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+              {sections.featured_listings.body}
+            </div>
+          </section>
+
+          {/* 10. Working with Crown Coastal Homes */}
+          <section id="working-with-agent">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+              {sections.working_with_agent.heading}
+            </h2>
+            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+              {sections.working_with_agent.body}
+            </div>
+          </section>
+        </>
+      );
+    } else {
+      // Legacy format: sections is an array
+      return content.sections.map((section: any) => {
+        switch (section.id) {
+          case "market-snapshot":
+            return (
+              <MarketSnapshot
+                key={section.id}
+                heading={section.heading}
+                body={section.body}
+                stats={section.stats}
+              />
+            );
+
+          case "featured-listings":
+            return (
+              <section key={section.id} id="featured-listings">
+                <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+                  {section.heading}
+                </h2>
+                <div
+                  className="prose prose-lg dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: section.body }}
+                />
+              </section>
+            );
+
+          case "what-1m-buys":
+            return (
+              <WhatMBuys
+                key={section.id}
+                heading={section.heading}
+                body={section.body}
+              />
+            );
+
+          case "neighborhoods":
+            return (
+              <NeighborhoodCards
+                key={section.id}
+                heading={section.heading}
+                body={section.body}
+                cards={section.neighborhood_cards || []}
+              />
+            );
+
+          case "property-types":
+            return (
+              <PropertyTypes
+                key={section.id}
+                heading={section.heading}
+                body={section.body}
+              />
+            );
+
+          case "buyer-strategy":
+            return (
+              <BuyerStrategy
+                key={section.id}
+                heading={section.heading}
+                body={section.body}
+                cta={section.cta}
+              />
+            );
+
+          default:
+            return null;
+        }
+      });
+    }
+  };
+
+  const intro = getIntro();
 
   return (
     <>
@@ -268,85 +532,20 @@ export default async function LandingPage({ params }: PageProps) {
             </h1>
 
             <PageIntro
-              subheadline={content.page_intro.subheadline}
-              quick_bullets={content.page_intro.quick_bullets}
-              last_updated_line={content.page_intro.last_updated_line}
+              subheadline={intro.subheadline}
+              quick_bullets={intro.quick_bullets}
+              last_updated_line={intro.last_updated_line}
             />
           </header>
 
-          {/* Table of Contents */}
-          <TableOfContents items={content.toc} />
+          {/* Table of Contents - only show for legacy format */}
+          {!isNewFormat && content.toc && (
+            <TableOfContents items={content.toc} />
+          )}
 
           {/* Main Sections */}
           <div className="space-y-16">
-            {content.sections.map((section: any) => {
-              switch (section.id) {
-                case "market-snapshot":
-                  return (
-                    <MarketSnapshot
-                      key={section.id}
-                      heading={section.heading}
-                      body={section.body}
-                      stats={section.stats}
-                    />
-                  );
-
-                case "featured-listings":
-                  return (
-                    <section key={section.id} id="featured-listings">
-                      <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-                        {section.heading}
-                      </h2>
-                      <div
-                        className="prose prose-lg dark:prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: section.body }}
-                      />
-                      {/* Add PropertyCard components here if you have listings data */}
-                    </section>
-                  );
-
-                case "what-1m-buys":
-                  return (
-                    <WhatMBuys
-                      key={section.id}
-                      heading={section.heading}
-                      body={section.body}
-                    />
-                  );
-
-                case "neighborhoods":
-                  return (
-                    <NeighborhoodCards
-                      key={section.id}
-                      heading={section.heading}
-                      body={section.body}
-                      cards={section.neighborhood_cards || []}
-                    />
-                  );
-
-                case "property-types":
-                  return (
-                    <PropertyTypes
-                      key={section.id}
-                      heading={section.heading}
-                      body={section.body}
-                    />
-                  );
-
-                case "buyer-strategy":
-                  return (
-                    <BuyerStrategy
-                      key={section.id}
-                      heading={section.heading}
-                      body={section.body}
-                      cta={section.cta}
-                    />
-                  );
-
-                default:
-                  return null;
-              }
-            })}
+            {renderSections()}
 
             {/* FAQ Section */}
             <section id="faq" className="py-12">

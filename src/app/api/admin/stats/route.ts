@@ -66,8 +66,8 @@ export async function GET() {
       // Blog posts stats - no views column in posts table
       supabase.from("posts").select("id, status, created_at", { count: "exact" }),
       
-      // Landing pages stats - no created_at column exists, select only id and ai_description_html
-      supabase.from("landing_pages").select("id, ai_description_html", { count: "exact" }),
+      // Landing pages stats - select id and content to check if page has content
+      supabase.from("landing_pages").select("id, content", { count: "exact" }),
       
       // Leads stats (last 30 days for "this month")
       supabase.from("leads").select("id, status, created_at", { count: "exact" }),
@@ -123,8 +123,8 @@ export async function GET() {
 
     // Calculate real landing page stats
     const landingPages = landingPagesData.data || [];
-    // Landing pages are "published" if they have ai_description_html content
-    const landingPagesPublished = landingPages.filter((p: any) => p.ai_description_html && p.ai_description_html.trim() !== '').length;
+    // Landing pages are "published" if they have content
+    const landingPagesPublished = landingPages.filter((p: any) => p.content && (typeof p.content === 'object' || (typeof p.content === 'string' && p.content.trim() !== ''))).length;
     const landingPagesPreviousCount = landingPagesPrevious.count || 0;
     // Since no created_at, can't calculate this month trend, just show change from baseline
     const landingTrend = landingPagesPublished - landingPagesPreviousCount;

@@ -98,24 +98,33 @@ export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ f
   if (!sb) return null
   const pageName = slug
   const loweredCity = city.toLowerCase()
-  // 1) Read existing
+  // 1) Read existing - check content JSON for faqs
   const { data, error } = await sb
     .from('landing_pages')
-    .select('faqs, seo_metadata')
+    .select('content')
     .eq('city', loweredCity)
     .eq('page_name', pageName)
     .maybeSingle()
-  if (!error && data?.faqs) {
-    const existing = (data.faqs as FAQItem[]) || []
-    if (existing.length >= 10) {
+  
+  // Check if content has faq array (new format)
+  const contentJson = data?.content && typeof data.content === 'object' ? data.content : null
+  const existingFaqs = contentJson?.faq || contentJson?.faqs || []
+  
+  if (!error && existingFaqs.length >= 10) {
+    // Normalize FAQ format (content.faq uses {q, a} format)
+    const normalizedFaqs: FAQItem[] = existingFaqs.map((f: any) => ({
+      question: f.question || f.q || '',
+      answer: f.answer || f.a || ''
+    })).filter((f: FAQItem) => f.question && f.answer)
+    
+    if (normalizedFaqs.length >= 10) {
       return {
-        faqs: existing,
-        markdown: buildMarkdownFromFaqs(existing),
-        jsonLd: buildFAQJsonLd(loweredCity, pageName, existing),
-        meta: data.seo_metadata as SEOMeta | undefined
+        faqs: normalizedFaqs,
+        markdown: buildMarkdownFromFaqs(normalizedFaqs),
+        jsonLd: buildFAQJsonLd(loweredCity, pageName, normalizedFaqs),
+        meta: contentJson?.seo as SEOMeta | undefined
       }
     }
-    // else fall through to regenerate to reach 10
   }
   // 2) Generate via OpenAI using shared FAQ template + SQL context
   if (!process.env.OPENAI_API_KEY) return { faqs: [], markdown: '', jsonLd: {} }
@@ -166,13 +175,31 @@ export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ f
   // Trim to exactly 10 if overfilled
   if (faqs.length > 10) faqs = faqs.slice(0, 10)
 
-  // 3) Persist
+  // 3) Persist - store as part of content JSON
+  // First fetch existing content to merge
+  const { data: existingData } = await sb
+    .from('landing_pages')
+    .select('content')
+    .eq('city', loweredCity)
+    .eq('page_name', pageName)
+    .maybeSingle()
+  
+  const existingContent = existingData?.content && typeof existingData.content === 'object' 
+    ? existingData.content 
+    : {}
+  
+  // Convert FAQs to the standard {q, a} format used by content JSON
+  const faqsForContent = faqs.map(f => ({ q: f.question, a: f.answer }))
+  
   await sb.from('landing_pages').upsert({
     city: loweredCity,
     page_name: pageName,
     kind: pageName,
-    faqs: faqs as any,
-    seo_metadata: meta as any,
+    content: {
+      ...existingContent,
+      faq: faqsForContent,
+      seo: meta ? { ...(existingContent.seo || {}), ...meta } : existingContent.seo
+    },
     updated_at: new Date().toISOString()
   }, { onConflict: 'city,page_name' })
 

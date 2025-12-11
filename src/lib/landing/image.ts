@@ -15,8 +15,8 @@ const pendingHero = new Map<string, Promise<string | undefined>>()
  * Fetch (and cache) a hero image for a landing page (city + kind).
  * Order of operations:
  * 1. Memory cache
- * 2. Supabase landing_pages.hero_image_url
- * 3. Unsplash search -> persist to Supabase (upsert) -> memory cache
+ * 2. Supabase landing_pages.content.hero_image_url
+ * 3. Unsplash search -> persist to content JSON -> memory cache
  */
 export async function getLandingHeroImage(city: string, kind: string): Promise<string | undefined> {
   const loweredCity = city.toLowerCase()
@@ -40,20 +40,21 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
 
   if (pending.has(key)) return pending.get(key)!
   const p = (async () => {
-    // 1. Supabase lookup
+    // 1. Supabase lookup - check content JSON for hero_image_url
     try {
       const sb = getSupabase()
       if (sb) {
         const { data, error } = await sb
           .from('landing_pages')
-          .select('hero_image_url')
+          .select('content')
           .eq('city', loweredCity)
           .eq('page_name', kind)
           .maybeSingle()
-        if (!error && data?.hero_image_url) {
-          memCache.set(key, data.hero_image_url)
+        const heroUrl = data?.content?.hero_image_url
+        if (!error && heroUrl) {
+          memCache.set(key, heroUrl)
           if (trace) console.log('[landing.hero] supabase hit', { key })
-          return data.hero_image_url
+          return heroUrl
         } else if (error && trace) {
           console.warn('[landing.hero] supabase select error', { key, msg: error.message, code: error.code })
         } else if (trace) {
@@ -104,17 +105,32 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
       return undefined
     }
 
-    // 3. Persist (best-effort)
+    // 3. Persist (best-effort) - store in content JSON
     try {
       const sb2 = getSupabase()
       if (sb2) {
+        // First fetch existing content to merge
+        const { data: existingData } = await sb2
+          .from('landing_pages')
+          .select('content')
+          .eq('city', loweredCity)
+          .eq('page_name', kind)
+          .maybeSingle()
+        
+        const existingContent = existingData?.content && typeof existingData.content === 'object' 
+          ? existingData.content 
+          : {}
+        
         const { error } = await sb2
           .from('landing_pages')
           .upsert({
             city: loweredCity,
             page_name: kind,
             kind,
-            hero_image_url: imageUrl,
+            content: {
+              ...existingContent,
+              hero_image_url: imageUrl,
+            },
             updated_at: new Date().toISOString()
           }, { onConflict: 'city,page_name' })
           .select('id')
@@ -135,7 +151,7 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
 }
 
 
-/** NEW: curated inline images, persisted on landing_pages.inline_images_json */
+/** NEW: curated inline images, persisted in content.inline_images */
 const memInline = new Map<string, InlineImg[] | null>()
 const pendingInline = new Map<string, Promise<InlineImg[]>>()
 
@@ -158,30 +174,31 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
   }
 
   const p = (async (): Promise<InlineImg[]> => {
-    // 1) Try Supabase cache
+    // 1) Try Supabase cache - check content JSON for inline_images
     try {
       const sb = getSupabase()
       if (sb) {
         console.log('[landing.inline] 🔍 Checking Supabase cache', { key })
         const { data, error } = await sb
           .from('landing_pages')
-          .select('inline_images_json')
+          .select('content')
           .eq('city', loweredCity)
           .eq('page_name', kind)
           .maybeSingle()
         
+        const inlineImages = data?.content?.inline_images
         if (error) {
           console.warn('[landing.inline] ⚠️ Supabase error', { key, error: error.message })
-        } else if (data?.inline_images_json && Array.isArray(data.inline_images_json) && data.inline_images_json.length) {
+        } else if (inlineImages && Array.isArray(inlineImages) && inlineImages.length) {
           console.log('[landing.inline] ✅ Supabase cache hit', { 
             key, 
-            count: data.inline_images_json.length,
-            images: data.inline_images_json.map((img: any) => ({ position: img.position, url: img.url.slice(0, 50) + '...' }))
+            count: inlineImages.length,
+            images: inlineImages.map((img: any) => ({ position: img.position, url: img.url.slice(0, 50) + '...' }))
           })
-          memInline.set(key, data.inline_images_json as InlineImg[])
-          return data.inline_images_json as InlineImg[]
+          memInline.set(key, inlineImages as InlineImg[])
+          return inlineImages as InlineImg[]
         } else {
-          console.log('[landing.inline] ℹ️ Supabase cache miss', { key, hasData: !!data, hasImages: !!data?.inline_images_json })
+          console.log('[landing.inline] ℹ️ Supabase cache miss', { key, hasData: !!data, hasImages: !!inlineImages })
         }
       } else {
         console.warn('[landing.inline] ⚠️ No Supabase client available')
@@ -241,16 +258,32 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
       images: imgs.map(img => ({ position: img.position, url: img.url.slice(0, 50) + '...' }))
     })
 
-    // 3) Persist best-effort
+    // 3) Persist best-effort - store in content JSON
     try {
       const sb2 = getSupabase()
       if (sb2 && imgs.length > 0) {
         console.log('[landing.inline] 💾 Persisting to Supabase', { key, count: imgs.length })
+        
+        // First fetch existing content to merge
+        const { data: existingData } = await sb2
+          .from('landing_pages')
+          .select('content')
+          .eq('city', loweredCity)
+          .eq('page_name', kind)
+          .maybeSingle()
+        
+        const existingContent = existingData?.content && typeof existingData.content === 'object' 
+          ? existingData.content 
+          : {}
+        
         const { error } = await sb2.from('landing_pages').upsert({
           city: loweredCity,
           page_name: kind,
           kind,
-          inline_images_json: imgs,
+          content: {
+            ...existingContent,
+            inline_images: imgs,
+          },
           updated_at: new Date().toISOString()
         }, { onConflict: 'city,page_name' })
         

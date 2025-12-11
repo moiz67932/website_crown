@@ -50,20 +50,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data to match the frontend expectations
-    const transformedPages = (pages || []).map((page: any) => ({
-      id: page.id,
-      city: page.city,
-      state: "CA", // Most pages are CA
-      slug: `/california/${page.city.toLowerCase().replace(/\s+/g, '-')}/${page.kind || page.page_name}`,
-      page_type: page.kind || page.page_name,
-      title: page.seo_metadata?.title || generateTitle(page.city, page.kind || page.page_name),
-      description: page.seo_metadata?.description || extractDescription(page.ai_description_html),
-      property_count: propertyCounts[page.city] || 0,
-      views: 0, // TODO: Track views
-      status: page.ai_description_html ? "published" : "draft",
-      created_at: page.created_at,
-      updated_at: page.updated_at,
-    }));
+    const transformedPages = (pages || []).map((page: any) => {
+      // Read from content JSON
+      const contentJson = page.content && typeof page.content === 'object' ? page.content : null;
+      const seo = contentJson?.seo || {};
+      
+      return {
+        id: page.id,
+        city: page.city,
+        state: "CA", // Most pages are CA
+        slug: `/california/${page.city.toLowerCase().replace(/\s+/g, '-')}/${page.kind || page.page_name}`,
+        page_type: page.kind || page.page_name,
+        title: seo.title || generateTitle(page.city, page.kind || page.page_name),
+        description: seo.meta_description || contentJson?.intro?.subheadline || extractDescription(contentJson),
+        property_count: propertyCounts[page.city] || 0,
+        views: 0, // TODO: Track views
+        status: contentJson ? "published" : "draft",
+        created_at: page.created_at,
+        updated_at: page.updated_at,
+      };
+    });
 
     return NextResponse.json({ pages: transformedPages });
   } catch (error) {
@@ -85,11 +91,16 @@ function generateTitle(city: string, kind: string): string {
   return `${kindTitle} in ${cityTitle}, CA`;
 }
 
-// Helper function to extract description from HTML
-function extractDescription(html: string | null): string {
-  if (!html) return "";
-  const stripped = html.replace(/<[^>]*>/g, "");
-  return stripped.slice(0, 200);
+// Helper function to extract description from content JSON
+function extractDescription(content: any): string {
+  if (!content) return "";
+  // If content is string (legacy), strip HTML tags
+  if (typeof content === 'string') {
+    const stripped = content.replace(/<[^>]*>/g, "");
+    return stripped.slice(0, 200);
+  }
+  // If content is object (new format), extract from sections or intro
+  return content.intro?.subheadline || content.seo?.meta_description || "";
 }
 
 /**
@@ -105,15 +116,23 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Transform the frontend data to match the database schema
+    // Transform the frontend data to match the database schema - store in content JSON
     const pageData = {
       city: body.city,
       page_name: body.page_type,
       kind: body.page_type,
-      ai_description_html: body.content || null,
-      seo_metadata: {
-        title: body.meta_title || body.title,
-        description: body.meta_description || body.description,
+      content: body.content ? (
+        typeof body.content === 'object' ? body.content : {
+          seo: {
+            title: body.meta_title || body.title,
+            meta_description: body.meta_description || body.description,
+          }
+        }
+      ) : {
+        seo: {
+          title: body.meta_title || body.title,
+          meta_description: body.meta_description || body.description,
+        }
       },
     };
 

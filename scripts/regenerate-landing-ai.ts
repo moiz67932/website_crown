@@ -48,18 +48,18 @@ async function main() {
     process.exit(1)
   }
 
-  console.log('[regen] querying landing_pages for missing/placeholder ai descriptions')
+  console.log('[regen] querying landing_pages for missing/placeholder content')
   const { data: rows, error } = await sb
     .from('landing_pages')
-    .select('city,page_name,ai_description_html')
-    .or("ai_description_html.is.null,ai_description_html.ilike.%25<!--placeholder-->%25")
+    .select('city,page_name,content')
+    .or("content.is.null,content->>legacy_html.ilike.%25<!--placeholder-->%25")
     .limit(500)
 
   if (error) {
     console.error('[regen] supabase select error', error.message)
     process.exit(1)
   }
-  const targets = (rows || []) as Array<{ city: string; page_name: string; ai_description_html: string | null }>
+  const targets = (rows || []) as Array<{ city: string; page_name: string; content: any }>
   if (!targets.length) {
     console.log('[regen] no targets found. Exiting.')
     return
@@ -93,9 +93,19 @@ async function main() {
     }
 
     try {
+      // Merge with existing content JSON
+      const existingContent = t.content && typeof t.content === 'object' ? t.content : {}
       const { error: upsertErr } = await sb
         .from('landing_pages')
-        .upsert({ city: city.toLowerCase(), page_name: kind, ai_description_html: html, updated_at: new Date().toISOString() }, { onConflict: 'city,page_name' })
+        .upsert({ 
+          city: city.toLowerCase(), 
+          page_name: kind, 
+          content: {
+            ...existingContent,
+            legacy_html: html,
+          },
+          updated_at: new Date().toISOString() 
+        }, { onConflict: 'city,page_name' })
       if (upsertErr) console.error('[regen] supabase upsert failed', upsertErr.message)
       else console.log(`[regen] upsert ok for ${city}/${kind}`)
     } catch (e) {

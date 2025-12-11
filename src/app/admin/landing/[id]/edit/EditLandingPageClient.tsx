@@ -46,17 +46,22 @@ export default function EditLandingPageClient({ id }: { id: string }) {
         const data = await response.json();
         const dbPage = data.page;
         
+        // Get content from the unified content JSON column
+        const contentJson = dbPage.content && typeof dbPage.content === 'object' ? dbPage.content : null;
+        
         // Transform database format to form format
         setPage({
           city: dbPage.city || "",
           state: "CA",
           slug: `/california/${(dbPage.city || "").toLowerCase().replace(/\s+/g, '-')}/${dbPage.kind || dbPage.page_name}`,
           page_type: dbPage.kind || dbPage.page_name || "homes-for-sale",
-          title: dbPage.seo_metadata?.title || generateTitle(dbPage.city, dbPage.kind || dbPage.page_name),
-          description: dbPage.seo_metadata?.description || "",
-          content: dbPage.ai_description_html || "",
-          meta_title: dbPage.seo_metadata?.title || "",
-          meta_description: dbPage.seo_metadata?.description || "",
+          // Read from content.seo if available
+          title: contentJson?.seo?.title || generateTitle(dbPage.city, dbPage.kind || dbPage.page_name),
+          description: contentJson?.intro?.subheadline || contentJson?.seo?.meta_description || "",
+          // Store full content JSON as stringified version for textarea editing
+          content: contentJson ? JSON.stringify(contentJson, null, 2) : "",
+          meta_title: contentJson?.seo?.title || "",
+          meta_description: contentJson?.seo?.meta_description || "",
           status: "published", // Always published in the current schema
         });
       }
@@ -79,15 +84,33 @@ export default function EditLandingPageClient({ id }: { id: string }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Transform form data to database format
+      // Parse the content JSON string back to object
+      let contentJson = null;
+      try {
+        contentJson = page.content ? JSON.parse(page.content) : null;
+      } catch {
+        // If parsing fails, treat content as legacy string
+        contentJson = null;
+      }
+      
+      // Transform form data to database format - store in content column only
       const updateData = {
         city: page.city,
         page_name: page.page_type,
         kind: page.page_type,
-        ai_description_html: page.content,
-        seo_metadata: {
-          title: page.meta_title || page.title,
-          description: page.meta_description || page.description,
+        // Store as content JSON, merging SEO fields from form
+        content: contentJson ? {
+          ...contentJson,
+          seo: {
+            ...(contentJson.seo || {}),
+            title: page.meta_title || page.title,
+            meta_description: page.meta_description || page.description,
+          }
+        } : {
+          seo: {
+            title: page.meta_title || page.title,
+            meta_description: page.meta_description || page.description,
+          }
         },
       };
 
@@ -118,16 +141,30 @@ export default function EditLandingPageClient({ id }: { id: string }) {
 
     setSaving(true);
     try {
-      const response = await fetch(`/api/admin/landing-pages/${id}/regenerate`, {
+      // Use the NEW JSON generator with hybrid model fallback
+      const response = await fetch("/api/admin/landing-pages/generate-content", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city: page.city,
+          kind: page.page_type, // Use page_type from form data
+          format: "json",
+          pageId: id, // Pass pageId for database update
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setPage({ ...page, content: data.ai_description_html || "" });
-        alert("Content regenerated successfully!");
+        // Update page with new content (JSON format)
+        const newContent = data.content ? JSON.stringify(data.content, null, 2) : "";
+        setPage({ ...page, content: newContent });
+        
+        const modelInfo = data._metadata?.model_used || "AI";
+        const fallbackNote = data._metadata?.fallback_attempted ? " (fallback applied)" : "";
+        alert(`Content regenerated successfully using ${modelInfo}${fallbackNote}!`);
       } else {
-        alert("Failed to regenerate content");
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Failed to regenerate content: ${errorData.error || errorData.details || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error regenerating content:", error);

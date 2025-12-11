@@ -18,6 +18,168 @@ export interface LandingSEO {
   ogImage?: string
 }
 
+// ============================================================================
+// New AI-Generated Landing Page Content Types (matching client's JSON schema)
+// ============================================================================
+
+/**
+ * SEO fields for the landing page
+ */
+export interface LandingPageSEO {
+  title: string;
+  meta_description: string;
+  h1: string;
+  canonical_path: string;
+  og_title: string;
+  og_description: string;
+}
+
+/**
+ * Intro section with subheadline and quick bullets
+ */
+export interface LandingPageIntro {
+  subheadline: string;
+  quick_bullets: string[];
+  last_updated_line: string;
+}
+
+/**
+ * Local area card for neighborhood sections
+ */
+export interface LocalAreaCard {
+  name: string;
+  blurb: string;
+  best_for: string[];
+  internal_link_text: string;
+  internal_link_href: string;
+}
+
+/**
+ * CTA (Call to Action) structure
+ */
+export interface LandingPageCTA {
+  title: string;
+  body: string;
+  button_text: string;
+  button_href: string;
+}
+
+/**
+ * All content sections (11-section structure)
+ */
+export interface LandingPageSections {
+  hero_overview: {
+    heading: string;
+    body: string;
+  };
+  about_area: {
+    heading: string;
+    body: string;
+  };
+  neighborhoods: {
+    heading: string;
+    body: string;
+    cards: LocalAreaCard[];
+  };
+  buyer_strategy: {
+    heading: string;
+    body: string;
+    cta: LandingPageCTA;
+  };
+  property_types: {
+    heading: string;
+    body: string;
+  };
+  market_snapshot: {
+    heading: string;
+    body: string;
+  };
+  schools_education: {
+    heading: string;
+    body: string;
+  };
+  lifestyle_amenities: {
+    heading: string;
+    body: string;
+  };
+  featured_listings: {
+    heading: string;
+    body: string;
+  };
+  working_with_agent: {
+    heading: string;
+    body: string;
+  };
+}
+
+/**
+ * FAQ item
+ */
+export interface LandingPageFAQItem {
+  q: string;
+  a: string;
+}
+
+/**
+ * In-body link for internal linking
+ */
+export interface InBodyLink {
+  href: string;
+  anchor: string;
+  context_note: string;
+}
+
+/**
+ * Internal link item (for related_pages, more_in_city, nearby_cities)
+ */
+export interface InternalLinkItem {
+  href: string;
+  anchor: string;
+}
+
+/**
+ * Internal linking structure
+ */
+export interface LandingPageInternalLinking {
+  in_body_links: InBodyLink[];
+  related_pages: InternalLinkItem[];
+  more_in_city: InternalLinkItem[];
+  nearby_cities: InternalLinkItem[];
+}
+
+/**
+ * Agent box in trust section
+ */
+export interface AgentBox {
+  headline: string;
+  body: string;
+  disclaimer: string;
+}
+
+/**
+ * Trust section with brand info and agent box
+ */
+export interface LandingPageTrust {
+  about_brand: string;
+  agent_box: AgentBox;
+}
+
+/**
+ * Complete AI-generated landing page content
+ * This matches the client's OUTPUT JSON SCHEMA exactly
+ */
+export interface LandingPageGeneratedContent {
+  seo: LandingPageSEO;
+  intro: LandingPageIntro;
+  sections: LandingPageSections;
+  faq: LandingPageFAQItem[];
+  internal_linking: LandingPageInternalLinking;
+  trust: LandingPageTrust;
+}
+
+// NOTE: The canonical type for AI-generated content is LandingPageContent from @/ai/landing
+// Use LandingPageGeneratedContent for the same shape when you need a local type definition
+
 export interface LandingStats {
   medianPrice?: number
   pricePerSqft?: number

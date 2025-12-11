@@ -19,12 +19,12 @@ export async function GET(request: NextRequest) {
       .from("landing_pages")
       .select("*", { count: "exact", head: true });
 
-    // Count by kind (since we don't have status field, all are considered published)
+    // Count by kind - check content JSON for published status
     const { data: allPages } = await supabase
       .from("landing_pages")
-      .select("kind, ai_description_html");
+      .select("kind, content");
 
-    const published = allPages?.filter(p => p.ai_description_html)?.length || 0;
+    const published = allPages?.filter(p => p.content && (typeof p.content === 'object' || (typeof p.content === 'string' && p.content.trim() !== '')))?.length || 0;
     const draft = (total || 0) - published;
 
     return NextResponse.json({

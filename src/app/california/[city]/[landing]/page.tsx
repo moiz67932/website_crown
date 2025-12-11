@@ -29,20 +29,22 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   const baseTitle = def.title(cityName)
   const canonical = def.canonicalPath(citySlug)
   const desc = def.description(cityName)
-  // Try SEO overrides from DB (no generation here)
+  // Try SEO overrides from DB (no generation here) - read from content JSON
   try {
     const sb = getSupabase()
     if (sb) {
       const { data } = await sb
         .from('landing_pages')
-        .select('seo_metadata')
+        .select('content')
         .eq('city', citySlug)
         .eq('page_name', landing)
         .maybeSingle()
-      const meta = (data?.seo_metadata as any) || null
-      const title = meta?.title || baseTitle
-      const description = meta?.description || desc
-      const keywords = Array.isArray(meta?.keywords) ? meta.keywords.join(', ') : undefined
+      // Read SEO from content.seo (new format) or content.seo_metadata (legacy fallback)
+      const contentJson = data?.content && typeof data.content === 'object' ? data.content : null
+      const seo = contentJson?.seo || contentJson?.seo_metadata || null
+      const title = seo?.title || baseTitle
+      const description = seo?.meta_description || seo?.description || desc
+      const keywords = Array.isArray(seo?.keywords) ? seo.keywords.join(', ') : undefined
       return {
         title,
         description,
