@@ -115,6 +115,7 @@ export async function getLandingStats(cityOrState: string, kind: LandingKind): P
       COUNT(*) AS total_active
     FROM properties
     WHERE status = 'Active'
+      AND LOWER(property_type) <> 'land'
       ${locationPredicate}`
 
     // Inject kind-specific predicate & params (only once)
@@ -433,7 +434,7 @@ function titleCase(str: string) {
 export async function listActiveCities(limit = 25): Promise<Array<{ city: string; count: number }>> {
   const pool = await getPgPool()
   const { rows } = await pool.query(
-    `SELECT LOWER(city) AS city, COUNT(*)::int AS count FROM properties WHERE status='Active' AND city IS NOT NULL GROUP BY 1 ORDER BY count DESC LIMIT $1`,
+    `SELECT LOWER(city) AS city, COUNT(*)::int AS count FROM properties WHERE status='Active' AND LOWER(property_type) <> 'land' AND city IS NOT NULL GROUP BY 1 ORDER BY count DESC LIMIT $1`,
     [limit]
   )
   return rows

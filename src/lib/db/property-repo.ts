@@ -343,7 +343,11 @@ export async function searchProperties(params: PropertySearchParams) {
   const pool = await getPgPool();
   const started = Date.now();
   const values: any[] = [];
-  const where: string[] = [`status = 'Active'`];
+  // Base filter: Active status AND exclude Land properties
+  const where: string[] = [
+    `status = 'Active'`,
+    `LOWER(property_type) <> 'land'`  // Never show Land properties
+  ];
 
   function log(event: string, extra?: Record<string, any>) {
     try {

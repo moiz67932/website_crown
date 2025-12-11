@@ -97,7 +97,10 @@ export async function POST(request: NextRequest) {
     const trestleFilters: any = {
       '$top': limit,
       '$orderby': 'OnMarketDate desc',
-      '$filter': ['StandardStatus eq \'Active\'']
+      '$filter': [
+        'StandardStatus eq \'Active\'',
+        'PropertyType ne \'Land\''  // Never show Land properties
+      ]
     };
 
     // Parse query for semantic meaning and add filters

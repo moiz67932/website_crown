@@ -69,6 +69,7 @@ export async function generateStaticParams() {
       .from("properties")
       .select("listing_key, address")
       .eq("status", "Active")
+      .not("property_type", "ilike", "land")  // Exclude Land properties
       .limit(100);
 
     if (!data) return [];

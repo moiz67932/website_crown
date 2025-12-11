@@ -288,6 +288,7 @@ export class PropertyDatabase {
     let sql = `
       SELECT * FROM properties 
       WHERE standard_status = 'Active'
+        AND LOWER(property_type) <> 'land'
     `;
     const params: any[] = [];
 

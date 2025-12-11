@@ -500,7 +500,11 @@ export function optimizeSearchQuery(filters: PropertyFilters): Record<string, an
       must: [],
       filter: [],
       should: [],
-      must_not: []
+      must_not: [
+        // Never show Land properties
+        { term: { "property_type.keyword": "Land" } },
+        { term: { "property_type": "land" } }
+      ]
     }
   };
 

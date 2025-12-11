@@ -130,7 +130,7 @@ export const PROPERTY_TYPES = [
   { label: 'Apartment', value: 'apartment', icon: 'Building' },
   { label: 'Single Family', value: 'single_family', icon: 'Home' },
   { label: 'Multi Family', value: 'multi_family', icon: 'Building2' },
-  { label: 'Land/Lot', value: 'land', icon: 'Trees' },
+  // Land/Lot removed - not displayed on the website
   { label: 'Commercial', value: 'commercial', icon: 'Building' }
 ];
 

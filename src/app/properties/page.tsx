@@ -51,6 +51,7 @@ async function getPropertiesServer(filters: {
     .from("properties")
     .select("*", { count: "exact" })
     .eq("status", "active")
+    .not("property_type", "ilike", "land")  // Never show Land properties
     .range(offset, offset + perPage - 1);
 
   // Apply filters

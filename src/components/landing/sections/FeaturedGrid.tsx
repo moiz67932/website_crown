@@ -6,7 +6,11 @@ import { formatPriceWithCommas } from '@/lib/utils';
 interface Props { properties?: LandingPropertyCard[]; }
 
 export default function FeaturedGrid({ properties }: Props) {
-  const loading = !properties || properties.length === 0
+  // Filter out any Land properties (safety check - should already be filtered from DB)
+  const filteredProperties = (properties || []).filter(
+    p => !p.status?.toLowerCase().includes('land')
+  )
+  const loading = !filteredProperties || filteredProperties.length === 0
   return (
     <section className="pt-4">
       <div className="flex items-center justify-between mb-6">
@@ -21,7 +25,7 @@ export default function FeaturedGrid({ properties }: Props) {
       )}
       {!loading && (
         <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {properties!.map((p) => (
+          {filteredProperties.map((p) => (
             <Card
               key={p.listingKey}
               className="overflow-hidden rounded-2xl group shadow-sm hover:shadow-md transition-all border border-neutral-200/60 dark:border-slate-700 bg-white dark:bg-slate-900"

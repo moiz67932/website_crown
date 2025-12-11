@@ -200,7 +200,12 @@ interface Props { data: LandingData; faqItems?: SimpleFAQ[]; faqJsonLd?: any }
 
 export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
   const { city, kind } = data
-  const featured = data.featured || []
+  // Filter out any Land properties (safety check - should already be filtered from DB)
+  const featured = (data.featured || []).filter(
+    (f: any) => !f.propertyType?.toLowerCase().includes('land') && 
+                !f.property_type?.toLowerCase().includes('land') &&
+                !f.status?.toLowerCase().includes('land')
+  )
   const citySlug = city.toLowerCase().replace(/\s+/g, '-')
 
   console.log('🎨 [LandingTemplate] Rendering with data:', {
