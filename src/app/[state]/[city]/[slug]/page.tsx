@@ -10,6 +10,7 @@
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getSupabase } from "@/lib/supabase";
 // Legacy AI module
 import { generateLandingPageJSON } from "@/lib/landing/ai";
 // New AI module (client's prompts)
@@ -45,6 +46,130 @@ const USE_NEW_AI_MODULE = process.env.USE_NEW_AI_MODULE === "true";
 
 // Enable ISR with revalidation
 export const revalidate = 3600; // Revalidate every hour
+
+// ============================================================================
+// BUILD-TIME DETECTION
+// ============================================================================
+
+/**
+ * Detect if we're in build phase (SSG/export)
+ * During build, AI generation MUST be skipped
+ */
+function isBuildTime(): boolean {
+  // Check Next.js phase
+  if (process.env.NEXT_PHASE === 'phase-production-build' || 
+      process.env.NEXT_PHASE === 'phase-export') {
+    return true;
+  }
+  
+  // Check Vercel build environment
+  if (process.env.VERCEL_ENV === 'production' && process.env.CI === 'true') {
+    return true;
+  }
+  
+  // Generic CI detection
+  if (process.env.CI === 'true' && process.env.NODE_ENV === 'production') {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Create safe fallback content that satisfies Zod schema
+ * Used during build or when AI generation fails
+ */
+function createFallbackContent(state: string, city: string, slug: string): LandingPageContent {
+  const cityName = city.replace(/-/g, ' ');
+  const cityTitle = cityName.replace(/\b\w/g, c => c.toUpperCase());
+  const stateTitle = state.replace(/\b\w/g, c => c.toUpperCase());
+  const filterLabel = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  
+  return {
+    seo: {
+      title: `${cityTitle}, ${stateTitle} ${filterLabel} | Crown Coastal Homes`,
+      h1: `${filterLabel} in ${cityTitle}, ${stateTitle}`,
+      meta_description: `Explore ${filterLabel.toLowerCase()} in ${cityTitle}, ${stateTitle}. Browse luxury properties and expert real estate services.`,
+      og_title: `${cityTitle} ${filterLabel}`,
+      og_description: `Find your dream home in ${cityTitle}, ${stateTitle}`,
+      canonical_path: `/${state}/${city}/${slug}`,
+    },
+    intro: {
+      subheadline: `Discover premium real estate opportunities in ${cityTitle}, ${stateTitle}.`,
+      quick_bullets: [
+        `Browse available ${filterLabel.toLowerCase()} in ${cityTitle}`,
+        'Connect with local real estate experts',
+        'View detailed property information',
+        'Get personalized guidance'
+      ],
+      last_updated_line: `Last updated: ${new Date().toLocaleDateString()}`
+    },
+    sections: {
+      hero_overview: {
+        heading: `${filterLabel} in ${cityTitle}`,
+        body: `Welcome to ${cityTitle}, ${stateTitle}. Browse available properties and connect with local real estate experts.`,
+      },
+      about_area: {
+        heading: `About ${cityTitle}`,
+        body: `${cityTitle} offers diverse real estate opportunities in ${stateTitle}.`,
+      },
+      market_snapshot: {
+        heading: 'Market Overview',
+        body: 'Current market data will be available soon.',
+      },
+      neighborhoods: {
+        heading: 'Neighborhoods',
+        body: 'Explore local neighborhoods.',
+        cards: [],
+      },
+      featured_listings: {
+        heading: 'Featured Properties',
+        body: 'Browse our latest listings.',
+      },
+      property_types: {
+        heading: 'Property Types',
+        body: 'Discover various property options.',
+      },
+      buyer_strategy: {
+        heading: 'Buyer Resources',
+        body: 'Get expert guidance on your home purchase.',
+        cta: {
+          title: 'Ready to Buy?',
+          body: 'Connect with our expert agents today.',
+          button_text: 'Contact Us',
+          button_href: '/contact'
+        }
+      },
+      schools_education: {
+        heading: 'Schools & Education',
+        body: 'Quality schools and educational opportunities.',
+      },
+      lifestyle_amenities: {
+        heading: 'Lifestyle & Amenities',
+        body: 'Explore local amenities and attractions.',
+      },
+      working_with_agent: {
+        heading: 'Why Choose Crown Coastal Homes',
+        body: 'Expert local knowledge and personalized service.',
+      },
+    },
+    faq: [],
+    internal_linking: {
+      in_body_links: [],
+      related_pages: [],
+      more_in_city: [],
+      nearby_cities: [],
+    },
+    trust: {
+      about_brand: 'Crown Coastal Homes provides expert real estate services.',
+      agent_box: {
+        headline: 'Work with a local expert',
+        body: 'Our experienced agents are ready to help you find your dream home.',
+        disclaimer: 'General info only. Verify details with official sources and the listing broker.',
+      },
+    },
+  };
+}
 
 interface PageProps {
   params: Promise<{
@@ -82,8 +207,8 @@ export async function generateMetadata({
 
   // Try to get generated content for metadata
   try {
-    // Generate content using appropriate AI module
-    const content = await generateContent(state, city, slug);
+    // Get cached or generate content (build-safe)
+    const content = await getOrGenerateLandingContent(state, city, slug);
 
     const title = validateMetaLength(content.seo.title, "title");
     const description = validateMetaLength(
@@ -235,18 +360,119 @@ function buildNewInputJson(state: string, city: string, slug: string): InputJson
 }
 
 /**
- * Generate content using the appropriate AI module
+ * Fetch cached landing page content from Supabase
  */
-async function generateContent(state: string, city: string, slug: string) {
-  if (USE_NEW_AI_MODULE && isValidPageTypeSlug(slug)) {
-    console.log("[Landing Page] Using NEW AI module with client prompts");
-    const pageTypeConfig = PAGE_TYPE_BY_SLUG[slug];
-    const inputJson = buildNewInputJson(state, city, slug);
-    return generateLandingPageContent(pageTypeConfig, inputJson);
-  } else {
-    console.log("[Landing Page] Using LEGACY AI module");
-    const inputJson = buildLegacyInputJson(state, city, slug);
-    return generateLandingPageJSON(inputJson);
+async function getCachedContent(city: string, slug: string): Promise<LandingPageContent | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  
+  const cityName = city.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  
+  try {
+    const { data, error } = await supabase
+      .from('landing_pages')
+      .select('content')
+      .eq('city', cityName)
+      .eq('page_name', slug)
+      .maybeSingle();
+    
+    if (error || !data || !data.content) return null;
+    
+    // Validate that content matches expected structure
+    if (typeof data.content === 'object' && data.content.seo && data.content.sections) {
+      console.log('[Landing Page] Cached content used');
+      return data.content as LandingPageContent;
+    }
+    
+    return null;
+  } catch (err) {
+    console.error('[Landing Page] Cache fetch error:', err);
+    return null;
+  }
+}
+
+/**
+ * Save generated content to Supabase cache
+ */
+async function saveCachedContent(city: string, slug: string, content: LandingPageContent): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) return;
+  
+  const cityName = city.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  
+  try {
+    const { error } = await supabase
+      .from('landing_pages')
+      .upsert(
+        {
+          city: cityName,
+          page_name: slug,
+          kind: slug,
+          content: content,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'city,page_name' }
+      );
+    
+    if (error) {
+      console.error('[Landing Page] Cache save error:', error);
+    } else {
+      console.log('[Landing Page] Content cached to database');
+    }
+  } catch (err) {
+    console.error('[Landing Page] Cache save exception:', err);
+  }
+}
+
+/**
+ * Generate AI content using NEW prompt system only
+ * NEVER call during build time
+ */
+async function generateAIContent(state: string, city: string, slug: string): Promise<LandingPageContent> {
+  if (!isValidPageTypeSlug(slug)) {
+    throw new Error(`Invalid page type slug: ${slug}`);
+  }
+  
+  console.log('[Landing Page] Runtime generation – new AI system');
+  const pageTypeConfig = PAGE_TYPE_BY_SLUG[slug];
+  const inputJson = buildNewInputJson(state, city, slug);
+  return generateLandingPageContent(pageTypeConfig, inputJson);
+}
+
+/**
+ * Get or generate landing page content with proper caching
+ * - During build: Return safe fallback (NO AI)
+ * - At runtime: Check cache → AI generate → save → return
+ */
+async function getOrGenerateLandingContent(
+  state: string,
+  city: string,
+  slug: string
+): Promise<LandingPageContent> {
+  // GUARD: Never run AI during build
+  if (isBuildTime()) {
+    console.log('[Landing] Build phase – AI skipped');
+    return createFallbackContent(state, city, slug);
+  }
+  
+  // Step 1: Try cache first
+  const cached = await getCachedContent(city, slug);
+  if (cached) {
+    return cached;
+  }
+  
+  // Step 2: Generate with NEW AI system at runtime
+  try {
+    const content = await generateAIContent(state, city, slug);
+    
+    // Step 3: Save to cache
+    await saveCachedContent(city, slug, content);
+    
+    return content;
+  } catch (error) {
+    console.error('[Landing Page] AI generation failed at runtime:', error);
+    // Return safe fallback if AI fails
+    return createFallbackContent(state, city, slug);
   }
 }
 
@@ -265,12 +491,12 @@ export default async function LandingPage({ params }: PageProps) {
   const isNewFormat = USE_NEW_AI_MODULE && isValidPageTypeSlug(slug);
 
   try {
-    // Generate AI content using appropriate module
-    content = await generateContent(state, city, slug);
+    // Get cached or generate content (build-safe)
+    content = await getOrGenerateLandingContent(state, city, slug);
   } catch (error) {
-    console.error("[Landing Page] Content generation failed:", error);
-    // Return 404 if content generation fails
-    notFound();
+    console.error("[Landing Page] Content retrieval failed:", error);
+    // Use fallback instead of 404
+    content = createFallbackContent(state, city, slug);
   }
 
   // Build structured data schemas

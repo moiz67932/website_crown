@@ -12,7 +12,8 @@
     "backfill:props": "ts-node --project tsconfig.scripts.json scripts/backfill-property-embeddings.ts",
     "backfill:posts": "ts-node --project tsconfig.scripts.json scripts/backfill-post-embeddings.ts",
     "generate:landing-ai": "ts-node --project tsconfig.scripts.json scripts/generate-landing-ai.ts",
-    "regenerate:landing-ai": "ts-node --project tsconfig.scripts.json scripts/regenerate-landing-ai.ts"
+    "regenerate:landing-ai": "ts-node --project tsconfig.scripts.json scripts/regenerate-landing-ai.ts",
+    "generate:landing-pages": "ts-node --project tsconfig.scripts.json scripts/generate-initial-landing-pages.ts"
   },
   "engines": {
     "node": "22.x"

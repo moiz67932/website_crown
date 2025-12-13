@@ -18,6 +18,7 @@ import type { PageTypeConfig } from "./pageTypes";
 import type { LandingKind, LandingStats, LandingPropertyCard } from "@/types/landing";
 // Re-use existing Cloud SQL query functions (DO NOT duplicate SQL logic)
 import { getLandingStats, getFeaturedProperties } from "@/lib/landing/query";
+import { isBuildTime, logBuildSkip } from "@/lib/utils/build-guard";
 
 // ============================================================================
 // BASE_PROMPT - Client-provided system prompt (DO NOT MODIFY)
@@ -649,6 +650,23 @@ export async function buildInputJson(options: BuildInputJsonOptions): Promise<In
     debug = process.env.LANDING_DEBUG === "true",
   } = options;
 
+  // GUARD: Skip Cloud SQL queries during build time
+  if (isBuildTime()) {
+    logBuildSkip('buildInputJson (Cloud SQL)');
+    
+    // Return minimal InputJson for build phase (no database queries)
+    return {
+      city: sanitizeString(city, 100),
+      canonical_path: sanitizeString(canonicalPath, 200),
+      data_source: "Build-time placeholder",
+      last_updated_iso: new Date().toISOString(),
+      featured_listings_has_missing_specs: true,
+      market_stats_text: "Market data will be available at runtime.",
+      region: sanitizeString(region, 100),
+      nearby_cities: nearbyCities.map((c) => sanitizeString(c, 100)),
+    };
+  }
+
   if (debug) {
     console.log("[buildInputJson] Starting with options:", {
       city,
@@ -1122,6 +1140,12 @@ export async function generateLandingPageContentWithFallback(
   pageTypeConfig: PageTypeConfig,
   inputJson: InputJson
 ): Promise<GenerationResult> {
+  // GUARD: Never run during build
+  if (isBuildTime()) {
+    logBuildSkip('AI Landing Generation');
+    throw new Error('AI generation is disabled during build time. Use runtime or API generation.');
+  }
+  
   console.log("[generateLandingPageContent] Starting hybrid generation", {
     pageType: pageTypeConfig.PAGE_TYPE_SLUG,
     city: inputJson.city,
@@ -1306,6 +1330,12 @@ export async function generateBatchLandingPages(
   | { success: true; content: LandingPageContent; model_used: string; fallback_attempted: boolean; attempts: number }
   | { success: false; error: string; city: string; pageType: string }
 >> {
+  // GUARD: Never run batch generation during build
+  if (isBuildTime()) {
+    logBuildSkip('Batch AI Generation');
+    throw new Error('Batch AI generation is disabled during build time. Use runtime API.');
+  }
+  
   console.log("[generateBatchLandingPages] Starting batch generation with hybrid fallback", {
     count: configs.length,
   });
