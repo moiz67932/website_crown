@@ -1,11 +1,12 @@
 // Real Postgres-backed landing query layer.
 // Provides aggregate stats + featured listings + basic SEO scaffolding.
+// NOTE: AI generation has been REMOVED from this layer.
+// AI content is fetched from cache only - generation via admin API.
 
 import { LandingKind, LandingData, LandingStats, LandingPropertyCard } from '@/types/landing'
 import { searchProperties } from '@/lib/db/property-repo'
 import { getPgPool } from '@/lib/db'
-import { generateAIDescription } from './ai'
-import { LANDING_PROMPTS } from '@/lib/ai/prompts/landings'
+import { contentToAiDescriptionHtml } from './ai'
 import type { LandingDef } from './defs'
 import { isBuildPhase } from '@/lib/env/buildDetection'
 
@@ -298,37 +299,125 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
   }
 
   console.log('🎯 [getLandingData] Extra filters:', extraFilters)
-  console.log('🎯 [getLandingData] Starting parallel data fetch (stats, featured, AI)...')
+  console.log('🎯 [getLandingData] Starting parallel data fetch (stats, featured)...')
+  console.log('🎯 [getLandingData] NOTE: AI generation disabled - fetching cached content only')
 
-  // AI description selection override via landingDef.aiPromptKey
-  let aiDescriptionPromise: Promise<string | undefined>
-  if (landingDef) {
-    const promptFn = LANDING_PROMPTS[landingDef.aiPromptKey]
-    if (promptFn) {
-      const cityTitleCase = cityOrState.replace(/\b\w/g, c => c.toUpperCase())
-      const { county, region, nearby } = deriveLocationMeta(cityTitleCase)
-      const generatedPrompt = promptFn(cityTitleCase, county, region, nearby)
-      if (process.env.LANDING_TRACE) {
-        console.log('[landing.ai.prompt.preview]', generatedPrompt.slice(0, 140) + '...')
+  // ============================================================================
+  // AI GENERATION REMOVED FROM RUNTIME
+  // ============================================================================
+  // AI description is now fetched from cache ONLY.
+  // To generate AI content, use:
+  // - POST /api/admin/landing-pages/generate-content
+  // - CLI scripts with ALLOW_AI_GENERATION=true
+  // ============================================================================
+  
+  // Fetch cached AI description from Supabase (no generation)
+  let aiDescriptionHtml: string | undefined
+  let dbContent: LandingData['dbContent'] = undefined
+  try {
+    const sb = (await import('@/lib/supabase')).getSupabase()
+    if (sb) {
+      // Try both title case and lowercase for city matching
+      // Database may store cities as "San Jose" or "san jose" depending on how they were created
+      const cityVariants = [
+        cityOrState,  // Original: "San Jose"
+        cityOrState.toLowerCase(),  // Lowercase: "san jose"
+        cityOrState.toLowerCase().replace(/\s+/g, '-'),  // Slug: "san-jose"
+      ]
+      
+      console.log('🔍 [getLandingData] Querying Supabase for AI content:', {
+        cityVariants,
+        page_name: kind
+      })
+      
+      let data: any = null
+      let error: any = null
+      
+      // Try each city variant until we find a match with ACTUAL content
+      // Use order + limit instead of maybeSingle to handle multiple rows safely
+      for (const cityVariant of cityVariants) {
+        const result = await sb
+          .from('landing_pages')
+          .select('content')
+          .ilike('city', cityVariant)  // Case-insensitive match
+          .eq('page_name', kind)
+          .order('updated_at', { ascending: false })
+          .limit(10)  // Get multiple rows to find best one
+        
+        if (result.data && result.data.length > 0) {
+          // Find the row with the most complete content (has sections, faq, or intro)
+          for (const row of result.data) {
+            if (row.content) {
+              const parsed = typeof row.content === 'string' ? JSON.parse(row.content) : row.content
+              // Check if this row has actual content (sections, faq, intro, trust)
+              const hasContent = parsed.sections || parsed.faq || parsed.intro || parsed.trust
+              console.log('🔍 [getLandingData] Checking row content:', {
+                cityVariant,
+                topLevelKeys: Object.keys(parsed || {}),
+                hasContent
+              })
+              if (hasContent) {
+                data = row
+                console.log('🔍 [getLandingData] Found COMPLETE content for city variant:', cityVariant)
+                break
+              }
+            }
+          }
+          // If no complete content found, fall back to first row
+          if (!data && result.data[0]?.content) {
+            data = result.data[0]
+            console.log('🔍 [getLandingData] Using first row (no complete content found):', cityVariant)
+          }
+          if (data) break
+        }
+        if (result.error && !error) {
+          error = result.error
+        }
       }
-      aiDescriptionPromise = generateAIDescription(cityOrState, kind, { customPrompt: generatedPrompt, promptKey: landingDef.aiPromptKey })
-    } else {
-      aiDescriptionPromise = generateAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+      
+      if (error && !data) {
+        console.warn('🔍 [getLandingData] Supabase query error:', error.message)
+      }
+      
+      if (data?.content) {
+        // Convert content JSON to HTML string using existing helper
+        const content = typeof data.content === 'string' ? JSON.parse(data.content) : data.content
+        
+        // Store raw DB content for direct rendering
+        dbContent = content
+        
+        console.log('🔍 [getLandingData] Supabase result:', {
+          hasData: !!data,
+          hasContent: !!data?.content,
+          contentType: typeof content,
+          topLevelKeys: Object.keys(content || {}),
+          sectionKeys: content?.sections ? Object.keys(content.sections) : [],
+          hasIntro: !!content?.intro,
+          hasTrust: !!content?.trust,
+          hasFaq: !!(content?.faq?.length || content?.faqs?.length),
+          faqCount: content?.faq?.length || content?.faqs?.length || 0
+        })
+        
+        aiDescriptionHtml = contentToAiDescriptionHtml(content)
+        console.log('🔍 [getLandingData] Generated AI HTML length:', aiDescriptionHtml?.length || 0)
+      } else {
+        console.log('🔍 [getLandingData] No content found in database for:', { cityOrState, kind })
+      }
     }
-  } else {
-    aiDescriptionPromise = generateAIDescription(cityOrState, kind).catch((e) => { console.warn('AI description failed', e); return undefined })
+  } catch (e: any) {
+    console.warn('[getLandingData] Failed to fetch cached AI content:', e?.message)
   }
 
-  const [stats, featured, aiDescriptionHtml] = await Promise.all([
+  const [stats, featured] = await Promise.all([
     getLandingStats(cityOrState, kind),
-    getFeaturedProperties(cityOrState, kind, 12, extraFilters),
-    aiDescriptionPromise
+    getFeaturedProperties(cityOrState, kind, 12, extraFilters)
   ])
 
   console.log('🎯 [getLandingData] Parallel fetch complete:', {
     statsKeys: Object.keys(stats || {}),
     featuredCount: featured?.length || 0,
-    hasAiDescription: !!aiDescriptionHtml
+    hasAiDescription: !!aiDescriptionHtml,
+    note: 'AI content is from cache only - no runtime generation'
   })
 
   // Basic placeholder / TODO sections (external data integrations later)
@@ -387,8 +476,13 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
     { label: 'Under 500K', href: `/${cityOrState}/homes-under-500k` }
   ]
 
+  // Use SEO from DB content if available, otherwise generate fallback
   const seoTitleBase = kind.replace(/-/g, ' ')
-  const seo: LandingData['seo'] = landingDef ? {
+  const seo: LandingData['seo'] = dbContent?.seo ? {
+    title: dbContent.seo.title || `${titleCase(cityOrState)} ${titleCase(seoTitleBase)}`,
+    description: dbContent.seo.meta_description || `Explore ${titleCase(cityOrState)} ${seoTitleBase} listings.`,
+    canonical: dbContent.seo.canonical_path || `/${cityOrState}/${kind}`
+  } : landingDef ? {
     title: landingDef.title(cityOrState),
     description: landingDef.description(cityOrState),
     canonical: landingDef.canonicalPath(cityOrState.toLowerCase().replace(/\s+/g,'-'))
@@ -398,15 +492,43 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
     canonical: `/${cityOrState}/${kind}`
   }
 
+  // Use intro from DB content if available
+  const introHtml = dbContent?.intro?.subheadline 
+    ? `<p>${dbContent.intro.subheadline}</p>` 
+    : `<p>Browse active ${seoTitleBase} in ${titleCase(cityOrState)}. Updated listing data includes pricing, photos, and key property details.</p>`
+
   const rawHero = featured[0]?.img
   const heroImage: string | undefined = rawHero ?? undefined
+
+  // Use FAQ from DB content if available
+  const dbFaqs = (dbContent as any)?.faq || (dbContent as any)?.faqs
+  if (dbFaqs && Array.isArray(dbFaqs) && dbFaqs.length > 0) {
+    faq = dbFaqs.map((f: any) => ({
+      q: f.q || f.question || '',
+      a: f.a || f.answer || ''
+    })).filter((f: any) => f.q && f.a)
+  }
+
+  console.log('🎯 [getLandingData] Final return data:', {
+    city: cityOrState,
+    kind,
+    hasDbContent: !!dbContent,
+    hasAiDescriptionHtml: !!aiDescriptionHtml,
+    aiHtmlLength: aiDescriptionHtml?.length || 0,
+    seoTitle: seo?.title,
+    introHtmlLength: introHtml?.length || 0,
+    faqCount: faq?.length || 0,
+    featuredCount: featured?.length || 0,
+    sectionKeys: dbContent?.sections ? Object.keys(dbContent.sections) : []
+  })
 
   return {
     kind,
     city: cityOrState,
     heroImage, // coerced to string | undefined (no null)
-    introHtml: `<p>Browse active ${seoTitleBase} in ${titleCase(cityOrState)}. Updated listing data includes pricing, photos, and key property details.</p>`,
+    introHtml,
     aiDescriptionHtml,
+    dbContent, // Pass raw DB content for direct section rendering
     stats,
     featured,
     neighborhoods,
@@ -421,7 +543,7 @@ export async function getLandingData(cityOrState: string, kind: LandingKind, opt
     economics: {} as NonNullable<LandingData['economics']>, // TODO
     crime: {} as NonNullable<LandingData['crime']>, // TODO
     businessDirectory: [] as NonNullable<LandingData['businessDirectory']>, // TODO
-  relatedCities: [] as NonNullable<LandingData['relatedCities']>, // TODO suggestions based on region
+    relatedCities: [] as NonNullable<LandingData['relatedCities']>, // TODO suggestions based on region
     seo
   }
 }

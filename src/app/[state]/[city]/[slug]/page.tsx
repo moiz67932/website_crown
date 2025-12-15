@@ -3,27 +3,19 @@
  * Route: /[state]/[city]/[slug]
  * Example: /california/san-diego/homes-over-1m
  * 
- * This page supports two content generation modes:
- * 1. New mode (USE_NEW_AI_MODULE=true): Uses src/ai/landing.ts with client's new prompt
- * 2. Legacy mode: Uses src/lib/landing/ai.ts with existing prompt
+ * CRITICAL: AI generation is DISABLED for page rendering.
+ * Content must be pre-generated via admin API or batch job.
+ * If content doesn't exist in DB, page returns 404.
  */
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
-// Legacy AI module
-import { generateLandingPageJSON } from "@/lib/landing/ai";
-// New AI module (client's prompts)
-import {
-  generateLandingPageContent,
-  type LandingPageContent,
-  type InputJson,
-} from "@/ai/landing";
-import { PAGE_TYPE_BY_SLUG, isValidPageTypeSlug } from "@/ai/pageTypes";
+import { type LandingPageContent } from "@/ai/landing";
+import { isValidPageTypeSlug } from "@/ai/pageTypes";
 import {
   generateBreadcrumb,
   generateFAQSchema,
-  generateListingSchema,
   generateWebPageSchema,
   generateLocalBusinessSchema,
   validateMetaLength,
@@ -31,18 +23,13 @@ import {
 import {
   MarketSnapshot,
   NeighborhoodCards,
-  WhatMBuys,
   PropertyTypes,
   BuyerStrategy,
   TrustBox,
   InternalLinks,
   PageIntro,
-  TableOfContents,
 } from "@/components/landing/landing-sections";
 import { FAQAccordion } from "@/components/ui/faq-accordion";
-
-// Feature flag: Set to true to use the new AI module with client's prompts
-const USE_NEW_AI_MODULE = process.env.USE_NEW_AI_MODULE === "true";
 
 // Enable ISR with revalidation
 export const revalidate = 3600; // Revalidate every hour
@@ -205,10 +192,20 @@ export async function generateMetadata({
   const resolvedParams = await params;
   const { state, city, slug } = resolvedParams;
 
-  // Try to get generated content for metadata
+  // Try to get content from database for metadata
   try {
-    // Get cached or generate content (build-safe)
-    const content = await getOrGenerateLandingContent(state, city, slug);
+    // Get cached content only - no AI generation
+    const content = await getLandingContent(state, city, slug);
+    
+    // If no content, return minimal fallback metadata
+    if (!content) {
+      const cityName = city.replace(/-/g, " ");
+      const stateName = state.replace(/-/g, " ");
+      return {
+        title: `${cityName}, ${stateName} Real Estate | Crown Coastal Homes`,
+        description: `Find your dream home in ${cityName}, ${stateName}.`,
+      };
+    }
 
     const title = validateMetaLength(content.seo.title, "title");
     const description = validateMetaLength(
@@ -260,104 +257,12 @@ export async function generateMetadata({
   }
 }
 
-/**
- * Build input JSON for AI content generator (Legacy format)
- */
-function buildLegacyInputJson(state: string, city: string, slug: string) {
-  // Convert URL params to readable format
-  const cityName = city.replace(/-/g, " ");
-  const stateName = state.replace(/-/g, " ");
-  const filterLabel = slug.replace(/-/g, " ");
-
-  // Example input structure - customize based on your data sources
-  return {
-    city: cityName,
-    state: stateName,
-    county: "", // Add if available
-    filter_label: filterLabel,
-    data_source: "MLS Data",
-    last_updated_iso: new Date().toISOString(),
-    neighborhoods: [
-      {
-        name: "La Jolla",
-        notes: "Coastal community known for beaches and upscale properties",
-      },
-      {
-        name: "Pacific Beach",
-        notes: "Beach town with active lifestyle and diverse housing",
-      },
-      {
-        name: "North Park",
-        notes: "Urban neighborhood with walkable streets and restaurants",
-      },
-    ],
-    featured_listings: [],
-    internal_links: {
-      related_pages: [
-        {
-          href: `/${state}/${city}/condos-for-sale`,
-          anchor: `${cityName} Condos for Sale`,
-        },
-        {
-          href: `/${state}/${city}/homes-for-sale`,
-          anchor: `${cityName} Homes for Sale`,
-        },
-      ],
-      more_in_city: [
-        {
-          href: `/${state}/${city}/luxury-homes`,
-          anchor: `${cityName} Luxury Homes`,
-        },
-      ],
-      nearby_cities: [
-        { href: `/${state}/la-jolla/homes-for-sale`, anchor: "La Jolla" },
-        {
-          href: `/${state}/coronado/homes-for-sale`,
-          anchor: "Coronado",
-        },
-      ],
-    },
-  };
-}
-
-/**
- * Build input JSON for the new AI module (client's schema)
- */
-function buildNewInputJson(state: string, city: string, slug: string): InputJson {
-  const cityName = city.replace(/-/g, " ");
-  const cityTitle = cityName.replace(/\b\w/g, (c) => c.toUpperCase());
-
-  return {
-    city: cityTitle,
-    county: "",
-    region: "Southern California",
-    nearby_cities: ["La Jolla", "Coronado", "Del Mar", "Carlsbad"],
-    canonical_path: `/${state}/${city}/${slug}`,
-    data_source: "MLS Data",
-    last_updated_iso: new Date().toISOString(),
-    featured_listings_has_missing_specs: true,
-    market_stats_text: "",
-    property_notes: "",
-    local_areas: [
-      { name: "La Jolla", notes: "Coastal community known for beaches and upscale properties" },
-      { name: "Pacific Beach", notes: "Beach town with active lifestyle and diverse housing" },
-      { name: "North Park", notes: "Urban neighborhood with walkable streets and restaurants" },
-    ],
-    internal_links: {
-      related_pages: [
-        { href: `/${state}/${city}/condos-for-sale`, anchor: `${cityTitle} Condos for Sale` },
-        { href: `/${state}/${city}/homes-for-sale`, anchor: `${cityTitle} Homes for Sale` },
-      ],
-      more_in_city: [
-        { href: `/${state}/${city}/luxury-homes`, anchor: `${cityTitle} Luxury Homes` },
-      ],
-      nearby_cities: [
-        { href: `/${state}/la-jolla/homes-for-sale`, anchor: "La Jolla" },
-        { href: `/${state}/coronado/homes-for-sale`, anchor: "Coronado" },
-      ],
-    },
-  };
-}
+// ============================================================================
+// NOTE: AI input JSON builders have been REMOVED from page rendering.
+// AI content generation is ONLY available via:
+// - POST /api/admin/landing-pages/generate-content
+// - CLI scripts with ALLOW_AI_GENERATION=true
+// ============================================================================
 
 /**
  * Fetch cached landing page content from Supabase
@@ -369,19 +274,34 @@ async function getCachedContent(city: string, slug: string): Promise<LandingPage
   const cityName = city.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   
   try {
-    const { data, error } = await supabase
+    // Use order + limit instead of maybeSingle to handle multiple rows safely
+    const { data: rows, error } = await supabase
       .from('landing_pages')
       .select('content')
-      .eq('city', cityName)
+      .ilike('city', cityName)
       .eq('page_name', slug)
-      .maybeSingle();
+      .order('updated_at', { ascending: false })
+      .limit(1);
     
+    const data = rows?.[0];
     if (error || !data || !data.content) return null;
     
+    // Content is stored as TEXT (stringified JSON) - must parse it
+    let parsedContent: any = null;
+    try {
+      parsedContent = typeof data.content === 'string' 
+        ? JSON.parse(data.content) 
+        : data.content;
+      console.log('[Landing Page] Parsed content, keys:', Object.keys(parsedContent || {}));
+    } catch (e) {
+      console.error('[Landing Page] Failed to parse content:', e);
+      return null;
+    }
+    
     // Validate that content matches expected structure
-    if (typeof data.content === 'object' && data.content.seo && data.content.sections) {
-      console.log('[Landing Page] Cached content used');
-      return data.content as LandingPageContent;
+    if (parsedContent && parsedContent.seo && parsedContent.sections) {
+      console.log('[Landing Page] Cached content used, section keys:', Object.keys(parsedContent.sections || {}));
+      return parsedContent as LandingPageContent;
     }
     
     return null;
@@ -424,79 +344,71 @@ async function saveCachedContent(city: string, slug: string, content: LandingPag
   }
 }
 
-/**
- * Generate AI content using NEW prompt system only
- * NEVER call during build time
- */
-async function generateAIContent(state: string, city: string, slug: string): Promise<LandingPageContent> {
-  if (!isValidPageTypeSlug(slug)) {
-    throw new Error(`Invalid page type slug: ${slug}`);
-  }
-  
-  console.log('[Landing Page] Runtime generation – new AI system');
-  const pageTypeConfig = PAGE_TYPE_BY_SLUG[slug];
-  const inputJson = buildNewInputJson(state, city, slug);
-  return generateLandingPageContent(pageTypeConfig, inputJson);
-}
+// ============================================================================
+// NOTE: AI generation functions have been REMOVED from page rendering.
+// AI content generation is ONLY available via:
+// - POST /api/admin/landing-pages/generate-content
+// - CLI scripts with ALLOW_AI_GENERATION=true
+// ============================================================================
 
 /**
- * Get or generate landing page content with proper caching
- * - During build: Return safe fallback (NO AI)
- * - At runtime: Check cache → AI generate → save → return
+ * Get landing page content from database ONLY
+ * 
+ * CRITICAL: AI generation is NEVER allowed during page render.
+ * - During build: Return null (triggers 404)
+ * - At runtime: Return cached content or null (triggers 404)
+ * 
+ * Content must be pre-generated via admin API:
+ * POST /api/admin/landing-pages/generate-content
  */
-async function getOrGenerateLandingContent(
+async function getLandingContent(
   state: string,
   city: string,
   slug: string
-): Promise<LandingPageContent> {
-  // GUARD: Never run AI during build
+): Promise<LandingPageContent | null> {
+  // During build phase, skip DB queries entirely
   if (isBuildTime()) {
-    console.log('[Landing] Build phase – AI skipped');
-    return createFallbackContent(state, city, slug);
+    console.log('[Landing] Build phase – returning null for static generation');
+    return null;
   }
   
-  // Step 1: Try cache first
+  // At runtime: fetch from database ONLY (no AI fallback)
   const cached = await getCachedContent(city, slug);
   if (cached) {
+    console.log('[Landing Page] Serving cached content from database');
     return cached;
   }
   
-  // Step 2: Generate with NEW AI system at runtime
-  try {
-    const content = await generateAIContent(state, city, slug);
-    
-    // Step 3: Save to cache
-    await saveCachedContent(city, slug, content);
-    
-    return content;
-  } catch (error) {
-    console.error('[Landing Page] AI generation failed at runtime:', error);
-    // Return safe fallback if AI fails
-    return createFallbackContent(state, city, slug);
-  }
+  // No cached content = 404
+  // Content must be pre-generated via admin API
+  console.log('[Landing Page] No cached content found - content must be generated via admin API');
+  return null;
 }
 
 /**
  * Main Page Component - Server-Side Rendered
  * 
- * Supports both new and legacy content formats:
- * - New format: Uses client's JSON schema with sections object
- * - Legacy format: Uses array-based sections structure
+ * CRITICAL: AI generation is DISABLED for page rendering.
+ * Content must be pre-generated via admin API or batch job.
+ * Returns 404 if content doesn't exist in DB.
  */
 export default async function LandingPage({ params }: PageProps) {
   const resolvedParams = await params;
   const { state, city, slug } = resolvedParams;
 
-  let content: any;
-  const isNewFormat = USE_NEW_AI_MODULE && isValidPageTypeSlug(slug);
+  // Validate slug format
+  if (!isValidPageTypeSlug(slug)) {
+    notFound();
+  }
 
-  try {
-    // Get cached or generate content (build-safe)
-    content = await getOrGenerateLandingContent(state, city, slug);
-  } catch (error) {
-    console.error("[Landing Page] Content retrieval failed:", error);
-    // Use fallback instead of 404
-    content = createFallbackContent(state, city, slug);
+  // Get content from database ONLY - no AI generation at runtime
+  const content = await getLandingContent(state, city, slug);
+  
+  // If no content exists, return 404
+  // Content must be pre-generated via admin API
+  if (!content) {
+    console.log('[Landing Page] Content not found, returning 404');
+    notFound();
   }
 
   // Build structured data schemas
@@ -531,191 +443,113 @@ export default async function LandingPage({ params }: PageProps) {
 
   // Helper to get intro content based on format
   const getIntro = () => {
-    if (isNewFormat) {
-      return {
-        subheadline: content.intro.subheadline,
-        quick_bullets: content.intro.quick_bullets,
-        last_updated_line: content.intro.last_updated_line,
-      };
-    }
+    // Content is always in new format (LandingPageContent type)
     return {
-      subheadline: content.page_intro?.subheadline || "",
-      quick_bullets: content.page_intro?.quick_bullets || [],
-      last_updated_line: content.page_intro?.last_updated_line || "",
+      subheadline: content.intro.subheadline,
+      quick_bullets: content.intro.quick_bullets,
+      last_updated_line: content.intro.last_updated_line,
     };
   };
 
-  // Render sections based on format (new = object, legacy = array)
+  // Render sections - content is always in new format (LandingPageContent type)
   const renderSections = () => {
-    if (isNewFormat) {
-      // New format: sections is an object with 11 named properties
-      const sections = content.sections;
-      return (
-        <>
-          {/* 1. Hero Overview */}
-          <section id="hero-overview">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-              {sections.hero_overview.heading}
-            </h2>
-            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
-              {sections.hero_overview.body}
-            </div>
-          </section>
+    const sections = content.sections;
+    return (
+      <>
+        {/* 1. Hero Overview */}
+        <section id="hero-overview">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+            {sections.hero_overview.heading}
+          </h2>
+          <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+            {sections.hero_overview.body}
+          </div>
+        </section>
 
-          {/* 2. About the Area */}
-          <section id="about-area">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-              {sections.about_area.heading}
-            </h2>
-            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
-              {sections.about_area.body}
-            </div>
-          </section>
+        {/* 2. About the Area */}
+        <section id="about-area">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+            {sections.about_area.heading}
+          </h2>
+          <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+            {sections.about_area.body}
+          </div>
+        </section>
 
-          {/* 3. Neighborhoods & Nearby Areas */}
-          <NeighborhoodCards
-            heading={sections.neighborhoods.heading}
-            body={sections.neighborhoods.body}
-            cards={sections.neighborhoods.cards.map((card: any) => ({
-              name: card.name,
-              blurb: card.blurb,
-              best_for: card.best_for,
-              internal_link_text: card.internal_link_text,
-              internal_link_href: card.internal_link_href,
-            }))}
-          />
+        {/* 3. Neighborhoods & Nearby Areas */}
+        <NeighborhoodCards
+          heading={sections.neighborhoods.heading}
+          body={sections.neighborhoods.body}
+          cards={sections.neighborhoods.cards.map((card: any) => ({
+            name: card.name,
+            blurb: card.blurb,
+            best_for: card.best_for,
+            internal_link_text: card.internal_link_text,
+            internal_link_href: card.internal_link_href,
+          }))}
+        />
 
-          {/* 4. Buyer Strategy */}
-          <BuyerStrategy
-            heading={sections.buyer_strategy.heading}
-            body={sections.buyer_strategy.body}
-            cta={sections.buyer_strategy.cta}
-          />
+        {/* 4. Buyer Strategy */}
+        <BuyerStrategy
+          heading={sections.buyer_strategy.heading}
+          body={sections.buyer_strategy.body}
+          cta={sections.buyer_strategy.cta}
+        />
 
-          {/* 5. Property Types */}
-          <PropertyTypes
-            heading={sections.property_types.heading}
-            body={sections.property_types.body}
-          />
+        {/* 5. Property Types */}
+        <PropertyTypes
+          heading={sections.property_types.heading}
+          body={sections.property_types.body}
+        />
 
-          {/* 6. Market Snapshot */}
-          <MarketSnapshot
-            heading={sections.market_snapshot.heading}
-            body={sections.market_snapshot.body}
-            stats={[]} // New format mentions stats in the body text
-          />
+        {/* 6. Market Snapshot */}
+        <MarketSnapshot
+          heading={sections.market_snapshot.heading}
+          body={sections.market_snapshot.body}
+          stats={[]} // New format mentions stats in the body text
+        />
 
-          {/* 7. Schools & Education */}
-          <section id="schools-education">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-              {sections.schools_education.heading}
-            </h2>
-            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
-              {sections.schools_education.body}
-            </div>
-          </section>
+        {/* 7. Schools & Education */}
+        <section id="schools-education">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+            {sections.schools_education.heading}
+          </h2>
+          <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+            {sections.schools_education.body}
+          </div>
+        </section>
 
-          {/* 8. Lifestyle & Amenities */}
-          <section id="lifestyle-amenities">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-              {sections.lifestyle_amenities.heading}
-            </h2>
-            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
-              {sections.lifestyle_amenities.body}
-            </div>
-          </section>
+        {/* 8. Lifestyle & Amenities */}
+        <section id="lifestyle-amenities">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+            {sections.lifestyle_amenities.heading}
+          </h2>
+          <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+            {sections.lifestyle_amenities.body}
+          </div>
+        </section>
 
-          {/* 9. Featured Listings */}
-          <section id="featured-listings">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-              {sections.featured_listings.heading}
-            </h2>
-            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
-              {sections.featured_listings.body}
-            </div>
-          </section>
+        {/* 9. Featured Listings */}
+        <section id="featured-listings">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+            {sections.featured_listings.heading}
+          </h2>
+          <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+            {sections.featured_listings.body}
+          </div>
+        </section>
 
-          {/* 10. Working with Crown Coastal Homes */}
-          <section id="working-with-agent">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-              {sections.working_with_agent.heading}
-            </h2>
-            <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
-              {sections.working_with_agent.body}
-            </div>
-          </section>
-        </>
-      );
-    } else {
-      // Legacy format: sections is an array
-      return content.sections.map((section: any) => {
-        switch (section.id) {
-          case "market-snapshot":
-            return (
-              <MarketSnapshot
-                key={section.id}
-                heading={section.heading}
-                body={section.body}
-                stats={section.stats}
-              />
-            );
-
-          case "featured-listings":
-            return (
-              <section key={section.id} id="featured-listings">
-                <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
-                  {section.heading}
-                </h2>
-                <div
-                  className="prose prose-lg dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: section.body }}
-                />
-              </section>
-            );
-
-          case "what-1m-buys":
-            return (
-              <WhatMBuys
-                key={section.id}
-                heading={section.heading}
-                body={section.body}
-              />
-            );
-
-          case "neighborhoods":
-            return (
-              <NeighborhoodCards
-                key={section.id}
-                heading={section.heading}
-                body={section.body}
-                cards={section.neighborhood_cards || []}
-              />
-            );
-
-          case "property-types":
-            return (
-              <PropertyTypes
-                key={section.id}
-                heading={section.heading}
-                body={section.body}
-              />
-            );
-
-          case "buyer-strategy":
-            return (
-              <BuyerStrategy
-                key={section.id}
-                heading={section.heading}
-                body={section.body}
-                cta={section.cta}
-              />
-            );
-
-          default:
-            return null;
-        }
-      });
-    }
+        {/* 10. Working with Crown Coastal Homes */}
+        <section id="working-with-agent">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+            {sections.working_with_agent.heading}
+          </h2>
+          <div className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap">
+            {sections.working_with_agent.body}
+          </div>
+        </section>
+      </>
+    );
   };
 
   const intro = getIntro();
@@ -763,11 +597,6 @@ export default async function LandingPage({ params }: PageProps) {
               last_updated_line={intro.last_updated_line}
             />
           </header>
-
-          {/* Table of Contents - only show for legacy format */}
-          {!isNewFormat && content.toc && (
-            <TableOfContents items={content.toc} />
-          )}
 
           {/* Main Sections */}
           <div className="space-y-16">

@@ -198,8 +198,129 @@ const TrendsSection = dynamic(() => import('./sections/Trends'), {
 type SimpleFAQ = { question: string; answer: string }
 interface Props { data: LandingData; faqItems?: SimpleFAQ[]; faqJsonLd?: any }
 
+// Helper component to render a section with heading and body
+function ContentSection({ section, className }: { section?: { heading?: string; body?: string; cards?: any[]; cta?: any }; className?: string }) {
+  if (!section || (!section.heading && !section.body)) return null
+  
+  // Convert body text with newlines and bullets to proper HTML
+  const renderBody = (body: string) => {
+    const parts = body.split('\n\n').filter(p => p.trim())
+    return parts.map((part, i) => {
+      // Check if it's a bullet list
+      if (part.trim().startsWith('- ')) {
+        const items = part.split('\n').filter(line => line.trim().startsWith('- '))
+        return (
+          <ul key={i} className="list-disc pl-5 space-y-2 my-4">
+            {items.map((item, j) => (
+              <li key={j} className="text-gray-700 dark:text-gray-300">{item.replace(/^-\s*/, '')}</li>
+            ))}
+          </ul>
+        )
+      }
+      return <p key={i} className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">{part.trim()}</p>
+    })
+  }
+
+  return (
+    <section className={className}>
+      {section.heading && (
+        <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-4">{section.heading}</h2>
+      )}
+      {section.body && (
+        <div className="prose prose-lg dark:prose-invert max-w-none">
+          {renderBody(section.body)}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// Helper component to render neighborhood cards
+function NeighborhoodCards({ section }: { section?: { heading?: string; body?: string; cards?: any[] } }) {
+  if (!section?.cards?.length) return null
+  
+  return (
+    <section>
+      {section.heading && (
+        <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-4">{section.heading}</h2>
+      )}
+      {section.body && (
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">{section.body}</p>
+      )}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {section.cards.map((card, i) => (
+          <div key={i} className="bg-white dark:bg-slate-800 rounded-xl border p-6 shadow-sm hover:shadow-md transition-shadow">
+            {card.name && <h3 className="text-lg font-semibold text-brand-midnightCove mb-2">{card.name}</h3>}
+            {card.blurb && <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{card.blurb}</p>}
+            {card.best_for?.length > 0 && (
+              <p className="text-sm text-gray-500 mb-3">
+                <strong>Best for:</strong> {card.best_for.join(', ')}
+              </p>
+            )}
+            {card.internal_link_href && card.internal_link_text && (
+              <Link href={card.internal_link_href} className="text-sm text-brand-midnightCove hover:underline font-medium">
+                {card.internal_link_text} →
+              </Link>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// Helper component to render buyer strategy with CTA
+function BuyerStrategySection({ section }: { section?: { heading?: string; body?: string; cta?: any } }) {
+  if (!section) return null
+  
+  // Convert body text with bullets
+  const renderBody = (body: string) => {
+    const parts = body.split('\n\n').filter(p => p.trim())
+    return parts.map((part, i) => {
+      if (part.trim().startsWith('- ')) {
+        const items = part.split('\n').filter(line => line.trim().startsWith('- '))
+        return (
+          <ul key={i} className="list-disc pl-5 space-y-2 my-4">
+            {items.map((item, j) => (
+              <li key={j} className="text-gray-700 dark:text-gray-300">{item.replace(/^-\s*/, '')}</li>
+            ))}
+          </ul>
+        )
+      }
+      return <p key={i} className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">{part.trim()}</p>
+    })
+  }
+
+  return (
+    <section>
+      {section.heading && (
+        <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-4">{section.heading}</h2>
+      )}
+      {section.body && (
+        <div className="prose prose-lg dark:prose-invert max-w-none mb-6">
+          {renderBody(section.body)}
+        </div>
+      )}
+      {section.cta && (
+        <div className="bg-brand-midnightCove/5 rounded-xl p-6 border border-brand-midnightCove/20">
+          {section.cta.title && <h3 className="text-xl font-semibold text-brand-midnightCove mb-2">{section.cta.title}</h3>}
+          {section.cta.body && <p className="text-gray-700 dark:text-gray-300 mb-4">{section.cta.body}</p>}
+          {section.cta.button_href && section.cta.button_text && (
+            <Link 
+              href={section.cta.button_href} 
+              className="inline-flex items-center px-6 py-3 bg-brand-midnightCove text-white rounded-lg font-medium hover:bg-brand-midnightCove/90 transition-colors"
+            >
+              {section.cta.button_text}
+            </Link>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
-  const { city, kind } = data
+  const { city, kind, dbContent } = data
   // Filter out any Land properties (safety check - should already be filtered from DB)
   const featured = (data.featured || []).filter(
     (f: any) => !f.propertyType?.toLowerCase().includes('land') && 
@@ -214,8 +335,18 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
     featuredCount: featured.length,
     hasStats: !!data.stats,
     stats: data.stats,
+    hasDbContent: !!dbContent,
+    dbContentKeys: dbContent ? Object.keys(dbContent) : [],
+    dbSectionKeys: dbContent?.sections ? Object.keys(dbContent.sections) : [],
+    hasAiDescriptionHtml: !!data.aiDescriptionHtml,
+    aiHtmlLength: data.aiDescriptionHtml?.length || 0,
     firstFeatured: featured[0] || null
   })
+
+  // Extract content from DB
+  const introContent = dbContent?.intro
+  const trustContent = dbContent?.trust
+  const sections = dbContent?.sections
 
   return (
     <div className="flex flex-col pb-24 pt-14">
@@ -232,13 +363,46 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
       <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12">
         <Hero city={city} kind={kind} />
 
-        {/* Short intro stays compact */}
-        <Intro html={data.introHtml} />
+        {/* Intro from DB content - show quick bullets if available */}
+        {introContent && (
+          <section className="prose dark:prose-invert max-w-none">
+            {introContent.subheadline && (
+              <p className="text-xl text-muted-foreground italic mb-4">{introContent.subheadline}</p>
+            )}
+            {introContent.quick_bullets && introContent.quick_bullets.length > 0 && (
+              <ul className="grid gap-3 sm:grid-cols-2 list-disc pl-5">
+                {introContent.quick_bullets.map((bullet, i) => (
+                  <li key={i} className="text-gray-700 dark:text-gray-300">{bullet}</li>
+                ))}
+              </ul>
+            )}
+            {introContent.last_updated_line && (
+              <p className="text-xs text-muted-foreground mt-4">{introContent.last_updated_line}</p>
+            )}
+          </section>
+        )}
 
-        {/* Bigger, nicer text + inline images */}
-        <AIDescription city={city} kind={kind} html={data.aiDescriptionHtml} />
+        {/* Fallback intro if no DB content */}
+        {!introContent && <Intro html={data.introHtml} />}
+
+        {/* === RENDER ALL DB SECTIONS DIRECTLY === */}
+        
+        {/* Hero Overview Section */}
+        <ContentSection section={sections?.hero_overview} />
+        
+        {/* About the Area Section */}
+        <ContentSection section={sections?.about_area} />
+        
+        {/* Market Snapshot Section */}
+        <ContentSection section={sections?.market_snapshot} />
 
         <StatsSection stats={data.stats} />
+
+        {/* Property Types Section */}
+        <ContentSection section={sections?.property_types} />
+
+        {/* Neighborhoods Section with Cards */}
+        <NeighborhoodCards section={sections?.neighborhoods} />
 
         {/* Featured */}
         <section className="pt-2">
@@ -277,6 +441,40 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
             </div>
           )}
         </section>
+
+        {/* Trust / Agent Box from DB content */}
+        {trustContent && (
+          <section className="bg-muted/30 rounded-xl p-6 border">
+            {trustContent.agent_box && (
+              <div className="mb-4">
+                {trustContent.agent_box.headline && (
+                  <h3 className="text-lg font-semibold mb-2">{trustContent.agent_box.headline}</h3>
+                )}
+                {trustContent.agent_box.body && (
+                  <p className="text-muted-foreground">{trustContent.agent_box.body}</p>
+                )}
+                {trustContent.agent_box.disclaimer && (
+                  <p className="text-xs text-muted-foreground mt-2 italic">{trustContent.agent_box.disclaimer}</p>
+                )}
+              </div>
+            )}
+            {trustContent.about_brand && (
+              <p className="text-sm text-muted-foreground">{trustContent.about_brand}</p>
+            )}
+          </section>
+        )}
+
+        {/* Buyer Strategy Section with CTA */}
+        <BuyerStrategySection section={sections?.buyer_strategy} />
+
+        {/* Schools/Education Section */}
+        <ContentSection section={sections?.schools_education} />
+
+        {/* Lifestyle/Amenities Section */}
+        <ContentSection section={sections?.lifestyle_amenities} />
+
+        {/* Working with Agent Section */}
+        <ContentSection section={sections?.working_with_agent} />
       </div>
 
       {/* Map */}

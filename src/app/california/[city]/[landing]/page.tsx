@@ -33,14 +33,28 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   try {
     const sb = getSupabase()
     if (sb) {
-      const { data } = await sb
+      // Use order + limit instead of maybeSingle to handle multiple rows safely
+      const { data: rows } = await sb
         .from('landing_pages')
         .select('content')
-        .eq('city', citySlug)
+        .ilike('city', citySlug)
         .eq('page_name', landing)
-        .maybeSingle()
+        .order('updated_at', { ascending: false })
+        .limit(1)
+      const data = rows?.[0]
+      // Content is stored as TEXT (stringified JSON) - must parse it
+      let contentJson: any = null
+      try {
+        if (data?.content) {
+          contentJson = typeof data.content === 'string' 
+            ? JSON.parse(data.content) 
+            : data.content
+          console.log('[Landing SEO] Parsed content, top-level keys:', Object.keys(contentJson || {}))
+        }
+      } catch (e) {
+        console.warn('[Landing SEO] Failed to parse content:', (e as any)?.message)
+      }
       // Read SEO from content.seo (new format) or content.seo_metadata (legacy fallback)
-      const contentJson = data?.content && typeof data.content === 'object' ? data.content : null
       const seo = contentJson?.seo || contentJson?.seo_metadata || null
       const title = seo?.title || baseTitle
       const description = seo?.meta_description || seo?.description || desc
@@ -72,8 +86,17 @@ export default async function Page({ params }: { params: Promise<{ city: string;
   const cityName = cityToTitle(citySlug)
   const def = LANDINGS_BY_SLUG[landing]
   if (!def) return null
+  
+  // ============================================================================
+  // NOTE: AI generation is DISABLED for page rendering.
+  // getLandingData() now only fetches cached AI content from database.
+  // To generate new AI content, use:
+  // - POST /api/admin/landing-pages/generate-content
+  // - CLI scripts with ALLOW_AI_GENERATION=true
+  // ============================================================================
+  
   const data = await getLandingData(cityName, def.slug as any, { landingDef: def })
-  // FAQs: generate once then persist; reuse afterwards
+  // FAQs: fetch cached only - no generation at runtime
   const faqBundle = await getOrGenerateFaqs(cityName, def.slug)
   return <LandingTemplate data={data} faqItems={faqBundle?.faqs} faqJsonLd={faqBundle?.jsonLd} />
 }

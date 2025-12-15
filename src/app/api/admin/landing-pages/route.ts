@@ -117,23 +117,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Transform the frontend data to match the database schema - store in content JSON
-    const pageData = {
-      city: body.city,
-      page_name: body.page_type,
-      kind: body.page_type,
-      content: body.content ? (
-        typeof body.content === 'object' ? body.content : {
-          seo: {
-            title: body.meta_title || body.title,
-            meta_description: body.meta_description || body.description,
-          }
-        }
-      ) : {
+    // Build content object
+    const contentObj = body.content ? (
+      typeof body.content === 'object' ? body.content : {
         seo: {
           title: body.meta_title || body.title,
           meta_description: body.meta_description || body.description,
         }
-      },
+      }
+    ) : {
+      seo: {
+        title: body.meta_title || body.title,
+        meta_description: body.meta_description || body.description,
+      }
+    };
+
+    const pageData = {
+      city: body.city,
+      page_name: body.page_type,
+      kind: body.page_type,
+      // Store content as stringified JSON (content column is TEXT type)
+      content: JSON.stringify(contentObj),
     };
 
     const { data, error } = await supabase

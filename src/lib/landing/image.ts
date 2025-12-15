@@ -44,12 +44,15 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
     try {
       const sb = getSupabase()
       if (sb) {
-        const { data, error } = await sb
+        // Use order + limit instead of maybeSingle to handle multiple rows safely
+        const { data: rows, error } = await sb
           .from('landing_pages')
           .select('content')
-          .eq('city', loweredCity)
+          .ilike('city', loweredCity)
           .eq('page_name', kind)
-          .maybeSingle()
+          .order('updated_at', { ascending: false })
+          .limit(1)
+        const data = rows?.[0]
         const heroUrl = data?.content?.hero_image_url
         if (!error && heroUrl) {
           memCache.set(key, heroUrl)
@@ -109,17 +112,27 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
     try {
       const sb2 = getSupabase()
       if (sb2) {
-        // First fetch existing content to merge
-        const { data: existingData } = await sb2
+        // First fetch existing content to merge - handle multiple rows safely
+        const { data: existingRows } = await sb2
           .from('landing_pages')
           .select('content')
-          .eq('city', loweredCity)
+          .ilike('city', loweredCity)
           .eq('page_name', kind)
-          .maybeSingle()
+          .order('updated_at', { ascending: false })
+          .limit(1)
+        const existingData = existingRows?.[0]
         
-        const existingContent = existingData?.content && typeof existingData.content === 'object' 
-          ? existingData.content 
-          : {}
+        // Content is stored as TEXT (stringified JSON) - must parse it
+        let existingContent: Record<string, any> = {}
+        try {
+          if (existingData?.content) {
+            existingContent = typeof existingData.content === 'string' 
+              ? JSON.parse(existingData.content) 
+              : existingData.content
+          }
+        } catch (e) {
+          if (trace) console.warn('[landing.hero] Failed to parse existing content', { key, error: (e as any)?.message })
+        }
         
         const { error } = await sb2
           .from('landing_pages')
@@ -127,14 +140,12 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
             city: loweredCity,
             page_name: kind,
             kind,
-            content: {
+            content: JSON.stringify({
               ...existingContent,
               hero_image_url: imageUrl,
-            },
+            }),
             updated_at: new Date().toISOString()
           }, { onConflict: 'city,page_name' })
-          .select('id')
-          .maybeSingle()
         if (error && trace) console.warn('[landing.hero] supabase upsert failed', { key, msg: error.message, code: error.code })
         else if (trace) console.log('[landing.hero] supabase upsert ok', { key })
       }
@@ -179,12 +190,15 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
       const sb = getSupabase()
       if (sb) {
         console.log('[landing.inline] 🔍 Checking Supabase cache', { key })
-        const { data, error } = await sb
+        // Use order + limit instead of maybeSingle to handle multiple rows safely
+        const { data: rows, error } = await sb
           .from('landing_pages')
           .select('content')
-          .eq('city', loweredCity)
+          .ilike('city', loweredCity)
           .eq('page_name', kind)
-          .maybeSingle()
+          .order('updated_at', { ascending: false })
+          .limit(1)
+        const data = rows?.[0]
         
         const inlineImages = data?.content?.inline_images
         if (error) {
@@ -264,26 +278,36 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
       if (sb2 && imgs.length > 0) {
         console.log('[landing.inline] 💾 Persisting to Supabase', { key, count: imgs.length })
         
-        // First fetch existing content to merge
-        const { data: existingData } = await sb2
+        // First fetch existing content to merge - handle multiple rows safely
+        const { data: existingRows } = await sb2
           .from('landing_pages')
           .select('content')
-          .eq('city', loweredCity)
+          .ilike('city', loweredCity)
           .eq('page_name', kind)
-          .maybeSingle()
+          .order('updated_at', { ascending: false })
+          .limit(1)
+        const existingData = existingRows?.[0]
         
-        const existingContent = existingData?.content && typeof existingData.content === 'object' 
-          ? existingData.content 
-          : {}
+        // Content is stored as TEXT (stringified JSON) - must parse it
+        let existingContent: Record<string, any> = {}
+        try {
+          if (existingData?.content) {
+            existingContent = typeof existingData.content === 'string' 
+              ? JSON.parse(existingData.content) 
+              : existingData.content
+          }
+        } catch (e) {
+          console.warn('[landing.inline] Failed to parse existing content', { key, error: (e as any)?.message })
+        }
         
         const { error } = await sb2.from('landing_pages').upsert({
           city: loweredCity,
           page_name: kind,
           kind,
-          content: {
+          content: JSON.stringify({
             ...existingContent,
             inline_images: imgs,
-          },
+          }),
           updated_at: new Date().toISOString()
         }, { onConflict: 'city,page_name' })
         

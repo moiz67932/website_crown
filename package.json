@@ -13,7 +13,12 @@
     "backfill:posts": "ts-node --project tsconfig.scripts.json scripts/backfill-post-embeddings.ts",
     "generate:landing-ai": "ts-node --project tsconfig.scripts.json scripts/generate-landing-ai.ts",
     "regenerate:landing-ai": "ts-node --project tsconfig.scripts.json scripts/regenerate-landing-ai.ts",
-    "generate:landing-pages": "ts-node --project tsconfig.scripts.json scripts/generate-initial-landing-pages.ts"
+    "generate:landing-pages": "ts-node --project tsconfig.scripts.json scripts/generate-initial-landing-pages.ts",
+    "generate:city-pages": "ts-node --project tsconfig.scripts.json scripts/generate-city-landing-pages.ts",
+    "generate:city-pages:v4": "ts-node --project tsconfig.scripts.json scripts/generate-city-landing-pages.ts --v4",
+    "validate:landings": "ts-node --project tsconfig.scripts.json scripts/validate-generated-landings.ts",
+    "validate:landings:regenerate": "ts-node --project tsconfig.scripts.json scripts/validate-generated-landings.ts --regenerate-failing",
+    "test:landing-v4": "ts-node --project tsconfig.scripts.json src/ai/__tests__/deriveAllowedPlaceNames.test.ts && ts-node --project tsconfig.scripts.json src/ai/__tests__/landingOutputValidator.test.ts && ts-node --project tsconfig.scripts.json src/ai/__tests__/landingGenerationPipeline.test.ts"
   },
   "engines": {
     "node": "22.x"

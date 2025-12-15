@@ -1140,10 +1140,32 @@ export async function generateLandingPageContentWithFallback(
   pageTypeConfig: PageTypeConfig,
   inputJson: InputJson
 ): Promise<GenerationResult> {
+  // ============================================================================
+  // HARD GUARD: AI generation is ONLY allowed via admin routes or CLI scripts
+  // ============================================================================
+  // This function should NEVER be called during SSR/ISR page rendering.
+  // It can only be called from:
+  // - Admin API routes that call enableAIGeneration() first
+  // - CLI scripts with ALLOW_AI_GENERATION=true environment variable
+  // ============================================================================
+  
+  // Import the guard functions
+  const { shouldBlockAIGeneration, logAIBlocked, isBuildTime, logBuildSkip } = await import('@/lib/utils/build-guard');
+  
   // GUARD: Never run during build
   if (isBuildTime()) {
     logBuildSkip('AI Landing Generation');
-    throw new Error('AI generation is disabled during build time. Use runtime or API generation.');
+    throw new Error('AI generation is disabled during build time.');
+  }
+  
+  // GUARD: Never run during SSR/ISR without explicit permission
+  if (shouldBlockAIGeneration()) {
+    logAIBlocked('AI Landing Generation', 'SSR/ISR without admin permission');
+    throw new Error(
+      'AI generation is disabled during SSR/ISR. ' +
+      'Content must be pre-generated via admin API or batch job. ' +
+      'Call enableAIGeneration() from admin routes to allow generation.'
+    );
   }
   
   console.log("[generateLandingPageContent] Starting hybrid generation", {

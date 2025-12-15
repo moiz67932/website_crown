@@ -7,14 +7,53 @@ import { isBuildPhase } from "@/lib/env/buildDetection";
 /**
  * Type representing the structure of landing page content JSON
  * stored in the landing_pages.content column
+ * 
+ * The actual schema from the database includes:
+ * - seo: { h1, title, og_title, canonical_path, og_description, meta_description }
+ * - intro: { subheadline, quick_bullets, last_updated_line }
+ * - trust: { agent_box, about_brand }
+ * - sections: { about_area, hero_overview, neighborhoods, buyer_strategy, property_types, market_snapshot, featured_listings, schools_education, working_with_agent, lifestyle_amenities }
+ * - internal_linking: { more_in_city, in_body_links, nearby_cities, related_pages }
  */
+type LandingContentSection = { heading?: string; body?: string; cards?: any[]; cta?: any }
 type LandingContent = {
+  seo?: {
+    h1?: string
+    title?: string
+    og_title?: string
+    canonical_path?: string
+    og_description?: string
+    meta_description?: string
+  }
+  intro?: {
+    subheadline?: string
+    quick_bullets?: string[]
+    last_updated_line?: string
+  }
+  trust?: {
+    agent_box?: { headline?: string; body?: string; disclaimer?: string }
+    about_brand?: string
+  }
   sections?: {
-    local_areas?: { heading?: string; body?: string }
-    buyer_strategy?: { heading?: string; body?: string }
-    property_types?: { heading?: string; body?: string }
-    market_snapshot?: { heading?: string; body?: string }
-    featured_listings?: { heading?: string; body?: string }
+    // New schema keys from database
+    about_area?: LandingContentSection
+    hero_overview?: LandingContentSection
+    neighborhoods?: LandingContentSection
+    buyer_strategy?: LandingContentSection
+    property_types?: LandingContentSection
+    market_snapshot?: LandingContentSection
+    featured_listings?: LandingContentSection
+    schools_education?: LandingContentSection
+    working_with_agent?: LandingContentSection
+    lifestyle_amenities?: LandingContentSection
+    // Legacy keys (keeping for backward compatibility)
+    local_areas?: LandingContentSection
+  }
+  internal_linking?: {
+    more_in_city?: Array<{ href?: string; anchor?: string }>
+    in_body_links?: Array<{ href?: string; anchor?: string; context_note?: string }>
+    nearby_cities?: Array<{ href?: string; anchor?: string }>
+    related_pages?: Array<{ href?: string; anchor?: string }>
   }
 }
 
@@ -22,22 +61,126 @@ type LandingContent = {
  * Converts the new structured content JSON into legacy HTML format
  * for the LandingData.aiDescriptionHtml field used by LandingTemplate
  */
-function contentToAiDescriptionHtml(content: LandingContent | null | undefined): string {
-  if (!content || !content.sections) return ''
+export function contentToAiDescriptionHtml(content: LandingContent | null | undefined): string {
+  if (!content) return ''
   const parts: string[] = []
 
-  const add = (section?: { heading?: string; body?: string }) => {
+  // Helper to add a section with heading and body
+  const addSection = (section?: LandingContentSection) => {
     if (!section) return
     if (section.heading) parts.push(`<h2>${section.heading}</h2>`)
-    if (section.body) parts.push(`<p>${section.body}</p>`)
+    if (section.body) {
+      // Convert newlines to proper HTML paragraphs
+      const paragraphs = section.body.split('\n\n').filter(p => p.trim())
+      paragraphs.forEach(p => {
+        // Check if it's a bullet list
+        if (p.trim().startsWith('- ')) {
+          const items = p.split('\n').filter(line => line.trim().startsWith('- '))
+          parts.push('<ul>' + items.map(item => `<li>${item.replace(/^-\s*/, '')}</li>`).join('') + '</ul>')
+        } else {
+          parts.push(`<p>${p.trim()}</p>`)
+        }
+      })
+    }
+    // Handle neighborhood cards
+    if (section.cards && section.cards.length > 0) {
+      parts.push('<div class="neighborhood-cards">')
+      section.cards.forEach(card => {
+        parts.push(`<div class="neighborhood-card">`)
+        if (card.name) parts.push(`<h3>${card.name}</h3>`)
+        if (card.blurb) parts.push(`<p>${card.blurb}</p>`)
+        if (card.best_for && card.best_for.length) {
+          parts.push(`<p><strong>Best for:</strong> ${card.best_for.join(', ')}</p>`)
+        }
+        if (card.internal_link_href && card.internal_link_text) {
+          parts.push(`<p><a href="${card.internal_link_href}">${card.internal_link_text}</a></p>`)
+        }
+        parts.push(`</div>`)
+      })
+      parts.push('</div>')
+    }
+    // Handle CTA
+    if (section.cta) {
+      parts.push(`<div class="cta-box">`)
+      if (section.cta.title) parts.push(`<h3>${section.cta.title}</h3>`)
+      if (section.cta.body) parts.push(`<p>${section.cta.body}</p>`)
+      if (section.cta.button_href && section.cta.button_text) {
+        parts.push(`<p><a href="${section.cta.button_href}" class="cta-button">${section.cta.button_text}</a></p>`)
+      }
+      parts.push(`</div>`)
+    }
   }
 
-  const s = content.sections
-  add(s.local_areas)
-  add(s.buyer_strategy)
-  add(s.property_types)
-  add(s.market_snapshot)
-  add(s.featured_listings)
+  // Add intro section if present
+  if (content.intro) {
+    if (content.intro.subheadline) {
+      parts.push(`<p class="subheadline"><em>${content.intro.subheadline}</em></p>`)
+    }
+    if (content.intro.quick_bullets && content.intro.quick_bullets.length > 0) {
+      parts.push('<ul class="quick-bullets">' + 
+        content.intro.quick_bullets.map(b => `<li>${b}</li>`).join('') + 
+      '</ul>')
+    }
+  }
+
+  // Process sections in a logical order
+  if (content.sections) {
+    const s = content.sections
+    // Hero/Overview first
+    addSection(s.hero_overview)
+    // About the area
+    addSection(s.about_area)
+    // Market snapshot
+    addSection(s.market_snapshot)
+    // Featured listings
+    addSection(s.featured_listings)
+    // Property types
+    addSection(s.property_types)
+    // Neighborhoods
+    addSection(s.neighborhoods)
+    // Schools
+    addSection(s.schools_education)
+    // Lifestyle
+    addSection(s.lifestyle_amenities)
+    // Buyer strategy
+    addSection(s.buyer_strategy)
+    // Working with agent
+    addSection(s.working_with_agent)
+    // Legacy: local_areas (backward compatibility)
+    addSection(s.local_areas)
+  }
+
+  // Add trust section (about brand and agent box)
+  if (content.trust) {
+    if (content.trust.about_brand) {
+      parts.push(`<div class="trust-section">`)
+      parts.push(`<p>${content.trust.about_brand}</p>`)
+      parts.push(`</div>`)
+    }
+    if (content.trust.agent_box) {
+      parts.push(`<div class="agent-box">`)
+      if (content.trust.agent_box.headline) parts.push(`<h3>${content.trust.agent_box.headline}</h3>`)
+      if (content.trust.agent_box.body) parts.push(`<p>${content.trust.agent_box.body}</p>`)
+      if (content.trust.agent_box.disclaimer) parts.push(`<p class="disclaimer"><small>${content.trust.agent_box.disclaimer}</small></p>`)
+      parts.push(`</div>`)
+    }
+  }
+
+  // Add internal links section
+  if (content.internal_linking) {
+    const links = content.internal_linking
+    const allLinks = [
+      ...(links.related_pages || []),
+      ...(links.more_in_city || [])
+    ].filter(l => l.href && l.anchor)
+    
+    if (allLinks.length > 0) {
+      parts.push(`<div class="related-links">`)
+      parts.push(`<h3>Related Pages</h3>`)
+      parts.push('<ul>' + allLinks.map(l => `<li><a href="${l.href}">${l.anchor}</a></li>`).join('') + '</ul>')
+      parts.push(`</div>`)
+    }
+  }
 
   return parts.join('\n\n')
 }
@@ -714,8 +857,7 @@ export async function generateAIDescription(
     return pending.get(key)!;
   }
 
-  // Skip OpenAI generation during build phase only
-  // At runtime (even on Vercel), we can generate AI descriptions if needed
+  // Skip OpenAI generation during build phase
   if (isBuildPhase()) {
     if (trace || debug)
       console.warn("[ai.desc] skipping OpenAI generation due to build phase", {
@@ -724,17 +866,36 @@ export async function generateAIDescription(
       });
     return undefined;
   }
+  
+  // ============================================================================
+  // HARD GUARD: Check if AI generation is allowed
+  // ============================================================================
+  // AI generation should only be triggered from admin routes that call
+  // enableAIGeneration() first, or from CLI with ALLOW_AI_GENERATION=true
+  // ============================================================================
+  const { shouldBlockAIGeneration } = await import('@/lib/utils/build-guard');
+  if (shouldBlockAIGeneration()) {
+    console.warn("[ai.desc] AI generation blocked - not running in admin context", {
+      key,
+      hint: "Call enableAIGeneration() from admin route or set ALLOW_AI_GENERATION=true"
+    });
+    // Return undefined to indicate no AI content (falls back to cached or empty)
+    return undefined;
+  }
 
   // 1. Supabase lookup (preferred) - check content column and convert JSON to HTML
   try {
     const sb = getSupabase();
     if (sb) {
-      const { data, error } = await sb
+      // Use order + limit instead of maybeSingle to handle multiple rows safely
+      const { data: rows, error } = await sb
         .from("landing_pages")
         .select("content")
-        .eq("city", loweredCity)
+        .ilike("city", loweredCity)
         .eq("page_name", kind)
-        .maybeSingle();
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      const data = rows?.[0];
       if (error) {
         if (trace)
           console.warn("[ai.desc] supabase select error", {
@@ -1136,9 +1297,7 @@ export async function generateAIDescription(
                 updated_at: new Date().toISOString(),
               },
               { onConflict: "city,page_name" }
-            )
-            .select("id")
-            .single();
+            );
           if (error) {
             console.warn("[ai.desc] supabase upsert failed", {
               key,

@@ -5,10 +5,22 @@
     "moduleResolution": "node",
     "target": "ES2020",
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/ai/*": ["./src/ai/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/styles/*": ["./src/styles/*"]
+    }
   },
   "ts-node": {
     "transpileOnly": true,
+    "require": ["tsconfig-paths/register"],
     "compilerOptions": {
       "module": "commonjs",
       "moduleResolution": "node"

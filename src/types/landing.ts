@@ -269,4 +269,32 @@ export interface LandingData {
   businessDirectory?: Array<{ name: string; category: string; blurb?: string; url?: string }>
   relatedCities?: Array<{ city: string; state?: string; href: string }>
   seo?: LandingSEO
+  // Raw DB content for direct rendering (not converted to HTML)
+  dbContent?: {
+    seo?: {
+      h1?: string
+      title?: string
+      og_title?: string
+      canonical_path?: string
+      og_description?: string
+      meta_description?: string
+    }
+    intro?: {
+      subheadline?: string
+      quick_bullets?: string[]
+      last_updated_line?: string
+    }
+    trust?: {
+      agent_box?: { headline?: string; body?: string; disclaimer?: string }
+      about_brand?: string
+    }
+    sections?: Record<string, { heading?: string; body?: string; cards?: any[]; cta?: any }>
+    internal_linking?: {
+      more_in_city?: Array<{ href?: string; anchor?: string }>
+      in_body_links?: Array<{ href?: string; anchor?: string; context_note?: string }>
+      nearby_cities?: Array<{ href?: string; anchor?: string }>
+      related_pages?: Array<{ href?: string; anchor?: string }>
+    }
+    faq?: Array<{ q?: string; a?: string; question?: string; answer?: string }>
+  }
 }

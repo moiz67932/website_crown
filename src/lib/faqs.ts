@@ -87,37 +87,62 @@ Rules:
 }
 
 export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ faqs: FAQItem[]; markdown: string; jsonLd: any; meta?: SEOMeta } | null> {
-  // Skip heavy DB/OpenAI work during build phase only
-  // At runtime (even on Vercel), we can generate FAQs if needed
+  // ============================================================================
+  // AI GENERATION DISABLED FOR RUNTIME
+  // ============================================================================
+  // FAQs are now fetched from cache ONLY. To generate FAQs, use:
+  // - POST /api/admin/landing-pages/generate-content (generates full content including FAQs)
+  // - CLI scripts with ALLOW_AI_GENERATION=true
+  // ============================================================================
+  
+  // Skip during build phase
   if (isBuildPhase()) {
-    if (process.env.LANDING_TRACE) console.log('[faqs] skipping FAQ generation due to build phase')
+    if (process.env.LANDING_TRACE) console.log('[faqs] skipping FAQ fetch due to build phase')
     return null
   }
 
   const sb = getSupabase()
   if (!sb) return null
+  
   const pageName = slug
   const loweredCity = city.toLowerCase()
-  // 1) Read existing - check content JSON for faqs
-  const { data, error } = await sb
+  
+  // Fetch existing FAQs from database - NO GENERATION
+  // Use order + limit instead of maybeSingle to handle multiple rows safely
+  const { data: rows, error } = await sb
     .from('landing_pages')
     .select('content')
-    .eq('city', loweredCity)
+    .ilike('city', loweredCity)  // Case-insensitive match
     .eq('page_name', pageName)
-    .maybeSingle()
+    .order('updated_at', { ascending: false })
+    .limit(1)
+  
+  const data = rows?.[0]
   
   // Check if content has faq array (new format)
-  const contentJson = data?.content && typeof data.content === 'object' ? data.content : null
+  // Content is stored as TEXT (stringified JSON) - must parse it
+  let contentJson: any = null
+  try {
+    if (data?.content) {
+      contentJson = typeof data.content === 'string' 
+        ? JSON.parse(data.content) 
+        : data.content
+      console.log('[faqs] Parsed content, keys:', Object.keys(contentJson || {}))
+    }
+  } catch (e) {
+    console.warn('[faqs] Failed to parse content:', (e as any)?.message)
+  }
   const existingFaqs = contentJson?.faq || contentJson?.faqs || []
   
-  if (!error && existingFaqs.length >= 10) {
+  if (!error && existingFaqs.length > 0) {
     // Normalize FAQ format (content.faq uses {q, a} format)
     const normalizedFaqs: FAQItem[] = existingFaqs.map((f: any) => ({
       question: f.question || f.q || '',
       answer: f.answer || f.a || ''
     })).filter((f: FAQItem) => f.question && f.answer)
     
-    if (normalizedFaqs.length >= 10) {
+    if (normalizedFaqs.length > 0) {
+      console.log('[faqs] Returning cached FAQs from database:', normalizedFaqs.length)
       return {
         faqs: normalizedFaqs,
         markdown: buildMarkdownFromFaqs(normalizedFaqs),
@@ -126,89 +151,10 @@ export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ f
       }
     }
   }
-  // 2) Generate via OpenAI using shared FAQ template + SQL context
-  if (!process.env.OPENAI_API_KEY) return { faqs: [], markdown: '', jsonLd: {} }
-  const sqlContext = await fetchCitySqlContext(city)
-  const generationPrompt = buildFaqGenerationPrompt(city, slug, sqlContext)
-  // Use the OpenAI client to create a chat completion. Keep messages as valid single-line strings
-  // to avoid TypeScript parsing issues from embedded newlines in template literals.
-  const res = await openai.chat.completions.create({
-    model: process.env.LLM_MODEL || 'gpt-5-mini',
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: 'You are an expert real estate SEO writer. Follow the user instructions precisely and return only valid JSON.' },
-      { role: 'user', content: generationPrompt }
-    ],
-    temperature: 1
-  })
-  let parsed: any
-  try {
-    parsed = JSON.parse(res.choices[0]?.message?.content || '{}')
-  } catch {
-    parsed = {}
-  }
-  const markdown: string = parsed.markdown || ''
-  const jsonLd: any = parsed.jsonLd || {}
-  const meta: SEOMeta | undefined = parsed.meta || undefined
-  let faqs: FAQItem[] = []
-  const richFaqs: RichFAQItem[] = Array.isArray(parsed.faqs) ? parsed.faqs : []
-  const addUnique = (list: FAQItem[]) => {
-    for (const item of list) {
-      if (!item.question || !item.answer) continue
-      if (!faqs.find(f => f.question.toLowerCase() === item.question.toLowerCase())) {
-        faqs.push(item)
-        if (faqs.length >= 10) break
-      }
-    }
-  }
-  if (richFaqs.length) {
-    addUnique(richFaqs.map((r: RichFAQItem) => ({ question: String(r.q || '').trim(), answer: String(r.longAnswer || '').trim() })))
-  }
-  if (faqs.length < 10 && jsonLd && Array.isArray(jsonLd.mainEntity)) {
-    addUnique((jsonLd.mainEntity as any[])
-      .map(e => ({ question: String(e?.name || '').trim(), answer: String(e?.acceptedAnswer?.text || '').trim() }))
-      .filter((f: any) => f.question && f.answer))
-  }
-  if (faqs.length < 10) {
-    addUnique(extractFaqsFromMarkdown(markdown))
-  }
-  // Trim to exactly 10 if overfilled
-  if (faqs.length > 10) faqs = faqs.slice(0, 10)
-
-  // 3) Persist - store as part of content JSON
-  // First fetch existing content to merge
-  const { data: existingData } = await sb
-    .from('landing_pages')
-    .select('content')
-    .eq('city', loweredCity)
-    .eq('page_name', pageName)
-    .maybeSingle()
   
-  const existingContent = existingData?.content && typeof existingData.content === 'object' 
-    ? existingData.content 
-    : {}
-  
-  // Convert FAQs to the standard {q, a} format used by content JSON
-  const faqsForContent = faqs.map(f => ({ q: f.question, a: f.answer }))
-  
-  await sb.from('landing_pages').upsert({
-    city: loweredCity,
-    page_name: pageName,
-    kind: pageName,
-    content: {
-      ...existingContent,
-      faq: faqsForContent,
-      seo: meta ? { ...(existingContent.seo || {}), ...meta } : existingContent.seo
-    },
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'city,page_name' })
-
-  // If JSON-LD missing or incomplete, build from short answers when available, otherwise from the chosen FAQs
-  const finalJsonLd = (jsonLd && Array.isArray(jsonLd.mainEntity) && jsonLd.mainEntity.length >= 10)
-    ? jsonLd
-    : buildFAQJsonLd(loweredCity, pageName, faqs, richFaqs)
-
-  return { faqs, markdown: markdown || buildMarkdownFromFaqs(faqs), jsonLd: finalJsonLd, meta }
+  // No cached FAQs found - return empty (do NOT generate)
+  console.log('[faqs] No cached FAQs found. Generate via admin API.')
+  return { faqs: [], markdown: '', jsonLd: {} }
 }
 
 function extractFaqsFromMarkdown(md: string): FAQItem[] {

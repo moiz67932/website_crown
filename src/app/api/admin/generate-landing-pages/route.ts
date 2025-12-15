@@ -9,11 +9,21 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/admin/generate-landing-pages
  * Generate landing pages for California cities with AI content
+ * 
+ * NOTE: This is an admin-only batch generation endpoint.
+ * AI generation is explicitly enabled for this route.
  */
 export async function POST(request: NextRequest) {
+  // ============================================================================
+  // ENABLE AI GENERATION FOR THIS ADMIN ROUTE
+  // ============================================================================
+  const { enableAIGeneration, disableAIGeneration } = await import('@/lib/utils/build-guard');
+  enableAIGeneration();
+  
   try {
     const supabase = getSupabase();
     if (!supabase) {
+      disableAIGeneration();
       return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
     }
 
@@ -30,13 +40,15 @@ export async function POST(request: NextRequest) {
 
       for (const landing of LANDINGS) {
         try {
-          // Check if page already exists
-          const { data: existing } = await supabase
+          // Check if page already exists - use order + limit for safety
+          const { data: existingRows } = await supabase
             .from("landing_pages")
             .select("id")
-            .eq("city", cityName)
+            .ilike("city", cityName)
             .eq("page_name", landing.slug)
-            .maybeSingle();
+            .order("updated_at", { ascending: false })
+            .limit(1);
+          const existing = existingRows?.[0];
 
           if (existing) {
             console.log(`Page already exists: ${cityName} - ${landing.slug}`);
@@ -52,23 +64,26 @@ export async function POST(request: NextRequest) {
             aiDescription = undefined;
           }
 
-          // Store in content JSON column
+          // Build content object
+          const contentObj = aiDescription ? {
+            seo: {
+              title: landing.title(cityName),
+              meta_description: landing.description(cityName),
+            },
+            legacy_html: aiDescription, // Store legacy HTML within content for backward compatibility
+          } : {
+            seo: {
+              title: landing.title(cityName),
+              meta_description: landing.description(cityName),
+            }
+          };
+
+          // Store in content JSON column (stringified for TEXT column)
           const pageData = {
             city: cityName,
             page_name: landing.slug,
             kind: landing.slug,
-            content: aiDescription ? {
-              seo: {
-                title: landing.title(cityName),
-                meta_description: landing.description(cityName),
-              },
-              legacy_html: aiDescription, // Store legacy HTML within content for backward compatibility
-            } : {
-              seo: {
-                title: landing.title(cityName),
-                meta_description: landing.description(cityName),
-              }
-            },
+            content: JSON.stringify(contentObj),
           };
 
           pagesToCreate.push(pageData);
@@ -111,5 +126,9 @@ export async function POST(request: NextRequest) {
       { error: "Failed to generate landing pages" },
       { status: 500 }
     );
+  } finally {
+    // Always disable AI generation after request completes
+    const { disableAIGeneration } = await import('@/lib/utils/build-guard');
+    disableAIGeneration();
   }
 }

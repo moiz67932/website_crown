@@ -64,13 +64,26 @@ function getInternalLinks(city: string, kind: string, state: string = "californi
  * - New mode (format=json): Returns structured JSON matching the new schema with real Cloud SQL data
  * 
  * When pageId is provided, the generated content is saved to the landing_pages table.
+ * 
+ * NOTE: This is the ONLY endpoint that should trigger AI generation.
+ * Page rendering should NEVER call AI generation directly.
  */
 export async function POST(request: NextRequest) {
+  // ============================================================================
+  // ENABLE AI GENERATION FOR THIS ADMIN ROUTE
+  // ============================================================================
+  // This is the authorized entry point for AI content generation.
+  // We import and call enableAIGeneration() to allow the AI functions to run.
+  // ============================================================================
+  const { enableAIGeneration, disableAIGeneration } = await import('@/lib/utils/build-guard');
+  enableAIGeneration();
+  
   try {
     const body = await request.json();
     const { city, kind, format = "legacy", state = "california", pageId } = body;
 
     if (!city || !kind) {
+      disableAIGeneration(); // Reset on early return
       return NextResponse.json(
         { error: "City and kind are required" },
         { status: 400 }
@@ -133,8 +146,8 @@ export async function POST(request: NextRequest) {
               const { error: updateError } = await supabase
                 .from("landing_pages")
                 .update({
-                  // Store full JSON content in the 'content' column only
-                  content: content,
+                  // Store full JSON content as stringified TEXT (content column is TEXT type)
+                  content: JSON.stringify(content),
                   updated_at: new Date().toISOString(),
                 })
                 .eq("id", pageId);
@@ -238,5 +251,9 @@ export async function POST(request: NextRequest) {
       { error: "Failed to generate content" },
       { status: 500 }
     );
+  } finally {
+    // Always disable AI generation after request completes
+    const { disableAIGeneration } = await import('@/lib/utils/build-guard');
+    disableAIGeneration();
   }
 }
