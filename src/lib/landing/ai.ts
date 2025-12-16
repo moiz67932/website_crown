@@ -970,26 +970,8 @@ export async function generateAIDescription(
         } else {
           memCache.set(key, legacyHtml);
           if (trace) console.log("[ai.desc] legacy pg hit", key);
-          // Best effort: sync to Supabase if possible (skip if placeholder)
-          try {
-            const sb2 = getSupabase();
-            if (sb2) {
-              if (trace)
-                console.log("[ai.desc] syncing legacy -> supabase", { key });
-              await sb2.from("landing_pages").upsert(
-                {
-                  city: loweredCity,
-                  page_name: kind,
-                  kind,
-                  content: legacyHtml,
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: "city,page_name" }
-              );
-            }
-          } catch (e: any) {
-            console.warn("[ai.desc] legacy->supabase sync failed", e?.message);
-          }
+          // NOTE: Removed runtime sync to Supabase - this caused duplicate entries
+          // with different casing. Data migration should be done via admin routes.
           return legacyHtml;
         }
       }
@@ -999,7 +981,8 @@ export async function generateAIDescription(
     }
   }
 
-  // 2.5 memCache fallback: if we already have a runtime value, return it but also ensure Supabase is updated
+  // 2.5 memCache fallback: if we already have a runtime value, return it
+  // NOTE: Removed runtime sync to Supabase - this caused duplicate entries
   if (
     !opts.forceRegenerate &&
     !process.env.FORCE_AI_REGEN &&
@@ -1011,7 +994,6 @@ export async function generateAIDescription(
       console.log("[ai.desc] memCache hit (post-lookup)", {
         key,
         isPlaceholder: isPh,
-        willSyncSupabase: !isPh,
       });
     if (isPh) {
       console.warn(
@@ -1019,26 +1001,7 @@ export async function generateAIDescription(
         { key }
       );
     } else {
-      try {
-        const sb3 = getSupabase();
-        if (sb3 && cached) {
-          await sb3.from("landing_pages").upsert(
-            {
-              city: loweredCity,
-              page_name: kind,
-              kind,
-              content: cached,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "city,page_name" }
-          );
-        }
-      } catch (e: any) {
-        console.warn(
-          "[ai.desc] supabase upsert (from memCache) failed",
-          e?.message
-        );
-      }
+      // Return cached value without syncing to DB
       return cached;
     }
   }

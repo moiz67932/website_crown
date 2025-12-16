@@ -311,38 +311,11 @@ async function getCachedContent(city: string, slug: string): Promise<LandingPage
   }
 }
 
-/**
- * Save generated content to Supabase cache
- */
-async function saveCachedContent(city: string, slug: string, content: LandingPageContent): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase) return;
-  
-  const cityName = city.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  
-  try {
-    const { error } = await supabase
-      .from('landing_pages')
-      .upsert(
-        {
-          city: cityName,
-          page_name: slug,
-          kind: slug,
-          content: content,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'city,page_name' }
-      );
-    
-    if (error) {
-      console.error('[Landing Page] Cache save error:', error);
-    } else {
-      console.log('[Landing Page] Content cached to database');
-    }
-  } catch (err) {
-    console.error('[Landing Page] Cache save exception:', err);
-  }
-}
+// ============================================================================
+// NOTE: saveCachedContent has been REMOVED to prevent runtime DB writes.
+// Content should ONLY be saved via admin routes or CLI scripts.
+// This ensures consistent city name casing and prevents duplicate entries.
+// ============================================================================
 
 // ============================================================================
 // NOTE: AI generation functions have been REMOVED from page rendering.

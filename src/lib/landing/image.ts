@@ -108,53 +108,11 @@ export async function getLandingHeroImage(city: string, kind: string): Promise<s
       return undefined
     }
 
-    // 3. Persist (best-effort) - store in content JSON
-    try {
-      const sb2 = getSupabase()
-      if (sb2) {
-        // First fetch existing content to merge - handle multiple rows safely
-        const { data: existingRows } = await sb2
-          .from('landing_pages')
-          .select('content')
-          .ilike('city', loweredCity)
-          .eq('page_name', kind)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-        const existingData = existingRows?.[0]
-        
-        // Content is stored as TEXT (stringified JSON) - must parse it
-        let existingContent: Record<string, any> = {}
-        try {
-          if (existingData?.content) {
-            existingContent = typeof existingData.content === 'string' 
-              ? JSON.parse(existingData.content) 
-              : existingData.content
-          }
-        } catch (e) {
-          if (trace) console.warn('[landing.hero] Failed to parse existing content', { key, error: (e as any)?.message })
-        }
-        
-        const { error } = await sb2
-          .from('landing_pages')
-          .upsert({
-            city: loweredCity,
-            page_name: kind,
-            kind,
-            content: JSON.stringify({
-              ...existingContent,
-              hero_image_url: imageUrl,
-            }),
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'city,page_name' })
-        if (error && trace) console.warn('[landing.hero] supabase upsert failed', { key, msg: error.message, code: error.code })
-        else if (trace) console.log('[landing.hero] supabase upsert ok', { key })
-      }
-    } catch {
-      // ignore persist errors
-      if (trace) console.warn('[landing.hero] supabase upsert exception', { key })
-    }
+    // NOTE: Removed runtime upsert - images should only be saved via admin routes
+    // to prevent duplicate entries with different casing.
+    // Hero images must be pre-generated via admin API or CLI scripts.
     memCache.set(key, imageUrl)
-    if (trace) console.log('[landing.hero] DONE', { key })
+    if (trace) console.log('[landing.hero] DONE (no persist - read-only at runtime)', { key })
     return imageUrl
   })().finally(() => pending.delete(key))
   pending.set(key, p)
@@ -272,57 +230,11 @@ export async function getLandingInlineImages(city: string, kind: string): Promis
       images: imgs.map(img => ({ position: img.position, url: img.url.slice(0, 50) + '...' }))
     })
 
-    // 3) Persist best-effort - store in content JSON
-    try {
-      const sb2 = getSupabase()
-      if (sb2 && imgs.length > 0) {
-        console.log('[landing.inline] 💾 Persisting to Supabase', { key, count: imgs.length })
-        
-        // First fetch existing content to merge - handle multiple rows safely
-        const { data: existingRows } = await sb2
-          .from('landing_pages')
-          .select('content')
-          .ilike('city', loweredCity)
-          .eq('page_name', kind)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-        const existingData = existingRows?.[0]
-        
-        // Content is stored as TEXT (stringified JSON) - must parse it
-        let existingContent: Record<string, any> = {}
-        try {
-          if (existingData?.content) {
-            existingContent = typeof existingData.content === 'string' 
-              ? JSON.parse(existingData.content) 
-              : existingData.content
-          }
-        } catch (e) {
-          console.warn('[landing.inline] Failed to parse existing content', { key, error: (e as any)?.message })
-        }
-        
-        const { error } = await sb2.from('landing_pages').upsert({
-          city: loweredCity,
-          page_name: kind,
-          kind,
-          content: JSON.stringify({
-            ...existingContent,
-            inline_images: imgs,
-          }),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'city,page_name' })
-        
-        if (error) {
-          console.error('[landing.inline] ❌ Supabase upsert error', { key, error: error.message })
-        } else {
-          console.log('[landing.inline] ✅ Supabase upsert success', { key })
-        }
-      }
-    } catch (e) {
-      console.error('[landing.inline] ❌ Supabase persist exception', { key, error: (e as any)?.message })
-    }
-
+    // NOTE: Removed runtime upsert - images should only be saved via admin routes
+    // to prevent duplicate entries with different casing.
+    // Inline images must be pre-generated via admin API or CLI scripts.
     memInline.set(key, imgs)
-    console.log('[landing.inline] ✅ DONE', { key, count: imgs.length })
+    console.log('[landing.inline] ✅ DONE (no persist - read-only at runtime)', { key, count: imgs.length })
     return imgs
   })().finally(() => pendingInline.delete(key))
 
