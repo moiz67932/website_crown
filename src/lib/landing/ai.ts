@@ -837,7 +837,10 @@ export async function generateAIDescription(
     `City: ${city}, Kind: ${kind}`
   );
 
+  // Normalize city for DB lookups (lowercase) and display (title case)
   const loweredCity = city.toLowerCase();
+  // Title case for consistent DB storage - e.g., "san jose" -> "San Jose"
+  const titleCaseCity = city.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const key = `${loweredCity}::${kind}`;
   const debug = !!process.env.LANDING_DEBUG;
   const trace = !!process.env.LANDING_TRACE;
@@ -1238,7 +1241,7 @@ export async function generateAIDescription(
         .filter(Boolean).length,
     });
 
-    // 4. Persist to Supabase
+    // 4. Persist to Supabase using title case for consistent city names
     try {
       const sb = getSupabase();
       if (sb) {
@@ -1246,6 +1249,7 @@ export async function generateAIDescription(
           console.log("[ai.desc] persisting supabase", {
             key,
             willPersist: !isPlaceholderHtml(html),
+            cityUsed: titleCaseCity,
           });
         const usingService = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!isPlaceholderHtml(html) && html) {
@@ -1253,7 +1257,7 @@ export async function generateAIDescription(
             .from("landing_pages")
             .upsert(
               {
-                city: loweredCity,
+                city: titleCaseCity, // Use title case for consistent DB storage
                 page_name: kind,
                 kind,
                 content: html,
@@ -1283,14 +1287,14 @@ export async function generateAIDescription(
       console.warn("[ai.desc] supabase persist exception", e.message);
     }
 
-    // 5. Legacy PG persistence
+    // 5. Legacy PG persistence - also use title case for consistency
     try {
       const pool2 = await getPgPool();
       await ensureLegacyTable(pool2);
       if (!isPlaceholderHtml(html) && html) {
         await pool2.query(
           "INSERT INTO landing_ai_descriptions(city,kind,html) VALUES($1,$2,$3) ON CONFLICT (city,kind) DO UPDATE SET html=EXCLUDED.html, generated_at=now()",
-          [loweredCity, kind, html]
+          [titleCaseCity, kind, html]
         );
       } else if (trace) {
         console.log("[ai.desc] skipping legacy pg persist due to placeholder", {

@@ -95,10 +95,12 @@ async function main() {
     try {
       // Merge with existing content JSON
       const existingContent = t.content && typeof t.content === 'object' ? t.content : {}
+      // Use title case for consistent DB storage
+      const titleCaseCity = city.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       const { error: upsertErr } = await sb
         .from('landing_pages')
         .upsert({ 
-          city: city.toLowerCase(), 
+          city: titleCaseCity, 
           page_name: kind, 
           content: {
             ...existingContent,
@@ -107,7 +109,7 @@ async function main() {
           updated_at: new Date().toISOString() 
         }, { onConflict: 'city,page_name' })
       if (upsertErr) console.error('[regen] supabase upsert failed', upsertErr.message)
-      else console.log(`[regen] upsert ok for ${city}/${kind}`)
+      else console.log(`[regen] upsert ok for ${titleCaseCity}/${kind}`)
     } catch (e) {
       console.error('[regen] supabase upsert exception', e)
     }
