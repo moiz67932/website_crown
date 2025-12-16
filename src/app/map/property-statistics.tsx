@@ -249,7 +249,7 @@ export default function PropertyStatistics({ properties }: PropertyStatisticsPro
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [`${value} properties`, name]}
+                    formatter={(value: number | undefined, name: string) => [`${value ?? 0} properties`, name]}
                     contentStyle={{ borderRadius: "0.375rem", border: "1px solid #e2e8f0" }}
                   />
                 </PieChart>
