@@ -35,6 +35,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { CA_CITIES, cityToTitle } from '../src/lib/seo/cities';
+import { getLandingHeroImage, getLandingInlineImages } from '../src/lib/landing/image';
 import {
   generateLandingPageContent,
   buildInputJson,
@@ -208,6 +209,46 @@ async function pageExists(
 }
 
 /**
+ * Fetch images from Unsplash for a landing page
+ * Returns hero_image_url and inline_images array
+ */
+async function fetchLandingImages(
+  city: string,
+  pageType: string
+): Promise<{ hero_image_url?: string; inline_images?: Array<{ url: string; alt: string; position: string }> }> {
+  const result: { hero_image_url?: string; inline_images?: Array<{ url: string; alt: string; position: string }> } = {};
+  
+  try {
+    console.log(`        📸 Fetching images from Unsplash...`);
+    
+    // Fetch hero image and inline images in parallel
+    const [heroImage, inlineImages] = await Promise.all([
+      getLandingHeroImage(city, pageType),
+      getLandingInlineImages(city, pageType),
+    ]);
+    
+    if (heroImage) {
+      result.hero_image_url = heroImage;
+      console.log(`        ✅ Hero image fetched`);
+    } else {
+      console.log(`        ⚠️  No hero image found`);
+    }
+    
+    if (inlineImages && inlineImages.length > 0) {
+      result.inline_images = inlineImages;
+      console.log(`        ✅ ${inlineImages.length} inline images fetched`);
+    } else {
+      console.log(`        ⚠️  No inline images found`);
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`        ❌ Image fetch failed: ${errorMessage}`);
+  }
+  
+  return result;
+}
+
+/**
  * Save landing page content to database
  */
 async function saveLandingPage(
@@ -215,8 +256,16 @@ async function saveLandingPage(
   city: string,
   citySlug: string,
   pageType: string,
-  content: LandingPageContent
+  content: LandingPageContent,
+  images?: { hero_image_url?: string; inline_images?: Array<{ url: string; alt: string; position: string }> }
 ): Promise<boolean> {
+  // Merge images into content if provided
+  const contentWithImages = {
+    ...content,
+    ...(images?.hero_image_url && { hero_image_url: images.hero_image_url }),
+    ...(images?.inline_images && { inline_images: images.inline_images }),
+  };
+  
   const { error } = await supabase
     .from('landing_pages')
     .upsert(
@@ -230,7 +279,7 @@ async function saveLandingPage(
         description: content.seo.meta_description,
         meta_title: content.seo.title,
         meta_description: content.seo.meta_description,
-        content: content,
+        content: contentWithImages,
         status: 'draft',
         updated_at: new Date().toISOString(),
       },
@@ -398,11 +447,17 @@ async function main() {
         }
       }
 
-      // Save to database
-      const saved = await saveLandingPage(supabase, cityName, citySlug, pageType, content);
+      // Fetch images from Unsplash
+      const images = await fetchLandingImages(cityName, pageType);
+
+      // Save to database with images
+      const saved = await saveLandingPage(supabase, cityName, citySlug, pageType, content, images);
       if (saved) {
         console.log(`   ${progress} ✅ ${pageType} - Created & saved`);
         console.log(`        Title: "${content.seo.title}"`);
+        if (images.hero_image_url || (images.inline_images && images.inline_images.length > 0)) {
+          console.log(`        Images: ${images.hero_image_url ? '1 hero' : '0 hero'}, ${images.inline_images?.length || 0} inline`);
+        }
         createdCount++;
       } else {
         console.log(`   ${progress} ❌ ${pageType} - Save failed`);

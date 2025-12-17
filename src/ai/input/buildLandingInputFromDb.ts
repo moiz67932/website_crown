@@ -61,11 +61,51 @@ export interface InternalLinks {
   nearby_cities?: InternalLinkItem[];
 }
 
+// export interface EnrichedInputJson extends InputJson {
+//   listing_mix?: ListingMix;
+//   page_type_signals?: PageTypeSignals;
+//   allowed_place_names?: string[];
+// }
+
+
+export interface StatsMethodology {
+  scope: string; // what listings are included (e.g., active listings from MLS-synced feed)
+  filters: string; // city + kind filter description (safe, factual)
+  computed_at_iso: string; // same as last_updated_iso
+  rounding: {
+    price_per_sqft: 'rounded';
+    days_on_market: 'rounded';
+  };
+  notes: string; // “snapshot not prediction” + verify details
+}
+
+export interface ContentTransparency {
+  production: 'AI-assisted';
+  data_source_label: string;
+  last_updated_iso: string;
+  human_reviewed: boolean; // keep truthful: default false unless you implement review
+}
+
 export interface EnrichedInputJson extends InputJson {
+  // helpful for the prompt to disambiguate intent and avoid “apartments vs for-sale” mismatch
+  kind?: LandingKind;
+  state?: string;
+
   listing_mix?: ListingMix;
   page_type_signals?: PageTypeSignals;
   allowed_place_names?: string[];
+
+  // SEO trust / anti-hallucination helpers
+  intent_clarifier?: string;
+  stats_methodology?: StatsMethodology;
+  content_transparency?: ContentTransparency;
+
+  // Pre-rounded, so the LLM cannot “invent” 205 vs 207 differences
+  price_per_sqft_rounded?: number;
+  days_on_market_rounded?: number;
 }
+
+
 
 // ============================================================================
 // Page Type Filter Mapping (reuse from query.ts logic)
@@ -132,49 +172,84 @@ function getPageTypeSignals(kind: LandingKind): PageTypeSignals {
   switch (kind) {
     case 'homes-with-pool':
       return {
-        focus: 'Properties with private pool or pool access',
-        typical_buyer: 'Families, outdoor enthusiasts, entertainers',
-        differentiators: ['Pool maintenance considerations', 'Year-round outdoor living', 'Premium lot sizes'],
+        focus: 'For-sale homes that include a private or shared pool feature',
+        typical_buyer: 'Buyers prioritizing outdoor space or pool access',
+        differentiators: [
+          'Pool condition and maintenance responsibility vary',
+          'Insurance requirements may differ for pool properties',
+          'Lot size and layout can affect usability',
+        ],
       };
+
     case 'homes-under-500k':
       return {
-        focus: 'Entry-level and affordable housing options',
-        typical_buyer: 'First-time buyers, budget-conscious families, investors',
-        differentiators: ['Value-focused', 'May require updates', 'Competitive market segment'],
+        focus: 'For-sale residential listings below a defined price threshold',
+        typical_buyer: 'Buyers seeking lower-priced entry points',
+        differentiators: [
+          'Inventory can move quickly in this segment',
+          'Condition and age of homes can vary widely',
+          'Buyers should verify renovation or repair needs',
+        ],
       };
+
     case 'homes-over-1m':
       return {
-        focus: 'Premium properties above $1 million',
-        typical_buyer: 'Move-up buyers, executives, growing families',
-        differentiators: ['Larger homes', 'Better locations', 'Premium finishes'],
+        focus: 'For-sale residential properties above a defined price threshold',
+        typical_buyer: 'Buyers looking for higher-priced homes',
+        differentiators: [
+          'Pricing varies by location and property characteristics',
+          'Disclosure review is especially important',
+          'Comparable sales may be more property-specific',
+        ],
       };
+
     case 'luxury-homes':
       return {
-        focus: 'High-end luxury real estate',
-        typical_buyer: 'Affluent buyers, executives, second-home buyers',
-        differentiators: ['Premium locations', 'Exceptional finishes', 'Exclusive amenities'],
+        focus: 'High-end residential listings often categorized as luxury',
+        typical_buyer: 'Buyers seeking premium homes or unique properties',
+        differentiators: [
+          'Luxury definitions vary by market',
+          'Finishes, privacy, and location are key differentiators',
+          'Listings may represent a narrow slice of total inventory',
+        ],
       };
+
     case 'condos-for-sale':
       return {
-        focus: 'Condominium and attached properties',
-        typical_buyer: 'Young professionals, downsizers, investors',
-        differentiators: ['Lower maintenance', 'HOA amenities', 'Urban convenience'],
+        focus: 'For-sale condominium and attached residential properties',
+        typical_buyer: 'Buyers seeking lower-maintenance ownership',
+        differentiators: [
+          'HOA fees and reserves impact true monthly cost',
+          'Rules on rentals and use vary by association',
+          'Shared amenities and maintenance responsibilities apply',
+        ],
       };
+
     case '2-bedroom-apartments':
       return {
-        focus: 'Two-bedroom units for smaller households',
-        typical_buyer: 'Couples, small families, roommates',
-        differentiators: ['Right-sized living', 'Often lower price point', 'Good rental potential'],
+        focus: 'Two-bedroom, space-efficient listings (often condo or apartment-style)',
+        typical_buyer: 'Buyers seeking a two-bedroom layout',
+        differentiators: [
+          'Layout efficiency and storage matter',
+          'HOA rules and reserves can impact true monthly cost',
+          'Rental rules vary by building and must be verified',
+        ],
       };
+
     case 'homes-for-sale':
     default:
       return {
-        focus: 'All residential properties for sale',
-        typical_buyer: 'Home buyers of all types',
-        differentiators: ['Full market view', 'Various price points', 'Diverse property types'],
+        focus: 'Residential properties currently offered for sale',
+        typical_buyer: 'Buyers evaluating available homes in the market',
+        differentiators: [
+          'Wide range of property types and price points',
+          'Location and condition drive pricing differences',
+          'Market metrics help contextualize individual listings',
+        ],
       };
   }
 }
+
 
 // ============================================================================
 // Database Aggregation Functions
@@ -449,6 +524,55 @@ function getLocalAreasForCity(citySlug: string): LocalArea[] {
   return LOCAL_AREAS_CONFIG[normalized] || [];
 }
 
+
+function rankInternalLinksForKind(kind: LandingKind, links: InternalLinkItem[]): InternalLinkItem[] {
+  const kw = (s: string) => s.toLowerCase();
+
+  const kindBoost: Record<LandingKind, string[]> = {
+    'homes-for-sale': ['homes for sale', 'for sale', 'homes'],
+    'condos-for-sale': ['condos', 'condo', 'townhome', 'attached'],
+    '2-bedroom-apartments': ['2 bedroom', 'two bedroom', 'condos', 'condo', 'homes for sale'],
+    'homes-with-pool': ['pool'],
+    'homes-under-500k': ['under', '$500', '500k', 'affordable'],
+    'homes-over-1m': ['over', '$1', '1m', 'million'],
+    'luxury-homes': ['luxury'],
+  };
+
+  const avoidForKind: Record<LandingKind, string[]> = {
+    'homes-for-sale': [],
+    'condos-for-sale': ['pool'], // not always bad, but usually off-topic
+    '2-bedroom-apartments': ['pool'], // avoid “pocket” linking to pool pages
+    'homes-with-pool': [],
+    'homes-under-500k': [],
+    'homes-over-1m': [],
+    'luxury-homes': [],
+  };
+
+  const boosts = kindBoost[kind] || [];
+  const avoids = avoidForKind[kind] || [];
+
+  const scored = links.map((l) => {
+    const a = kw(l.anchor);
+    let score = 0;
+
+    // boosts
+    for (const b of boosts) if (a.includes(b)) score += 5;
+
+    // general “good” anchors for most pages
+    if (a.includes('homes for sale')) score += 2;
+    if (a.includes('condos')) score += 2;
+
+    // avoid anchors that read off-topic for this kind
+    for (const bad of avoids) if (a.includes(bad)) score -= 6;
+
+    return { l, score };
+  });
+
+  scored.sort((x, y) => y.score - x.score);
+  return scored.map((x) => x.l);
+}
+
+
 // ============================================================================
 // Main Enrichment Function
 // ============================================================================
@@ -495,7 +619,7 @@ export async function buildEnrichedInputJson(
     internalLinks,
     marketStats,
     featuredListingsHasMissingSpecs = true,
-    dataSource = 'Cloud SQL (MLS-synced)',
+    dataSource = 'MLS-synced listing feed',
     debug = process.env.LANDING_DEBUG === 'true',
   } = options;
 
@@ -518,30 +642,44 @@ export async function buildEnrichedInputJson(
   }
 
   // Add market stats if provided
+  // Add market stats if provided (and pre-round to prevent prompt drift)
   if (marketStats) {
     if (marketStats.medianPrice != null) {
       baseInput.median_price = marketStats.medianPrice;
     }
+
+    const ppsfRounded =
+      marketStats.pricePerSqft != null ? Math.round(marketStats.pricePerSqft) : undefined;
     if (marketStats.pricePerSqft != null) {
-      baseInput.price_per_sqft = marketStats.pricePerSqft;
+      baseInput.price_per_sqft = marketStats.pricePerSqft; // keep raw for internal use if you want
     }
+    if (ppsfRounded != null) {
+      baseInput.price_per_sqft_rounded = ppsfRounded;
+    }
+
+    const domRounded =
+      marketStats.daysOnMarket != null ? Math.round(marketStats.daysOnMarket) : undefined;
     if (marketStats.daysOnMarket != null) {
-      baseInput.days_on_market = marketStats.daysOnMarket;
+      baseInput.days_on_market = marketStats.daysOnMarket; // keep raw
     }
+    if (domRounded != null) {
+      baseInput.days_on_market_rounded = domRounded;
+    }
+
     if (marketStats.totalActive != null) {
       baseInput.total_active = marketStats.totalActive;
     }
 
-    // Build market stats text
+    // Build market stats text (use the SAME rounded values you’ll display in UI)
     const parts: string[] = [];
     if (marketStats.medianPrice != null) {
       parts.push(`Median price $${marketStats.medianPrice.toLocaleString()}`);
     }
-    if (marketStats.pricePerSqft != null) {
-      parts.push(`price per sqft $${Math.round(marketStats.pricePerSqft)}`);
+    if (ppsfRounded != null) {
+      parts.push(`price per sqft $${ppsfRounded}`);
     }
-    if (marketStats.daysOnMarket != null) {
-      parts.push(`average DOM ${marketStats.daysOnMarket} days`);
+    if (domRounded != null) {
+      parts.push(`days on market ${domRounded} days`);
     }
     if (marketStats.totalActive != null) {
       parts.push(`active listings ${marketStats.totalActive.toLocaleString()}`);
@@ -550,6 +688,29 @@ export async function buildEnrichedInputJson(
       baseInput.market_stats_text = parts.join(', ') + '.';
     }
   }
+
+  //   if (marketStats.totalActive != null) {
+  //     baseInput.total_active = marketStats.totalActive;
+  //   }
+
+  //   // Build market stats text
+  //   const parts: string[] = [];
+  //   if (marketStats.medianPrice != null) {
+  //     parts.push(`Median price $${marketStats.medianPrice.toLocaleString()}`);
+  //   }
+  //   if (marketStats.pricePerSqft != null) {
+  //     parts.push(`price per sqft $${Math.round(marketStats.pricePerSqft)}`);
+  //   }
+  //   if (marketStats.daysOnMarket != null) {
+  //     parts.push(`average DOM ${marketStats.daysOnMarket} days`);
+  //   }
+  //   if (marketStats.totalActive != null) {
+  //     parts.push(`active listings ${marketStats.totalActive.toLocaleString()}`);
+  //   }
+  //   if (parts.length > 0) {
+  //     baseInput.market_stats_text = parts.join(', ') + '.';
+  //   }
+  // }
 
   // Add internal links
   if (internalLinks) {
@@ -565,26 +726,109 @@ export async function buildEnrichedInputJson(
   // Add page type signals
   baseInput.page_type_signals = getPageTypeSignals(kind);
 
+ // Intent clarifiers: prevent misleading assumptions (rentals, speculation, etc.)
+switch (kind) {
+  case '2-bedroom-apartments':
+    baseInput.intent_clarifier =
+      'Listings shown on this page are for-sale properties (often condo or apartment-style units). Rental availability is separate and can vary by building and timing.';
+    break;
+
+  case 'condos-for-sale':
+    baseInput.intent_clarifier =
+      'Listings shown are for-sale condominium properties. HOA rules, fees, and rental restrictions vary by building and should be reviewed before making decisions.';
+    break;
+
+  case 'homes-with-pool':
+    baseInput.intent_clarifier =
+      'Listings shown are for-sale homes that include a private or shared pool feature. Pool condition, maintenance responsibility, and insurance requirements vary by property.';
+    break;
+
+  case 'homes-under-500k':
+    baseInput.intent_clarifier =
+      'Listings shown are for-sale properties priced under the specified threshold at the time of publication. Availability and pricing can change quickly in this segment.';
+    break;
+
+  case 'homes-over-1m':
+    baseInput.intent_clarifier =
+      'Listings shown are for-sale properties above the specified price threshold. Pricing, disclosures, and negotiations vary by property and market conditions.';
+    break;
+
+  case 'luxury-homes':
+    baseInput.intent_clarifier =
+      'Listings shown are for-sale luxury properties. Definitions of luxury vary by market, and featured listings may not represent the full range of available inventory.';
+    break;
+
+  case 'homes-for-sale':
+  default:
+    baseInput.intent_clarifier =
+      'Listings shown are for-sale residential properties. Availability, pricing, and property details can change and should be verified before making decisions.';
+    break;
+}
+
+    // Methodology + transparency (used by prompt to create a “How we calculate” box)
+  const kindFilter = buildKindFilter(kind);
+
+  baseInput.stats_methodology = {
+    scope: 'Active listings from MLS-synced sources (snapshot)',
+    filters: `City: ${city}. Page filter: ${kindFilter.description}.`,
+    computed_at_iso: baseInput.last_updated_iso,
+    rounding: {
+      price_per_sqft: 'rounded',
+      days_on_market: 'rounded',
+    },
+    notes:
+      'Metrics are a snapshot of currently active listings and can change as inventory updates. Confirm availability and details on the listing page or with your agent.',
+  };
+
+  baseInput.content_transparency = {
+    production: 'AI-assisted',
+    data_source_label: dataSource,
+    last_updated_iso: baseInput.last_updated_iso,
+    human_reviewed: false, // flip this to true only when you actually implement human review
+  };
+
+
   // Get local areas
   const citySlug = city.toLowerCase().replace(/\s+/g, '-');
   const localAreas = getLocalAreasForCity(citySlug);
   
   // Attach internal links to local areas if available
-  if (localAreas.length > 0 && internalLinks) {
-    const allLinks = [
+  // if (localAreas.length > 0 && internalLinks) {
+  //   const allLinks = [
+  //     ...(internalLinks.related_pages || []),
+  //     ...(internalLinks.more_in_city || []),
+  //   ];
+    
+  //   localAreas.forEach((area, idx) => {
+  //     if (allLinks[idx]) {
+  //       area.internal_link_href = allLinks[idx].href;
+  //       area.internal_link_text = allLinks[idx].anchor;
+  //     }
+  //   });
+    
+  //   baseInput.local_areas = localAreas;
+  // }
+
+
+    if (localAreas.length > 0 && internalLinks) {
+    const allLinksRaw = [
       ...(internalLinks.related_pages || []),
       ...(internalLinks.more_in_city || []),
     ];
-    
+
+    const allLinks = rankInternalLinksForKind(kind, allLinksRaw);
+
     localAreas.forEach((area, idx) => {
       if (allLinks[idx]) {
         area.internal_link_href = allLinks[idx].href;
         area.internal_link_text = allLinks[idx].anchor;
       }
     });
-    
+
     baseInput.local_areas = localAreas;
   }
+
+
 
   // Derive allowed place names
   baseInput.allowed_place_names = deriveAllowedPlaceNames(baseInput);

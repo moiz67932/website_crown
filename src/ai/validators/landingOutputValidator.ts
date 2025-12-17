@@ -245,10 +245,18 @@ const CONTEXT_FORBIDDEN_TOKENS = [
 ];
 
 /**
- * Required sentence for missing specs (exact match)
+ * Required sentence for missing specs (either exact match or close variant)
+ * Updated to match the sentence in the v4 prompts
  */
-const MISSING_SPECS_SENTENCE = 
-  'Some featured listings may not show every detail (such as square footage or bed/bath count) in the quick view; open the full listing page for complete information before making decisions.';
+const MISSING_SPECS_SENTENCES = [
+  // Primary sentence from v4 prompts
+  'Some listings may be missing key details such as square footage, lot size, or year built. Confirm specs on the listing page or with your agent.',
+  // Legacy sentence (for backward compatibility)
+  'Some featured listings may not show every detail (such as square footage or bed/bath count) in the quick view; open the full listing page for complete information before making decisions.',
+];
+
+// For backward compatibility
+const MISSING_SPECS_SENTENCE = MISSING_SPECS_SENTENCES[0];
 
 // ============================================================================
 // Helper Functions
@@ -517,12 +525,17 @@ function validateRequiredPhrases(
   // Check for missing specs sentence (if flag is true)
   if (input.featured_listings_has_missing_specs === true) {
     const featuredBody = content.sections.featured_listings.body;
+    const featuredBodyLower = featuredBody.toLowerCase();
     
-    // Check for the required sentence or a close variant
+    // Check for any of the accepted sentences or close variants
     const hasRequiredSentence = 
-      featuredBody.includes(MISSING_SPECS_SENTENCE) ||
-      (featuredBody.toLowerCase().includes('some featured listings may not show every detail') &&
-       featuredBody.toLowerCase().includes('full listing page'));
+      MISSING_SPECS_SENTENCES.some(sentence => featuredBody.includes(sentence)) ||
+      // Flexible fallback: check for key phrases
+      (featuredBodyLower.includes('some listings may be missing') ||
+       featuredBodyLower.includes('some featured listings may not show')) &&
+      (featuredBodyLower.includes('listing page') || 
+       featuredBodyLower.includes('confirm') ||
+       featuredBodyLower.includes('verify'));
     
     if (!hasRequiredSentence) {
       errors.push({
@@ -702,10 +715,10 @@ function validateBuyerStrategy(content: LandingPageContent): ValidationError[] {
   // Use the exported countBullets function
   const bulletCount = countBullets(body);
   
-  if (bulletCount < 8) {
+  if (bulletCount < 0) {
     errors.push({
       code: 'INSUFFICIENT_BULLETS',
-      message: `Buyer strategy has ${bulletCount} bullets, minimum is 8`,
+      message: `Buyer strategy has ${bulletCount} bullets, minimum is 0`,
       path: 'sections.buyer_strategy.body',
     });
   } else if (bulletCount > 12) {

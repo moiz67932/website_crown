@@ -22,7 +22,12 @@ function buildKindFilter(kind: LandingKind): { sql: string; params: any[]; searc
     case 'luxury-homes':
       return { sql: 'AND list_price >= $EXTRA1', params: [1000000], searchParams: { minPrice: 1000000 } }
     case 'condos-for-sale':
-      return { sql: "AND LOWER(property_type) LIKE LOWER('%condo%')", params: [], searchParams: { propertyType: 'condo' } }
+      return {     sql: `
+      AND (
+        LOWER(property_type) LIKE LOWER('%condo%')
+        OR LOWER(property_sub_type) LIKE LOWER('%condo%')
+      )
+    `, params: [], searchParams: { propertyType: 'condo' } }
   case '2-bedroom-apartments':
       // Treat as 2-bedroom units (apartments, condos, etc.)
       return { sql: "AND bedrooms_total = 2", params: [], searchParams: { minBedrooms: 2, maxBedrooms: 2 } }

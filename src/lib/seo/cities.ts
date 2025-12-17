@@ -1,7 +1,7 @@
 // Central California city slugs for initial SEO launch
 // Idempotent: safe to re-run without duplication.
 export const CA_CITIES = [
-  // "los-angeles",
+  "los-angeles",
   // "san-diego",
   "san-jose",
   // "san-francisco",

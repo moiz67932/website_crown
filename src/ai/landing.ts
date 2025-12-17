@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI Landing Page Content Generation Module
  * ==========================================
  * Centralized prompts and generation function for city landing pages.
@@ -28,7 +28,7 @@ export const BASE_PROMPT = `You are a senior real estate copywriter and SEO spec
 IMPORTANT GLOBAL RULES:
 - Write in clear, professional, **US real-estate** English.
 - Treat all city/state names as **proper nouns** even if INPUT_JSON gives them in lowercase.
-  - Example: "california" → "California".
+  - Example: "california" ΓåÆ "California".
 - Do NOT hallucinate any stats, services, guarantees, or coverage areas that are not implied or listed in INPUT_JSON.
 - Do NOT invent exact numbers (prices, counts, percentages, dates) beyond what is given.
   - You may describe trends qualitatively (e.g., "higher-priced segment", "entry-level price points") if consistent with the provided stats.
@@ -62,7 +62,7 @@ CORE PRIORITIES (in order):
 STYLE & TONE:
 - Tone: Professional, clear, and reassuring. Assume the reader is serious about buying but may be a first-time or move-up buyer.
 - Use **short paragraphs** and **clear headings**, so content is easy to scan.
-- Avoid buzzwords and "fluff"—every paragraph should give practical insight or help the buyer make decisions.
+- Avoid buzzwords and "fluff"ΓÇöevery paragraph should give practical insight or help the buyer make decisions.
 
 QUALITY CHECK BEFORE OUTPUT:
 - JSON valid.
@@ -101,13 +101,13 @@ Use these fields correctly and faithfully. When you mention stats, copy the numb
 CONTENT STRUCTURE & SECTIONS (11 Required Sections)
 --------------------------------
 
-Produce content that can be rendered into an SEO landing page with **rich headings and sections**. Aim for roughly **1,500–2,000 words** for a state or large city; minimum ~1,000 words for smaller markets.
+Produce content that can be rendered into an SEO landing page with **rich headings and sections**. Aim for roughly **1,500ΓÇô2,000 words** for a state or large city; minimum ~1,000 words for smaller markets.
 
 Include ALL of the following sections:
 
 1. HERO + OVERVIEW
    - Title: "Homes for Sale in {{city}}"
-   - 1–2 short intro paragraphs that:
+   - 1ΓÇô2 short intro paragraphs that:
      - Set the stage: what kind of buyers this page is for.
      - Highlight that listings are updated regularly from MLS data.
      - Briefly reference the market snapshot (preview numbers, full stats in section 6).
@@ -115,14 +115,14 @@ Include ALL of the following sections:
 2. ABOUT {{city}} / ABOUT THE AREA
    - Explain **why buyers consider {{city}} or the region**:
      - Lifestyle, climate, typical architecture, proximity to major hubs, coastal vs inland, etc.
-     - Keep it generic and truthful – no invented landmarks or ultra-specific claims.
-   - 2–4 paragraphs.
+     - Keep it generic and truthful ΓÇô no invented landmarks or ultra-specific claims.
+   - 2ΓÇô4 paragraphs.
 
 3. NEIGHBORHOODS & NEARBY AREAS
    - Explain how the market is organized:
      - Different neighborhoods, submarkets, or nearby cities.
    - Use INPUT_JSON.internal_links.nearby_cities to **name-drop specific nearby cities** and explain in natural language why someone might click those pages (without promising specifics you don't know).
-   - 2–4 paragraphs.
+   - 2ΓÇô4 paragraphs.
 
 4. HOW TO APPROACH BUYING IN {{city}}
    - Provide a **clear, ordered strategy** for buyers:
@@ -132,7 +132,7 @@ Include ALL of the following sections:
      - Use filters (price, beds, baths, lot size, etc.).
      - Schedule tours.
      - Make offers, inspections, escrow steps.
-   - Include a **bullet or numbered checklist** (8–12 items using "- " hyphen bullets).
+   - Include a **bullet or numbered checklist** (8ΓÇô12 items using "- " hyphen bullets).
    - KEEP IT GENERIC and compliant: always encourage buyers to confirm details with their agent and lender.
    - Mention Crown Coastal Homes as a local guide.
 
@@ -187,14 +187,14 @@ Include ALL of the following sections:
     - Do NOT promise guaranteed outcomes or special services beyond generic high-quality representation.
 
 11. FREQUENTLY ASKED QUESTIONS (FAQ)
-    - Provide **8–12 concise FAQs with clear Q/A pairs**, tailored to buyers searching for homes for sale in {{city}}.
+    - Provide **8ΓÇô12 concise FAQs with clear Q/A pairs**, tailored to buyers searching for homes for sale in {{city}}.
     - Example themes:
       - "How competitive is the current market in {{city}}?"
       - "What price range is common for first-time buyers?"
       - "How long do homes typically stay on the market?"
       - "Do I need to be pre-approved before touring homes?"
       - "How do HOAs impact my monthly costs?"
-    - Each answer: 60–110 words, plain text.
+    - Each answer: 60ΓÇô110 words, plain text.
     - Use the provided stats and context wherever they naturally support the answer.
 
 --------------------------------
@@ -213,17 +213,17 @@ SEO RULES
 WORD COUNT REQUIREMENTS (strict)
 --------------------------------
 
-- hero_overview: 140–190 words
-- about_area: 200–300 words
-- neighborhoods: 150–220 words
-- buyer_strategy: 220–320 words (must include 8–12 bullet checklist)
-- property_types: 160–240 words
-- market_snapshot: 150–220 words (must mention data_source and last_updated_iso)
-- schools_education: 100–150 words
-- lifestyle_amenities: 150–220 words
-- featured_listings: 80–140 words
-- working_with_agent: 120–180 words
-- faq: 8–12 items, each answer 60–110 words
+- hero_overview: 140ΓÇô190 words
+- about_area: 200ΓÇô300 words
+- neighborhoods: 150ΓÇô220 words
+- buyer_strategy: 220ΓÇô320 words (must include 8ΓÇô12 bullet checklist)
+- property_types: 160ΓÇô240 words
+- market_snapshot: 150ΓÇô220 words (must mention data_source and last_updated_iso)
+- schools_education: 100ΓÇô150 words
+- lifestyle_amenities: 150ΓÇô220 words
+- featured_listings: 80ΓÇô140 words
+- working_with_agent: 120ΓÇô180 words
+- faq: 8ΓÇô12 items, each answer 60ΓÇô110 words
 
 --------------------------------
 INTERNAL LINKING RULES
@@ -771,7 +771,7 @@ export async function buildInputJson(options: BuildInputJsonOptions): Promise<In
   }
 
   if (debug) {
-    console.log("[buildInputJson] ✅ Built INPUT_JSON:", JSON.stringify(inputJson, null, 2));
+    console.log("[buildInputJson] Γ£à Built INPUT_JSON:", JSON.stringify(inputJson, null, 2));
   }
 
   return inputJson;
@@ -1091,8 +1091,8 @@ async function attemptGeneration(
  * 
  * This function implements a robust fallback strategy:
  * 1. Try primary model (e.g., gpt-5-mini for cost efficiency)
- * 2. If JSON invalid → retry once with primary model
- * 3. If still failing → fallback to gpt-4o-mini (stable)
+ * 2. If JSON invalid ΓåÆ retry once with primary model
+ * 3. If still failing ΓåÆ fallback to gpt-4o-mini (stable)
  * 
  * @param pageTypeConfig - Configuration for the page type (slug, primary intent, synonyms)
  * @param inputJson - City-level metadata for the landing page
@@ -1210,7 +1210,7 @@ export async function generateLandingPageContentWithFallback(
   try {
     const result = await attemptGeneration(models.primary, userPrompt, inputJson);
     
-    console.log("[generateLandingPageContent] ✅ Successfully generated with primary model", {
+    console.log("[generateLandingPageContent] Γ£à Successfully generated with primary model", {
       city: inputJson.city,
       pageType: pageTypeConfig.PAGE_TYPE_SLUG,
       model: models.primary,
@@ -1247,7 +1247,7 @@ export async function generateLandingPageContentWithFallback(
     
     const result = await attemptGeneration(models.primary, userPrompt, inputJson);
     
-    console.log("[generateLandingPageContent] ✅ Successfully generated on primary retry", {
+    console.log("[generateLandingPageContent] Γ£à Successfully generated on primary retry", {
       city: inputJson.city,
       pageType: pageTypeConfig.PAGE_TYPE_SLUG,
       model: models.primary,
@@ -1295,7 +1295,7 @@ export async function generateLandingPageContentWithFallback(
     const result = await attemptGeneration(models.fallback, userPrompt, inputJson);
     tokenUsage = result.tokenUsage;
     
-    console.log("[generateLandingPageContent] ✅ Successfully generated with fallback model", {
+    console.log("[generateLandingPageContent] Γ£à Successfully generated with fallback model", {
       city: inputJson.city,
       pageType: pageTypeConfig.PAGE_TYPE_SLUG,
       model: models.fallback,
@@ -1327,7 +1327,7 @@ export async function generateLandingPageContentWithFallback(
   // ============================================================================
   // ALL ATTEMPTS FAILED
   // ============================================================================
-  console.error("[generateLandingPageContent] ❌ All generation attempts failed", {
+  console.error("[generateLandingPageContent] Γ¥î All generation attempts failed", {
     city: inputJson.city,
     pageType: pageTypeConfig.PAGE_TYPE_SLUG,
     totalAttempts: attempts,
