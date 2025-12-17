@@ -73,10 +73,10 @@ function ContentSection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none
                      text-gray-600 dark:text-gray-400
-                     prose-p:text-[1.1rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
+                     prose-p:text-[5.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
-                     prose-li:text-[1.05rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
+                     prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
                      prose-li:marker:text-brand-midnightCove prose-li:pl-2
                      prose-strong:text-gray-700 dark:prose-strong:text-gray-300
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
@@ -111,9 +111,9 @@ function NeighborhoodCards({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
-                     prose-p:text-[1.1rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
+                     prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
-                     prose-li:text-[1.05rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400"
+                     prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400"
           dangerouslySetInnerHTML={{
   __html: stripDuplicateHeading(section.body, section.heading)
 }}
@@ -132,12 +132,12 @@ function NeighborhoodCards({
               </h3>
             )}
             {card.blurb && (
-              <p className="text-[0.95rem] leading-relaxed text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-[1.05rem] leading-relaxed text-gray-500 dark:text-gray-400 mb-4">
                 {card.blurb}
               </p>
             )}
             {card.best_for?.length > 0 && (
-              <p className="text-[0.95rem] text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-[1.05rem] text-gray-500 dark:text-gray-400 mb-4">
                 <strong className="text-gray-600 dark:text-gray-300">
                   Best for:
                 </strong>{" "}
@@ -179,10 +179,10 @@ function BuyerStrategySection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
-                     prose-p:text-[1.1rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
+                     prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
-                     prose-li:text-[1.05rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
+                     prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
                      prose-li:marker:text-brand-midnightCove prose-li:pl-2
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_li]:relative [&_li]:pl-2"
@@ -200,10 +200,10 @@ function BuyerStrategySection({
             </h3>
           )}
           {section.cta.body && (
-            <p className="text-[1.05rem] leading-relaxed text-gray-600 dark:text-gray-400 mb-5">
+            <p className="text-[1.1rem] leading-relaxed text-gray-600 dark:text-gray-400 mb-5">
               {section.cta.body}
             </p>
-          )}
+            )}
           {section.cta.button_href && section.cta.button_text && (
             <Link
               href={section.cta.button_href}
@@ -270,7 +270,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
         {introContent && (
           <section className="prose dark:prose-invert max-w-none space-y-4">
             {introContent.subheadline && (
-              <p className="text-[1.15rem] leading-relaxed text-gray-500 dark:text-gray-400 italic mb-5">
+              <p className="text-[1.2rem] leading-relaxed text-gray-500 dark:text-gray-400 italic mb-5">
                 {introContent.subheadline}
               </p>
             )}
@@ -280,7 +280,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
                   {introContent.quick_bullets.map((bullet, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-3 text-[1.05rem] leading-relaxed text-gray-600 dark:text-gray-400"
+                      className="flex items-start gap-3 text-[1.1rem] leading-relaxed text-gray-600 dark:text-gray-400"
                     >
                       <span className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-brand-midnightCove/10 flex items-center justify-center">
                         <svg
@@ -387,7 +387,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
                   </h3>
                 )}
                 {trustContent.agent_box.body && (
-                  <p className="text-[1.05rem] leading-relaxed text-gray-600 dark:text-gray-400">
+                  <p className="text-[1.1rem] leading-relaxed text-gray-600 dark:text-gray-400">
                     {trustContent.agent_box.body}
                   </p>
                 )}
@@ -399,7 +399,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
               </div>
             )}
             {trustContent.about_brand && (
-              <p className="text-[0.95rem] leading-relaxed text-gray-500 dark:text-gray-400">
+              <p className="text-[1.05rem] leading-relaxed text-gray-500 dark:text-gray-400">
                 {trustContent.about_brand}
               </p>
             )}
