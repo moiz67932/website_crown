@@ -18,6 +18,7 @@ import {
   generateFAQSchema,
   generateWebPageSchema,
   generateLocalBusinessSchema,
+  generateRealEstateAgentSchema,
   validateMetaLength,
 } from "@/lib/utils/seo";
 import {
@@ -30,6 +31,7 @@ import {
   PageIntro,
 } from "@/components/landing/landing-sections";
 import { FAQAccordion } from "@/components/ui/faq-accordion";
+import { ensureFAQsForRender, MIN_FAQS, type FAQItem } from "@/lib/faqs";
 
 // Enable ISR with revalidation
 export const revalidate = 3600; // Revalidate every hour
@@ -119,13 +121,42 @@ function createFallbackContent(state: string, city: string, slug: string): Landi
       },
       buyer_strategy: {
         heading: 'Buyer Resources',
-        body: 'Get expert guidance on your home purchase.',
+        body: `<p>Make an informed decision when buying in ${cityTitle}:</p>
+<ul>
+<li><strong>Pre-approval:</strong> Get pre-approved before house hunting to know your budget.</li>
+<li><strong>Home inspections:</strong> Always schedule professional inspections to uncover potential issues.</li>
+<li><strong>HOA documents:</strong> Review CC&Rs, reserve studies, and meeting minutes carefully.</li>
+<li><strong>Comparable sales:</strong> Research recent sales in the neighborhood to gauge fair pricing.</li>
+<li><strong>Market timing:</strong> Work with your agent to understand current market conditions.</li>
+<li><strong>Negotiation strategy:</strong> Your agent can help craft competitive offers.</li>
+<li><strong>Closing costs:</strong> Budget for 2-5% of purchase price in closing costs.</li>
+<li><strong>Documentation review:</strong> Review all disclosures and documentation before signing.</li>
+</ul>`,
         cta: {
-          title: 'Ready to Buy?',
-          body: 'Connect with our expert agents today.',
-          button_text: 'Contact Us',
+          title: 'Ready to Start Your Search?',
+          body: 'Contact an agent when you are ready to schedule viewings, need HOA documents reviewed, or want comparable sales analysis.',
+          button_text: 'Contact an agent',
           button_href: '/contact'
         }
+      },
+      buy_vs_rent: {
+        heading: `Buy vs. Rent Analysis for ${cityTitle}`,
+        body: `<p>Understanding whether to buy or rent in ${cityTitle} depends on several factors including your financial situation, long-term plans, and current market conditions.</p>
+<p>Key considerations include down payment savings, monthly payment comparison, tax benefits of ownership, and how long you plan to stay in the area. Generally, buying makes more sense if you plan to stay for 5+ years.</p>`,
+      },
+      price_breakdown: {
+        heading: `${cityTitle} Price Breakdown`,
+        body: `<p>Current market statistics for ${cityTitle}:</p>
+<table>
+<thead><tr><th>Metric</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Median price</td><td>Contact for details</td></tr>
+<tr><td>HOA range</td><td>Varies by community</td></tr>
+<tr><td>$/sqft</td><td>Contact for details</td></tr>
+<tr><td>DOM</td><td>Market dependent</td></tr>
+</tbody>
+</table>
+<p>Contact our team for current, accurate pricing information.</p>`,
       },
       schools_education: {
         heading: 'Schools & Education',
@@ -384,6 +415,18 @@ export default async function LandingPage({ params }: PageProps) {
     notFound();
   }
 
+  // ============================================================================
+  // FAQ GUARANTEE: Ensure ≥10 FAQs using deterministic fallback (NO AI)
+  // ============================================================================
+  const cityName = city.replace(/-/g, ' ');
+  const guaranteedFAQs = ensureFAQsForRender(content.faq, cityName);
+  
+  console.log('[Landing Page] FAQ guarantee check:', {
+    originalCount: content.faq?.length ?? 0,
+    guaranteedCount: guaranteedFAQs.length,
+    usedFallback: guaranteedFAQs.length > (content.faq?.length ?? 0),
+  });
+
   // Build structured data schemas
   const breadcrumbSchema = generateBreadcrumb([
     { name: "Home", item: "/", position: 1 },
@@ -396,12 +439,8 @@ export default async function LandingPage({ params }: PageProps) {
     },
   ]);
 
-  const faqSchema = generateFAQSchema(
-    content.faq.map((item: any) => ({
-      question: item.q,
-      answer: item.a,
-    }))
-  );
+  // Generate FAQ schema using the GUARANTEED FAQs (not raw DB data)
+  const faqSchema = generateFAQSchema(guaranteedFAQs);
 
   const webPageSchema = generateWebPageSchema(
     content.seo.canonical_path,
@@ -413,6 +452,9 @@ export default async function LandingPage({ params }: PageProps) {
     city.replace(/-/g, " "),
     state.replace(/-/g, " ")
   );
+
+  // Generate RealEstateAgent schema (authoritative for all landing pages)
+  const realEstateAgentSchema = generateRealEstateAgentSchema();
 
   // Helper to get intro content based on format
   const getIntro = () => {
@@ -554,6 +596,12 @@ export default async function LandingPage({ params }: PageProps) {
           __html: JSON.stringify(localBusinessSchema),
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(realEstateAgentSchema),
+        }}
+      />
 
       {/* Main Content */}
       <main className="min-h-screen bg-white dark:bg-slate-950">
@@ -575,16 +623,13 @@ export default async function LandingPage({ params }: PageProps) {
           <div className="space-y-16">
             {renderSections()}
 
-            {/* FAQ Section */}
+            {/* FAQ Section - Uses GUARANTEED FAQs (≥10 items) */}
             <section id="faq" className="py-12">
               <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
                 Frequently Asked Questions
               </h2>
               <FAQAccordion
-                faqs={content.faq.map((item: any) => ({
-                  question: item.q,
-                  answer: item.a,
-                }))}
+                faqs={guaranteedFAQs}
               />
             </section>
 

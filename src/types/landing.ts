@@ -65,7 +65,7 @@ export interface LandingPageCTA {
 }
 
 /**
- * All content sections (11-section structure)
+ * All content sections (13-section structure including buy_vs_rent and price_breakdown)
  */
 export interface LandingPageSections {
   hero_overview: {
@@ -91,6 +91,16 @@ export interface LandingPageSections {
     body: string;
   };
   market_snapshot: {
+    heading: string;
+    body: string;
+  };
+  // Buy vs Rent intent clarifier (REQUIRED)
+  buy_vs_rent: {
+    heading: string;
+    body: string;
+  };
+  // Price breakdown table section (REQUIRED)
+  price_breakdown: {
     heading: string;
     body: string;
   };

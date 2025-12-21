@@ -2,12 +2,12 @@
 // Idempotent: safe to re-run without duplication.
 export const CA_CITIES = [
   "los-angeles",
-  // "san-diego",
+  "san-diego",
   "san-jose",
-  // "san-francisco",
-  // "irvine",
-  // "pasadena",
-  // "santa-monica",
+  "san-francisco",
+  "irvine",
+  "pasadena",
+  "santa-monica",
 ] as const;
 
 export type CACitySlug = typeof CA_CITIES[number];

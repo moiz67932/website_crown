@@ -300,6 +300,44 @@ export function formatPrice(price: number): string {
 }
 
 /**
+ * Generate RealEstateAgent schema for Crown Coastal Homes / Reza Barghlameno
+ * This is the AUTHORITATIVE agent schema for all landing pages.
+ */
+export function generateRealEstateAgentSchema(): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": "https://www.crowncoastalhomes.com#agent",
+    name: "Crown Coastal Homes",
+    description: "California real estate brokerage specializing in residential properties. Expert guidance on HOA analysis, comparable sales, and documentation review.",
+    url: "https://www.crowncoastalhomes.com",
+    areaServed: {
+      "@type": "State",
+      name: "California",
+      sameAs: "https://en.wikipedia.org/wiki/California"
+    },
+    employee: {
+      "@type": "Person",
+      name: "Reza Barghlameno",
+      description: "Licensed California Real Estate Agent specializing in buyer representation, HOA document analysis, and comparable sales research.",
+      jobTitle: "Real Estate Agent",
+      identifier: {
+        "@type": "PropertyValue",
+        name: "California DRE License",
+        value: "02211952"
+      }
+    },
+    knowsAbout: [
+      "HOA document analysis",
+      "Comparable sales research",
+      "Home inspections",
+      "Buyer protection",
+      "Documentation review"
+    ]
+  };
+}
+
+/**
  * Format price range for SEO (e.g., "$1M+" instead of "1m")
  */
 export function formatPriceRangeForSEO(min?: number, max?: number): string {

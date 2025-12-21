@@ -426,6 +426,16 @@ export const LandingPageContentSchema = z.object({
       heading: z.string(),
       body: z.string(),
     }),
+    // Buy vs Rent intent clarifier (REQUIRED - fail if missing)
+    buy_vs_rent: z.object({
+      heading: z.string(),
+      body: z.string(),
+    }),
+    // Price breakdown table section (REQUIRED - fail if missing)
+    price_breakdown: z.object({
+      heading: z.string(),
+      body: z.string(),
+    }),
     schools_education: z.object({
       heading: z.string(),
       body: z.string(),

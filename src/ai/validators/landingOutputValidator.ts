@@ -706,39 +706,307 @@ export function checkRepetition(texts: string[]): { count: number; repeated: str
 }
 
 /**
- * Validate buyer strategy has required bullets
+ * Count <li> elements in HTML body
+ */
+function countListItems(html: string): number {
+  const matches = html.match(/<li[^>]*>/gi);
+  return matches ? matches.length : 0;
+}
+
+/**
+ * Validate buyer strategy has required bullets (exactly 8 <li> items) and proper CTA
  */
 function validateBuyerStrategy(content: LandingPageContent): ValidationError[] {
   const errors: ValidationError[] = [];
   const body = content.sections.buyer_strategy.body;
+  const bodyLower = body.toLowerCase();
   
-  // Use the exported countBullets function
-  const bulletCount = countBullets(body);
+  // Count <li> elements in HTML
+  const liCount = countListItems(body);
   
-  if (bulletCount < 0) {
+  if (liCount < 8) {
     errors.push({
       code: 'INSUFFICIENT_BULLETS',
-      message: `Buyer strategy has ${bulletCount} bullets, minimum is 0`,
+      message: `Buyer strategy has ${liCount} list items, minimum is 8`,
       path: 'sections.buyer_strategy.body',
     });
-  } else if (bulletCount > 12) {
+  } else if (liCount > 12) {
     errors.push({
       code: 'TOO_MANY_BULLETS',
-      message: `Buyer strategy has ${bulletCount} bullets, maximum is 12`,
+      message: `Buyer strategy has ${liCount} list items, maximum is 12`,
       path: 'sections.buyer_strategy.body',
     });
   }
 
-  // Validate CTA exists
-  const cta = content.sections.buyer_strategy.cta;
-  if (!cta || !cta.button_text || !cta.button_href) {
+  // Validate required content references in buyer_strategy body
+  const hasInspections = /inspection|inspect/i.test(body);
+  const hasHOA = /hoa|homeowner.*association/i.test(body);
+  const hasComparables = /comparable|comp.*sale|market.*comparison/i.test(body);
+  
+  if (!hasInspections) {
     errors.push({
-      code: 'MISSING_CTA',
-      message: 'Buyer strategy must have a CTA with button_text and button_href',
-      path: 'sections.buyer_strategy.cta',
+      code: 'MISSING_INSPECTION_REFERENCE',
+      message: 'Buyer strategy must reference inspections',
+      path: 'sections.buyer_strategy.body',
+    });
+  }
+  if (!hasHOA) {
+    errors.push({
+      code: 'MISSING_HOA_REFERENCE',
+      message: 'Buyer strategy must reference HOA documents',
+      path: 'sections.buyer_strategy.body',
+    });
+  }
+  if (!hasComparables) {
+    errors.push({
+      code: 'MISSING_COMPARABLES_REFERENCE',
+      message: 'Buyer strategy must reference comparable sales',
+      path: 'sections.buyer_strategy.body',
     });
   }
 
+  // Validate CTA exists with required values
+  const cta = content.sections.buyer_strategy.cta;
+  if (!cta) {
+    errors.push({
+      code: 'MISSING_CTA',
+      message: 'Buyer strategy must have a CTA object',
+      path: 'sections.buyer_strategy.cta',
+    });
+  } else {
+    // Validate button_text
+    if (cta.button_text !== 'Contact an agent') {
+      errors.push({
+        code: 'INVALID_CTA_BUTTON_TEXT',
+        message: `CTA button_text must be exactly "Contact an agent", got "${cta.button_text}"`,
+        path: 'sections.buyer_strategy.cta.button_text',
+      });
+    }
+    
+    // Validate button_href
+    if (cta.button_href !== '/contact') {
+      errors.push({
+        code: 'INVALID_CTA_BUTTON_HREF',
+        message: `CTA button_href must be exactly "/contact", got "${cta.button_href}"`,
+        path: 'sections.buyer_strategy.cta.button_href',
+      });
+    }
+    
+    // Validate CTA body explains WHEN to contact (not just why)
+    const ctaBodyLower = (cta.body || '').toLowerCase();
+    const hasWhenContext = 
+      /before (touring|viewing|visiting|making|submitting)/i.test(cta.body || '') ||
+      /after (narrowing|identifying|selecting|shortlist)/i.test(cta.body || '') ||
+      /prior to (submitting|making|signing)/i.test(cta.body || '') ||
+      /when (reviewing|comparing|evaluating|analyzing)/i.test(cta.body || '') ||
+      ctaBodyLower.includes('disclosure') ||
+      ctaBodyLower.includes('hoa document');
+    
+    if (!hasWhenContext) {
+      errors.push({
+        code: 'CTA_MISSING_WHEN_CONTEXT',
+        message: 'CTA body must explain WHEN to contact an agent (e.g., before touring, after narrowing a shortlist, when reviewing disclosures)',
+        path: 'sections.buyer_strategy.cta.body',
+      });
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Minimum FAQ count requirement
+ */
+const MIN_FAQ_COUNT = 10;
+
+/**
+ * Validate FAQ count >= MIN_FAQ_COUNT
+ */
+function validateFAQCount(content: LandingPageContent): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const faqCount = content.faq?.length ?? 0;
+  
+  if (faqCount < MIN_FAQ_COUNT) {
+    errors.push({
+      code: 'FAQ_MIN_COUNT',
+      message: `FAQ has ${faqCount} items, minimum is ${MIN_FAQ_COUNT}`,
+      path: 'faq',
+    });
+  }
+  
+  return errors;
+}
+
+/**
+ * Required sections that must exist in content
+ */
+const REQUIRED_SECTIONS = [
+  'hero_overview',
+  'about_area',
+  'market_snapshot',
+  'buy_vs_rent',
+  'property_types',
+  'neighborhoods',
+  'buyer_strategy',
+  'price_breakdown',
+] as const;
+
+/**
+ * Validate required sections exist
+ */
+function validateRequiredSections(content: LandingPageContent): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const sections = content.sections as Record<string, unknown>;
+  
+  for (const sectionName of REQUIRED_SECTIONS) {
+    const section = sections[sectionName];
+    if (!section || typeof section !== 'object') {
+      errors.push({
+        code: 'MISSING_SECTION',
+        message: `Required section "${sectionName}" is missing`,
+        path: `sections.${sectionName}`,
+      });
+      continue;
+    }
+    
+    const sectionObj = section as { heading?: string; body?: string };
+    if (!sectionObj.heading || !sectionObj.body) {
+      errors.push({
+        code: 'INCOMPLETE_SECTION',
+        message: `Section "${sectionName}" must have heading and body`,
+        path: `sections.${sectionName}`,
+      });
+    }
+  }
+  
+  // Validate price_breakdown has a <table> with required rows
+  const priceBreakdown = sections.price_breakdown as { body?: string } | undefined;
+  if (priceBreakdown?.body) {
+    const bodyLower = priceBreakdown.body.toLowerCase();
+    
+    if (!/<table[^>]*>/i.test(priceBreakdown.body)) {
+      errors.push({
+        code: 'PRICE_TABLE_MISSING',
+        message: 'price_breakdown section must contain a <table> element',
+        path: 'sections.price_breakdown.body',
+      });
+    } else {
+      // Check for required table rows
+      const hasMedianPrice = /median\s+price|median\s+listing|average\s+price/i.test(bodyLower);
+      const hasHOA = /hoa|homeowner.*fee|association.*fee/i.test(bodyLower);
+      const hasSqft = /\$.*sqft|\$.*sq\s*ft|per\s+square\s+foot|price.*sqft/i.test(bodyLower);
+      const hasDOM = /days?\s+on\s+market|dom\b|market\s+time/i.test(bodyLower);
+      
+      if (!hasMedianPrice) {
+        errors.push({
+          code: 'PRICE_TABLE_MISSING_MEDIAN',
+          message: 'price_breakdown table must include Median price row',
+          path: 'sections.price_breakdown.body',
+        });
+      }
+      if (!hasHOA) {
+        errors.push({
+          code: 'PRICE_TABLE_MISSING_HOA',
+          message: 'price_breakdown table must include HOA range row',
+          path: 'sections.price_breakdown.body',
+        });
+      }
+      if (!hasSqft) {
+        errors.push({
+          code: 'PRICE_TABLE_MISSING_SQFT',
+          message: 'price_breakdown table must include $/sqft range row',
+          path: 'sections.price_breakdown.body',
+        });
+      }
+      if (!hasDOM) {
+        errors.push({
+          code: 'PRICE_TABLE_MISSING_DOM',
+          message: 'price_breakdown table must include Days on Market (DOM) row',
+          path: 'sections.price_breakdown.body',
+        });
+      }
+    }
+  }
+  
+  return errors;
+}
+
+/**
+ * Validate SEO fields meet requirements
+ */
+function validateSEOFields(content: LandingPageContent): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const { title, meta_description, canonical_path } = content.seo;
+  const currentYear = new Date().getFullYear().toString();
+  
+  // Title should include year and buyer intent
+  const titleLower = title.toLowerCase();
+  const hasYear = title.includes(currentYear) || title.includes((parseInt(currentYear) + 1).toString());
+  const hasBuyerIntent = /for sale|listings|market guide|homes|properties/i.test(titleLower);
+  
+  if (!hasYear) {
+    errors.push({
+      code: 'SEO_TITLE_NO_YEAR',
+      message: `SEO title should include the year (${currentYear})`,
+      path: 'seo.title',
+    });
+  }
+  
+  if (!hasBuyerIntent) {
+    errors.push({
+      code: 'SEO_TITLE_NO_INTENT',
+      message: 'SEO title should include buyer intent words (for sale, listings, market guide)',
+      path: 'seo.title',
+    });
+  }
+  
+  // Meta description length
+  if (meta_description.length > 160) {
+    errors.push({
+      code: 'SEO_META_TOO_LONG',
+      message: `Meta description is ${meta_description.length} chars, max is 160`,
+      path: 'seo.meta_description',
+    });
+  }
+  
+  // Canonical path format
+  if (!canonical_path.startsWith('/california/')) {
+    errors.push({
+      code: 'SEO_CANONICAL_FORMAT',
+      message: 'Canonical path must start with /california/',
+      path: 'seo.canonical_path',
+    });
+  }
+  
+  return errors;
+}
+
+/**
+ * Validate agent information in trust section
+ */
+function validateAgentInfo(content: LandingPageContent): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const agentBox = content.trust?.agent_box;
+  
+  if (!agentBox) {
+    errors.push({
+      code: 'MISSING_AGENT_BOX',
+      message: 'Trust section must include agent_box',
+      path: 'trust.agent_box',
+    });
+    return errors;
+  }
+  
+  // Check for required agent info (allow flexibility in exact format)
+  const bodyLower = (agentBox.body || '').toLowerCase();
+  const hasAgentName = bodyLower.includes('reza') || bodyLower.includes('barghlameno');
+  const hasLicense = /dre\s*#?\s*0?2211952|02211952/i.test(agentBox.body || agentBox.disclaimer || '');
+  
+  if (!hasAgentName && !hasLicense) {
+    // Only warn, don't fail - content may have brand focus instead
+    console.warn('[Validator] Agent box may be missing specific agent credentials');
+  }
+  
   return errors;
 }
 
@@ -823,6 +1091,18 @@ export function validateLandingOutput(
   errors.push(...validateForbiddenContent(fields));
   errors.push(...validateBuyerStrategy(content));
   errors.push(...validateRepetition(fields));
+  
+  // NEW: Validate FAQ count >= 10
+  errors.push(...validateFAQCount(content));
+  
+  // NEW: Validate required sections exist (buy_vs_rent, price_breakdown, etc.)
+  errors.push(...validateRequiredSections(content));
+  
+  // NEW: Validate SEO fields (year, buyer intent, meta length)
+  errors.push(...validateSEOFields(content));
+  
+  // NEW: Validate agent info in trust section
+  errors.push(...validateAgentInfo(content));
 
   // Validate canonical path
   if (content.seo.canonical_path !== input.canonical_path) {

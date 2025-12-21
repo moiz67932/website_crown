@@ -107,8 +107,18 @@ QUALITY CHECK BEFORE OUTPUT:
 ✓ All required phrases included (Data source, Last updated, missing-specs sentence)
 ✓ Numbers match INPUT_JSON exactly
 ✓ buyer_strategy.cta present with button_text="Contact an agent" and button_href="/contact"
+✓ buyer_strategy.body contains exactly 8 <li> items (actionable checklist)
+✓ buyer_strategy.body references: inspections, HOA documents, comparable sales
+✓ buyer_strategy.cta.body explains WHEN to contact an agent (before touring, when reviewing disclosures, etc.)
 ✓ neighborhoods.cards populated (use local_areas when present)
 ✓ internal_linking arrays exactly match INPUT_JSON.internal_links
+✓ buy_vs_rent section EXISTS with heading and body (REQUIRED)
+✓ price_breakdown section EXISTS with heading and body containing <table> (REQUIRED)
+✓ price_breakdown table includes: Median price, HOA range, $/sqft, Days on Market
+✓ faq array contains AT LEAST 10 items (HARD REQUIREMENT)
+✓ trust.about_brand mentions Crown Coastal Homes
+✓ trust.agent_box.body references Reza Barghlameno and/or DRE #02211952
+✓ seo.title includes current year (${new Date().getFullYear()}) and buyer intent words
 
 INFRASTRUCTURE SANITIZATION (MANDATORY)
 - If you need to refer to where data comes from, you MUST ONLY use this exact phrase:
@@ -118,6 +128,20 @@ INFRASTRUCTURE SANITIZATION (MANDATORY)
 
 ✓ If featured_listings_has_missing_specs is true, the exact missing-specs disclaimer sentence appears verbatim in the Featured Listings section
 
+AGENT AUTHORITY (E-E-A-T REQUIREMENT)
+The trust section MUST establish agent authority:
+- Agent name: Reza Barghlameno
+- License: California DRE #02211952
+- Brand: Crown Coastal Homes
+- Trust messaging should emphasize: HOA analysis, comparable sales review, documentation expertise, buyer protection
+- NO hype language. Be professional and advisory.
+
+FAQ HARD REQUIREMENT (CRITICAL)
+- You MUST generate AT LEAST 10 FAQ items
+- Each FAQ must have a question (q) and answer (a)
+- FAQs should be locally relevant and buyer-focused
+- At least one FAQ should reference working with an agent or the value of professional representation
+- Generation will FAIL if fewer than 10 FAQs are provided
 
 `;
 
@@ -274,6 +298,23 @@ Explain:
 - How to interpret them alongside market snapshot
 Include the mandatory missing-specs sentence if applicable. 2-3 paragraphs.
 
+1️⃣1️⃣ Buy vs Rent Analysis (REQUIRED SECTION)
+Explain:
+- When buying makes more sense than renting in this market
+- Equity building vs flexibility tradeoffs
+- Local rent vs mortgage payment comparisons
+- Long-term wealth considerations
+This helps buyers understand their decision context. 2-3 paragraphs.
+
+1️⃣2️⃣ Price Breakdown (REQUIRED SECTION - MUST CONTAIN TABLE)
+Create an HTML <table> that includes:
+- Median listing price row
+- HOA fee range row (typical ranges, "varies" if unknown)
+- Price per square foot ($/sqft) row
+- Days on Market (DOM) row
+The table must use <table>, <thead>, <tbody>, <tr>, <th>, <td> tags.
+Include 1-2 paragraphs explaining what these metrics mean for buyers.
+
 ============================================================
 OUTPUT JSON SCHEMA (exact match required)
 ============================================================
@@ -289,29 +330,31 @@ OUTPUT JSON SCHEMA (exact match required)
     "hero_overview": { "heading": "", "body": "<h2>...</h2><p>...</p><p>...</p>" },
     "about_area": { "heading": "", "body": "<h2>...</h2><p>...</p><p>...</p>" },
     "market_snapshot": { "heading": "", "body": "<h2>...</h2><p>...</p><p>Data source: ...</p>" },
+    "buy_vs_rent": { "heading": "", "body": "<h2>...</h2><p>...</p><p>...</p>" },
+    "price_breakdown": { "heading": "", "body": "<h2>...</h2><p>...</p><table>...</table><p>...</p>" },
     "property_types": { "heading": "", "body": "<h2>...</h2><p>...</p><ul><li>...</li></ul>" },
     "neighborhoods": {
       "heading": "", "body": "<h2>...</h2><p>...</p>",
       "cards": [{ "name": "", "blurb": "", "best_for": [], "internal_link_text": "", "internal_link_href": "" }]
     },
     "buyer_strategy": {
-      "heading": "", "body": "<h2>...</h2><p>...</p><ul><li>...</li></ul>",
-      "cta": { "title": "", "body": "", "button_text": "Contact an agent", "button_href": "/contact" }
+      "heading": "", "body": "<h2>...</h2><p>...</p><ul><li>8 items exactly</li></ul>",
+      "cta": { "title": "", "body": "Explain WHEN to contact (before touring, when reviewing HOA docs, etc.)", "button_text": "Contact an agent", "button_href": "/contact" }
     },
     "schools_education": { "heading": "", "body": "<h2>...</h2><p>...</p>" },
     "working_with_agent": { "heading": "", "body": "<h2>...</h2><p>...</p>" },
     "lifestyle_amenities": { "heading": "", "body": "<h2>...</h2><p>...</p>" },
     "featured_listings": { "heading": "", "body": "<h2>...</h2><p>...</p>" }
   },
-  "faq": [{ "q": "", "a": "" }],
+  "faq": [{ "q": "", "a": "" }, "... minimum 10 FAQ items required"],
   "internal_linking": {
     "in_body_links": [{ "href": "", "anchor": "", "context_note": "" }],
     "related_pages": [], "more_in_city": [], "nearby_cities": []
   },
   "trust": {
-    "about_brand": "",
+    "about_brand": "Include Crown Coastal Homes and agent Reza Barghlameno, CA DRE #02211952",
     "agent_box": {
-      "headline": "Work with a local expert", "body": "",
+      "headline": "Work with a local expert", "body": "Reference HOA analysis, comparable sales, documentation review",
       "disclaimer": "General info only. Verify details with official sources and the listing broker."
     }
   }

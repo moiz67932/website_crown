@@ -22,6 +22,7 @@ import CitySchema from "@/components/seo/CitySchema";
 import RelatedVariants from "./sections/RelatedVariants";
 import Link from "next/link";
 import { CA_CITIES, cityToTitle } from "@/lib/seo/cities";
+import { safeHtml } from "@/lib/utils/sanitize-html";
 
 const MapSection = dynamic<{ city: string }>(() => import("./sections/Map"), {
   loading: () => (
@@ -42,14 +43,8 @@ interface Props {
   faqJsonLd?: any;
 }
 
-function stripDuplicateHeading(body: string, heading?: string) {
-  if (!heading || !body) return body;
-
-  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`^\\s*<h2[^>]*>\\s*${escaped}\\s*</h2>`, "i");
-
-  return body.replace(regex, "").trim();
-}
+// NOTE: stripDuplicateHeading is now imported from sanitize-html.ts
+// All HTML rendering uses safeHtml() which sanitizes AND strips duplicate headings
 
 // Helper component to render a section with heading and body
 function ContentSection({
@@ -73,7 +68,7 @@ function ContentSection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none
                      text-gray-600 dark:text-gray-400
-                     prose-p:text-[5.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
+                     prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
                      prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
@@ -83,7 +78,7 @@ function ContentSection({
                      [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_ol]:space-y-2
                      [&_li]:relative [&_li]:pl-2"
           dangerouslySetInnerHTML={{
-            __html: stripDuplicateHeading(section.body, section.heading),
+            __html: safeHtml(section.body, section.heading),
           }}
         />
       )}
@@ -115,8 +110,8 @@ function NeighborhoodCards({
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400"
           dangerouslySetInnerHTML={{
-  __html: stripDuplicateHeading(section.body, section.heading)
-}}
+            __html: safeHtml(section.body, section.heading),
+          }}
         />
       )}
 
@@ -187,8 +182,8 @@ function BuyerStrategySection({
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_li]:relative [&_li]:pl-2"
           dangerouslySetInnerHTML={{
-  __html: stripDuplicateHeading(section.body, section.heading)
-}}
+            __html: safeHtml(section.body, section.heading),
+          }}
         />
       )}
 
@@ -259,6 +254,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
             url: (f as any).url || undefined,
           }))}
           variant={kind}
+          faqItems={faqItems}
         />
       )}
 
@@ -323,6 +319,12 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
         <ContentSection section={sections?.market_snapshot} />
 
         <StatsSection stats={data.stats} />
+
+        {/* Price Breakdown Section (REQUIRED - contains table) */}
+        <ContentSection section={sections?.price_breakdown} className="price-breakdown-section" />
+
+        {/* Buy vs Rent Intent Clarifier (REQUIRED) */}
+        <ContentSection section={sections?.buy_vs_rent} />
 
         {/* Property Types Section */}
         <ContentSection section={sections?.property_types} />

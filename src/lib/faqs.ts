@@ -10,6 +10,129 @@ export type SEOMeta = { title?: string; description?: string; keywords?: string[
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
+// ============================================================================
+// MIN_FAQS: Guarantee at least 10 FAQs on every landing page
+// ============================================================================
+export const MIN_FAQS = 10;
+
+/**
+ * Fallback FAQs for when cached FAQs are missing or insufficient.
+ * These are buyer-focused, generic enough to work for any California city,
+ * but include agent mention for E-E-A-T.
+ * 
+ * CRITICAL: At least one FAQ MUST reference Reza Barghlameno and DRE #02211952
+ * This is EXPORTED for use by the rendering layer as a deterministic fallback.
+ */
+export function getFallbackFAQs(city: string): FAQItem[] {
+  const cityTitle = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+  return [
+    {
+      question: `How does Reza Barghlameno (DRE #02211952) help buyers review HOA documents?`,
+      answer: `Reza Barghlameno provides comprehensive HOA document review services including analysis of CC&Rs, financial statements, reserve studies, and meeting minutes. This helps buyers understand their obligations, assess the association's financial health, and identify potential special assessments before purchase.`
+    },
+    {
+      question: `What should I know about home inspections in ${cityTitle}?`,
+      answer: `A professional home inspection in ${cityTitle} typically costs $400-$600 and examines structural elements, electrical systems, plumbing, roof condition, and HVAC. Consider additional inspections for termites, foundation, and pool if applicable. Inspections provide negotiating leverage and help avoid costly surprises.`
+    },
+    {
+      question: `How long does it take to close on a home in ${cityTitle}?`,
+      answer: `The typical closing timeline in ${cityTitle} is 30-45 days from accepted offer to keys. Cash purchases may close faster (14-21 days). Factors affecting timeline include loan approval, appraisal scheduling, title search, and any inspection-related negotiations.`
+    },
+    {
+      question: `What are typical closing costs when buying in ${cityTitle}?`,
+      answer: `Buyers in ${cityTitle} should budget 2-3% of purchase price for closing costs, including lender fees, title insurance, escrow fees, recording fees, and prorated property taxes. Some costs are negotiable between buyer and seller.`
+    },
+    {
+      question: `How do I know if a ${cityTitle} home is priced fairly?`,
+      answer: `Evaluate fair pricing by reviewing comparable sales (similar homes sold in the last 90 days within 1 mile), price per square foot relative to neighborhood averages, days on market compared to local norms, and any price reductions. Your agent can provide a Comparative Market Analysis (CMA).`
+    },
+    {
+      question: `What mortgage options are available for ${cityTitle} homes?`,
+      answer: `Common mortgage options include conventional loans (20% down typical), FHA loans (3.5% down, income limits apply), VA loans (0% down for veterans), and jumbo loans for amounts exceeding conforming limits. Current California conforming loan limits and interest rates vary by lender.`
+    },
+    {
+      question: `What should I look for in ${cityTitle} neighborhood research?`,
+      answer: `Key neighborhood factors include school ratings, crime statistics, commute times, walkability scores, planned developments, and property tax rates. Visit at different times of day to assess noise, traffic, and parking. Review HOA rules if applicable.`
+    },
+    {
+      question: `How competitive is the ${cityTitle} real estate market?`,
+      answer: `Market competitiveness varies by neighborhood and price point. Check days on market (DOM), list-to-sale price ratios, and active inventory levels. Lower DOM and higher ratios indicate seller-favorable conditions requiring more competitive offers.`
+    },
+    {
+      question: `When is the best time to buy a home in ${cityTitle}?`,
+      answer: `While spring traditionally sees more inventory, late fall and winter may offer less competition and more motivated sellers. The best time depends on your personal timeline, interest rates, and local market conditions rather than season alone.`
+    },
+    {
+      question: `What property types are available for purchase in ${cityTitle}?`,
+      answer: `${cityTitle} offers single-family homes, condominiums, townhomes, and small multifamily properties (2-4 units). Each type has different ownership structures, HOA considerations, and maintenance responsibilities. Your choice depends on lifestyle, budget, and investment goals.`
+    },
+    {
+      question: `How do property taxes work in California?`,
+      answer: `California property taxes run approximately 1.1-1.25% of assessed value annually. Under Proposition 13, assessed value increases are capped at 2% annually until sale, when it resets to market value. Supplemental tax bills may apply after purchase.`
+    },
+    {
+      question: `What questions should I ask before making an offer?`,
+      answer: `Key questions include: How long has the property been listed? Have there been price reductions? Are there multiple offers? What's included in the sale? Are there any known issues? What's the seller's timeline? Has the seller disclosed all material facts?`
+    },
+  ];
+}
+
+/**
+ * Pad FAQs to meet minimum count using fallback questions.
+ * EXPORTED for use in rendering layer to guarantee ≥10 FAQs.
+ * This is a DETERMINISTIC operation (no AI calls).
+ */
+export function padFAQsToMinimum(faqs: FAQItem[], city: string): FAQItem[] {
+  if (faqs.length >= MIN_FAQS) {
+    return faqs;
+  }
+  
+  const fallbacks = getFallbackFAQs(city);
+  const existingQuestions = new Set(faqs.map(f => f.question.toLowerCase().trim()));
+  
+  // Add fallback FAQs that don't duplicate existing questions
+  const result = [...faqs];
+  for (const fallback of fallbacks) {
+    if (result.length >= MIN_FAQS) break;
+    if (!existingQuestions.has(fallback.question.toLowerCase().trim())) {
+      result.push(fallback);
+      existingQuestions.add(fallback.question.toLowerCase().trim());
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Ensure FAQs meet the minimum requirement for rendering.
+ * This is the PRIMARY function for render-time FAQ guarantee.
+ * Converts {q, a} format to {question, answer} format if needed.
+ * Returns at least MIN_FAQS items, using fallbacks if necessary.
+ * 
+ * @param rawFaqs - FAQs from DB in either {q, a} or {question, answer} format
+ * @param city - City name for generating fallbacks
+ * @returns Array of FAQItem with at least MIN_FAQS items
+ */
+export function ensureFAQsForRender(
+  rawFaqs: Array<{ q?: string; a?: string; question?: string; answer?: string }> | undefined,
+  city: string
+): FAQItem[] {
+  if (!rawFaqs || rawFaqs.length === 0) {
+    return getFallbackFAQs(city).slice(0, MIN_FAQS);
+  }
+  
+  // Normalize to {question, answer} format
+  const normalized: FAQItem[] = rawFaqs
+    .map(f => ({
+      question: f.question || f.q || '',
+      answer: f.answer || f.a || ''
+    }))
+    .filter(f => f.question && f.answer);
+  
+  // Pad to minimum
+  return padFAQsToMinimum(normalized, city);
+}
+
 async function fetchCitySqlContext(city: string): Promise<string> {
   try {
     const pool = await getPgPool()
@@ -142,19 +265,27 @@ export async function getOrGenerateFaqs(city: string, slug: string): Promise<{ f
     })).filter((f: FAQItem) => f.question && f.answer)
     
     if (normalizedFaqs.length > 0) {
-      console.log('[faqs] Returning cached FAQs from database:', normalizedFaqs.length)
+      // Pad to MIN_FAQS if insufficient (defensive fallback)
+      const paddedFaqs = padFAQsToMinimum(normalizedFaqs, city);
+      console.log('[faqs] Returning cached FAQs from database:', normalizedFaqs.length, 
+        paddedFaqs.length > normalizedFaqs.length ? `(padded to ${paddedFaqs.length})` : '');
       return {
-        faqs: normalizedFaqs,
-        markdown: buildMarkdownFromFaqs(normalizedFaqs),
-        jsonLd: buildFAQJsonLd(loweredCity, pageName, normalizedFaqs),
+        faqs: paddedFaqs,
+        markdown: buildMarkdownFromFaqs(paddedFaqs),
+        jsonLd: buildFAQJsonLd(loweredCity, pageName, paddedFaqs),
         meta: contentJson?.seo as SEOMeta | undefined
       }
     }
   }
   
-  // No cached FAQs found - return empty (do NOT generate)
-  console.log('[faqs] No cached FAQs found. Generate via admin API.')
-  return { faqs: [], markdown: '', jsonLd: {} }
+  // No cached FAQs found - return fallback set (do NOT generate)
+  console.log('[faqs] No cached FAQs found. Returning fallback FAQs. Generate via admin API for production content.')
+  const fallbackFaqs = getFallbackFAQs(city);
+  return { 
+    faqs: fallbackFaqs, 
+    markdown: buildMarkdownFromFaqs(fallbackFaqs), 
+    jsonLd: buildFAQJsonLd(loweredCity, pageName, fallbackFaqs) 
+  }
 }
 
 function extractFaqsFromMarkdown(md: string): FAQItem[] {
