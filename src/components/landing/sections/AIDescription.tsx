@@ -191,7 +191,7 @@ export default async function AIDescription({ city, kind, html }: Props) {
 
               {section.heading && (
   <h2
-    className="..."
+    className="text-3xl sm:text-4xl font-extrabold text-brand-midnightCove mt-12 mb-6"
     dangerouslySetInnerHTML={{
       __html: section.heading.replace(/<\/?h2>/g, ""),
     }}
