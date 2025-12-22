@@ -56,9 +56,12 @@ function ContentSection({
 }) {
   if (!section || (!section.heading && !section.body)) return null;
 
+  // Check if body already contains an h2 tag - if so, don't render separate heading
+  const bodyHasH2 = section.body && /<h2[^>]*>/i.test(section.body);
+
   return (
     <section className={`${className || ""} space-y-4`}>
-      {section.heading && (
+      {section.heading && !bodyHasH2 && (
         <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-5">
           {section.heading}
         </h2>
@@ -68,6 +71,7 @@ function ContentSection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none
                      text-gray-600 dark:text-gray-400
+                     prose-headings:text-2xl sm:prose-headings:text-3xl prose-headings:font-bold prose-headings:text-brand-midnightCove prose-headings:mb-5
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
@@ -78,7 +82,7 @@ function ContentSection({
                      [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_ol]:space-y-2
                      [&_li]:relative [&_li]:pl-2"
           dangerouslySetInnerHTML={{
-            __html: safeHtml(section.body, section.heading),
+            __html: safeHtml(section.body),
           }}
         />
       )}
@@ -94,9 +98,12 @@ function NeighborhoodCards({
 }) {
   if (!section?.cards?.length) return null;
 
+  // Check if body already contains an h2 tag - if so, don't render separate heading
+  const bodyHasH2 = section.body && /<h2[^>]*>/i.test(section.body);
+
   return (
     <section className="space-y-5">
-      {section.heading && (
+      {section.heading && !bodyHasH2 && (
         <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-5">
           {section.heading}
         </h2>
@@ -106,11 +113,12 @@ function NeighborhoodCards({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
+                     prose-headings:text-2xl sm:prose-headings:text-3xl prose-headings:font-bold prose-headings:text-brand-midnightCove prose-headings:mb-5
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400"
           dangerouslySetInnerHTML={{
-            __html: safeHtml(section.body, section.heading),
+            __html: safeHtml(section.body),
           }}
         />
       )}
@@ -162,9 +170,12 @@ function BuyerStrategySection({
 }) {
   if (!section) return null;
 
+  // Check if body already contains an h2 tag - if so, don't render separate heading
+  const bodyHasH2 = section.body && /<h2[^>]*>/i.test(section.body);
+
   return (
     <section className="space-y-5">
-      {section.heading && (
+      {section.heading && !bodyHasH2 && (
         <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-5">
           {section.heading}
         </h2>
@@ -174,6 +185,7 @@ function BuyerStrategySection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
+                     prose-headings:text-2xl sm:prose-headings:text-3xl prose-headings:font-bold prose-headings:text-brand-midnightCove prose-headings:mb-5
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
@@ -182,7 +194,7 @@ function BuyerStrategySection({
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_li]:relative [&_li]:pl-2"
           dangerouslySetInnerHTML={{
-            __html: safeHtml(section.body, section.heading),
+            __html: safeHtml(section.body),
           }}
         />
       )}
