@@ -102,9 +102,11 @@ function NeighborhoodCards({
 }) {
   if (!section?.cards?.length) return null;
 
+  const hasInternalH2 = bodyHasH2(section.body);
+
   return (
     <section className="space-y-5">
-      {section.heading && (
+      {!hasInternalH2 && section.heading && (
         <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-5">
           {section.heading}
         </h2>
@@ -170,9 +172,11 @@ function BuyerStrategySection({
 }) {
   if (!section) return null;
 
+  const hasInternalH2 = bodyHasH2(section.body);
+
   return (
     <section className="space-y-5">
-      {section.heading && (
+      {!hasInternalH2 && section.heading && (
         <h2 className="text-2xl sm:text-3xl font-bold text-brand-midnightCove mb-5">
           {section.heading}
         </h2>
