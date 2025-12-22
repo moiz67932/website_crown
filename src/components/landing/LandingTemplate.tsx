@@ -86,7 +86,13 @@ function ContentSection({
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_ol]:space-y-2
                      [&_li]:relative [&_li]:pl-2
-                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0"
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0
+                     [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_table]:dark:border-gray-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
+                     [&_thead]:bg-brand-midnightCove/10 [&_thead]:dark:bg-brand-midnightCove/20
+                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_th]:text-brand-midnightCove [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
+                     [&_td]:border [&_td]:border-gray-300 [&_td]:dark:border-gray-600 [&_td]:px-4 [&_td]:py-3 [&_td]:text-gray-600 [&_td]:dark:text-gray-400
+                     [&_tr]:even:bg-gray-50 [&_tr]:dark:even:bg-gray-800/50
+                     [&_tbody_tr]:hover:bg-gray-100 [&_tbody_tr]:dark:hover:bg-gray-700/50 [&_tbody_tr]:transition-colors"
           dangerouslySetInnerHTML={{
             __html: safeHtml(section.body, section.heading),
           }}
@@ -122,7 +128,13 @@ function NeighborhoodCards({
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
-                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0"
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0
+                     [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_table]:dark:border-gray-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
+                     [&_thead]:bg-brand-midnightCove/10 [&_thead]:dark:bg-brand-midnightCove/20
+                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_th]:text-brand-midnightCove [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
+                     [&_td]:border [&_td]:border-gray-300 [&_td]:dark:border-gray-600 [&_td]:px-4 [&_td]:py-3 [&_td]:text-gray-600 [&_td]:dark:text-gray-400
+                     [&_tr]:even:bg-gray-50 [&_tr]:dark:even:bg-gray-800/50
+                     [&_tbody_tr]:hover:bg-gray-100 [&_tbody_tr]:dark:hover:bg-gray-700/50 [&_tbody_tr]:transition-colors"
           dangerouslySetInnerHTML={{
             __html: safeHtml(section.body, section.heading),
           }}
@@ -198,7 +210,13 @@ function BuyerStrategySection({
                      prose-li:marker:text-brand-midnightCove prose-li:pl-2
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_li]:relative [&_li]:pl-2
-                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0"
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0
+                     [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_table]:dark:border-gray-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
+                     [&_thead]:bg-brand-midnightCove/10 [&_thead]:dark:bg-brand-midnightCove/20
+                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_th]:text-brand-midnightCove [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
+                     [&_td]:border [&_td]:border-gray-300 [&_td]:dark:border-gray-600 [&_td]:px-4 [&_td]:py-3 [&_td]:text-gray-600 [&_td]:dark:text-gray-400
+                     [&_tr]:even:bg-gray-50 [&_tr]:dark:even:bg-gray-800/50
+                     [&_tbody_tr]:hover:bg-gray-100 [&_tbody_tr]:dark:hover:bg-gray-700/50 [&_tbody_tr]:transition-colors"
           dangerouslySetInnerHTML={{
             __html: safeHtml(section.body, section.heading),
           }}
