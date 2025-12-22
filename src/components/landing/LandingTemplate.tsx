@@ -76,6 +76,7 @@ function ContentSection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none
                      text-gray-600 dark:text-gray-400
+                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:text-brand-midnightCove prose-h2:mb-5 prose-h2:mt-0
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
@@ -84,7 +85,8 @@ function ContentSection({
                      prose-strong:text-gray-700 dark:prose-strong:text-gray-300
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_ol]:space-y-2
-                     [&_li]:relative [&_li]:pl-2"
+                     [&_li]:relative [&_li]:pl-2
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0"
           dangerouslySetInnerHTML={{
             __html: safeHtml(section.body, section.heading),
           }}
@@ -116,9 +118,11 @@ function NeighborhoodCards({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
+                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:text-brand-midnightCove prose-h2:mb-5 prose-h2:mt-0
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
-                     prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400"
+                     prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0"
           dangerouslySetInnerHTML={{
             __html: safeHtml(section.body, section.heading),
           }}
@@ -186,13 +190,15 @@ function BuyerStrategySection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
+                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:text-brand-midnightCove prose-h2:mb-5 prose-h2:mt-0
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
                      prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
                      prose-li:marker:text-brand-midnightCove prose-li:pl-2
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
-                     [&_li]:relative [&_li]:pl-2"
+                     [&_li]:relative [&_li]:pl-2
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-midnightCove [&_h2]:mb-5 [&_h2]:mt-0"
           dangerouslySetInnerHTML={{
             __html: safeHtml(section.body, section.heading),
           }}
