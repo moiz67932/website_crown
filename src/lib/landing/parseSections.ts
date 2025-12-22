@@ -39,3 +39,8 @@ export function parseIntoSections(html: string): ParsedSection[] {
 
   return sections;
 }
+
+export function bodyHasH2(html?: string): boolean {
+  if (!html) return false
+  return /<h2[\s>]/i.test(html)
+}

@@ -180,20 +180,30 @@ export default async function AIDescription({ city, kind, html }: Props) {
              prose-a:text-brand-midnightCove prose-a:no-underline hover:prose-a:underline
              [&>*:first-child]:mt-0"
             >
-              {section.heading && (
+              {/* {section.heading && (
                 <h2
                   className="text-3xl sm:text-4xl font-extrabold text-brand-midnightCove mt-12 mb-6"
                   dangerouslySetInnerHTML={{
                     __html: section.heading.replace(/<\/?h2>/g, ""),
                   }}
                 />
-              )}
+              )} */}
 
-              <div
+              {section.heading && (
+  <h2
+    className="..."
+    dangerouslySetInnerHTML={{
+      __html: section.heading.replace(/<\/?h2>/g, ""),
+    }}
+  />
+)}
+
+
+              {/* <div
                 className="prose prose-lg lg:prose-xl dark:prose-invert max-w-none
              prose-p:leading-relaxed prose-p:mb-6"
                 dangerouslySetInnerHTML={{ __html: section.content }}
-              />
+              /> */}
             </div>
 
             {/* Contextual Image with better styling */}
