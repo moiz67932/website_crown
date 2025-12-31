@@ -10,14 +10,10 @@ export default function MapSection({ city }: Props) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const map = useRef<any | null>(null);
   const geocodeViewport = useRef<any | null>(null);
-  const polygons = useRef<any[]>([]);
   const markers = useRef<any[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(
     "idle"
   );
-  const [polyStatus, setPolyStatus] = useState<
-    "pending" | "ok" | "fail" | "none"
-  >("pending");
   const [properties, setProperties] = useState<any[]>([]);
 
   // ---------- load Google Maps ----------
@@ -103,135 +99,6 @@ export default function MapSection({ city }: Props) {
     };
   }, [ensureScript, city]);
 
-  // ---------- boundaries ----------
-  useEffect(() => {
-    if (status !== "ready" || !map.current) return;
-
-    async function fetchBoundary() {
-      if (!city) {
-        setPolyStatus("none");
-        return;
-      }
-      setPolyStatus("pending");
-      const g = (window as any).google.maps as GMaps;
-      const safe = city.replace(/"/g, '\\"');
-
-      // Query tiers: state (admin_level 4), county (6/7), city/town (8), generic place
-      const queryTemplates = [
-        `relation["boundary"="administrative"]["admin_level"="4"]["name"~"^${safe}$",i];`,
-        `relation["boundary"="administrative"]["admin_level"~"6|7"]["name"~"^${safe}$",i];`,
-        `relation["boundary"="administrative"]["admin_level"="8"]["name"~"^${safe}$",i];`,
-        `relation["place"~"city|town|village"]["name"~"^${safe}$",i];`
-      ];
-
-      let succeeded = false;
-
-      for (const tmpl of queryTemplates) {
-        const overpass = `[out:json][timeout:30];(${tmpl});(._;>;);out geom;`;
-        try {
-          console.log("[map.boundary] Overpass attempt", tmpl);
-          const resp = await fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: overpass,
-          });
-          if (!resp.ok) {
-            console.warn("[map.boundary] HTTP", resp.status);
-            continue;
-          }
-          const json = await resp.json();
-          const relations: any[] =
-            json.elements?.filter((e: any) => e.type === "relation") || [];
-          if (!relations.length) {
-            console.log("[map.boundary] no relations in this tier");
-            continue;
-          }
-
-          // Choose best relation: prefer one with outer ways & lowest admin_level
-          const pick = relations
-            .map(r => ({
-              r,
-              level: parseInt(r.tags?.admin_level || "99", 10) || 99,
-              outers: (r.members || []).filter((m: any) => m.type === "way" && (m.role === "outer" || !m.role)).length
-            }))
-            .sort((a, b) => (a.outers === b.outers ? a.level - b.level : b.outers - a.outers))[0].r;
-
-          const allWays = json.elements.filter(
-            (e: any) => e.type === "way" && Array.isArray(e.geometry)
-          );
-          const outerWayIds = (pick.members || [])
-            .filter(
-              (m: any) => m.type === "way" && (m.role === "outer" || !m.role)
-            )
-            .map((m: any) => m.ref);
-
-          let ways = allWays.filter((w: any) => outerWayIds.includes(w.id));
-          let rings: { lat: number; lng: number }[][] = [];
-          if (ways.length) {
-            rings = ways.map((w: any) =>
-              w.geometry.map((pt: any) => ({ lat: pt.lat, lng: pt.lon }))
-            );
-          } else if (pick.geometry) {
-            rings = ringify(pick.geometry);
-          }
-
-          if (!rings.length) {
-            console.log("[map.boundary] empty geometry in this tier");
-            continue;
-          }
-
-          drawPolygons(rings, g, map.current, polygons);
-          setPolyStatus("ok");
-          console.log("[map.boundary] success from tier", tmpl);
-          succeeded = true;
-          break;
-        } catch (err) {
-          console.warn("[map.boundary] tier error", err);
-        }
-      }
-
-      if (!succeeded) {
-        console.warn("[map.boundary] Overpass failed all tiers, trying Nominatim fallback");
-        try {
-          const url = `https://nominatim.openstreetmap.org/search?format=geojson&polygon_geojson=1&limit=1&q=${encodeURIComponent(
-            city
-          )}`;
-          const resp = await fetch(url, {
-            headers: { "Accept": "application/json" },
-          });
-          if (resp.ok) {
-            const gj = await resp.json();
-            const feat = gj.features?.[0];
-            if (feat?.geometry) {
-              const rings = geojsonToRings(feat.geometry);
-              if (rings.length) {
-                drawPolygons(rings, g, map.current, polygons);
-                setPolyStatus("ok");
-                console.log("[map.boundary] fallback Nominatim success");
-                return;
-              }
-            }
-          }
-          setPolyStatus("fail");
-        } catch (e) {
-          console.warn("[map.boundary] Nominatim fallback failed", e);
-          setPolyStatus("fail");
-        }
-
-        // fallback: keep geocode viewport if available
-        if (geocodeViewport.current && map.current) {
-          map.current.fitBounds(geocodeViewport.current, {
-            top: 40,
-            bottom: 40,
-            left: 40,
-            right: 40,
-          });
-        }
-      }
-    }
-
-    fetchBoundary();
-  }, [city, status]);
-
   // ---------- fetch properties ----------
   useEffect(() => {
     if (!city || status !== "ready") return;
@@ -266,7 +133,7 @@ export default function MapSection({ city }: Props) {
 
   // ---------- render property markers ----------
   useEffect(() => {
-    if (!map.current || !properties.length) return;
+    if (!map.current) return;
     const g = (window as any).google.maps as GMaps;
     if (!g) return;
 
@@ -325,6 +192,38 @@ export default function MapSection({ city }: Props) {
 
       markers.current.push(marker);
     });
+
+    // Auto-zoom to the markers (or fall back to geocoded viewport)
+    try {
+      const bounds = new g.LatLngBounds();
+      let count = 0;
+      markers.current.forEach((m) => {
+        const pos = m.getPosition?.();
+        if (pos) {
+          bounds.extend(pos);
+          count++;
+        }
+      });
+
+      if (count > 1) {
+        map.current.fitBounds(bounds, { top: 40, bottom: 40, left: 40, right: 40 });
+        // prevent extreme zoom-in on tightly clustered points
+        const z = map.current.getZoom?.();
+        if (typeof z === "number" && z > 16) map.current.setZoom(16);
+      } else if (count === 1) {
+        map.current.setCenter(bounds.getCenter());
+        map.current.setZoom(14);
+      } else if (geocodeViewport.current) {
+        map.current.fitBounds(geocodeViewport.current, {
+          top: 40,
+          bottom: 40,
+          left: 40,
+          right: 40,
+        });
+      }
+    } catch (e) {
+      console.warn("[map] fitBounds failed", e);
+    }
   }, [properties]);
 
   return (
@@ -335,13 +234,6 @@ export default function MapSection({ city }: Props) {
           {status === "loading" && <span>Loading</span>}
           {status === "error" && (
             <span className="text-red-500">Map Unavailable</span>
-          )}
-          {status === "ready" && polyStatus === "pending" && (
-            <span>Boundary…</span>
-          )}
-          {status === "ready" && polyStatus === "ok" && <span>Boundary</span>}
-          {status === "ready" && polyStatus === "fail" && (
-            <span className="text-yellow-600">No Boundary</span>
           )}
           {properties.length > 0 && (
             <span className="text-blue-600">{properties.length} Properties</span>
@@ -372,82 +264,4 @@ export default function MapSection({ city }: Props) {
       )}
     </section>
   );
-}
-
-/* ---------- helpers ---------- */
-function ringify(
-  geometry: Array<{ lat: number; lon: number }>
-): { lat: number; lng: number }[][] {
-  const rings: { lat: number; lng: number }[][] = [];
-  let cur: { lat: number; lng: number }[] = [];
-  const jump = 0.2;
-  for (let i = 0; i < geometry.length; i++) {
-    const pt = geometry[i],
-      prev = geometry[i - 1];
-    const node = { lat: pt.lat, lng: pt.lon };
-    if (prev) {
-      const dl = Math.abs(prev.lat - pt.lat);
-      const dn = Math.abs(prev.lon - pt.lon);
-      if (dl > jump || dn > jump) {
-        if (cur.length) rings.push(cur);
-        cur = [];
-      }
-    }
-    cur.push(node);
-  }
-  if (cur.length) rings.push(cur);
-  return rings;
-}
-
-function drawPolygons(
-  rings: { lat: number; lng: number }[][],
-  g: GMaps,
-  mapInst: any,
-  polygonsRef: React.MutableRefObject<any[]>
-) {
-  polygonsRef.current.forEach((p) => p.setMap(null));
-  polygonsRef.current = [];
-  rings.forEach((seg) => {
-    polygonsRef.current.push(
-      new g.Polygon({
-        paths: seg,
-        strokeColor: "#0D47A1",
-        strokeOpacity: 0.95,
-        strokeWeight: 2,
-        fillColor: "#1976D2",
-        fillOpacity: 0.12,
-        clickable: false,
-        map: mapInst,
-      })
-    );
-  });
-  if (rings.length) {
-    try {
-      const b = new g.LatLngBounds();
-      rings.forEach((seg) => seg.forEach((p) => b.extend(p)));
-      mapInst.fitBounds(b, { top: 40, bottom: 40, left: 40, right: 40 });
-      if ((mapInst.getZoom?.() ?? 12) < 5 && rings.length === 1) {
-        mapInst.setZoom(5);
-      }
-    } catch (e) {
-      console.warn("[map.boundary] fitBounds failed", e);
-    }
-  }
-}
-
-function geojsonToRings(geom: any): { lat: number; lng: number }[][] {
-  const rings: { lat: number; lng: number }[][] = [];
-  if (!geom) return rings;
-  if (geom.type === "Polygon") {
-    geom.coordinates.forEach((ring: number[][]) =>
-      rings.push(ring.map(([lng, lat]) => ({ lat, lng })))
-    );
-  } else if (geom.type === "MultiPolygon") {
-    geom.coordinates.forEach((poly: number[][][]) =>
-      poly.forEach((ring: number[][]) =>
-        rings.push(ring.map(([lng, lat]) => ({ lat, lng })))
-      )
-    );
-  }
-  return rings;
 }

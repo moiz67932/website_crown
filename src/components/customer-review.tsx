@@ -57,33 +57,44 @@ export default CustomerReview
 
 const testimonials = [
   {
-    name: "Jacob Oenter",
-    avatar: "/client/client1.jpeg",
-    text: "Recently sold my home, and I couldn’t be more grateful for the outstanding work my real estate agent did throughout the entire process. From our first meeting to closing day, they were professional, knowledgeable, and truly dedicated to getting the best outcome for me. They provided expert advice on pricing, staging, and marketing, and their strategy brought in strong interest right away. Communication was consistent and clear, and I always felt like I was in good hands. They went above and beyond, handling every detail with care and making what could have been a stressful process feel smooth and manageable. Thanks to their expertise and hard work, my home sold quickly and at a great price. I highly recommend Reza Barghlameno to anyone looking to buy or sell a home—you won’t be disappointed!",
+    name: "Mario & Sylvia Jacobo",
+    avatar: "/client/mario_sylvia.jpg",
+    text: "Working with Reza meant to be working with excellency! We had an incredible experience, due to his professionalism, was very knowledgeable, and truly invested his willingness and time in helping us find the place we chose. One of the things that personally liked the most was his charisma; very approachable whenever we came to him with questions. But best of all, he’s very respectful in our requests whether they were religious faith, which was very important for us. He always took the time to understand exactly what we were looking for and guided us through every step of the process with patience and professionalism. We appreciated his sharp eye for detail, another plus for us, and more importantly, his honest advice gave us confidence in our decision to go for the place in Temecula, where we could be closer to our children. We couldn’t have asked for a better agent and we highly recommend Reza Barghlameno to anyone looking to buy a home.",
+  },
+  {
+    name: "Fern Siegel",
+    avatar: "/client/fern_siegel.jpg",
+    text: "Reza Barghlalmeno made buying our home such an incredible experience—one of the best we’ve had as a family, and I’ve been through quite a few home purchases in my 80+ years! From the first phone call, Reza completely put us at ease. He was kind, professional, and so detail-oriented that the entire process felt seamless. We closed in just 18 days, and everything went so smoothly on our end, thanks to his hard work behind the scenes. This house is everything we dreamed of. Reza wasn’t just helping us buy a house—he was helping us find a home for the next chapter of our lives. He went above and beyond at every step, from handling negotiations to managing all the small details to checking in with us even after the sale was done. I honestly couldn’t be more grateful. If you get the chance to work with Reza, you’re in the best hands possible.",
   },
   {
     name: "Maxim Gantman",
-    avatar: "/client/client2.jpeg",
-    text: "I have met many realtors in my day but there’s no one I could ever trust like Reza. His passion for real estate & the extra mile he goes at every step is something truly rare. During every interaction we had with Reza he genuinely listened to our needs & concerns. He was always prepared with solutions to any challenges. I wholeheartedly recommend Reza to anyone looking for an exceptional service.",
+    avatar: "/client/maxim_gantman.jpg",
+    text: "I recently had the pleasure of working with Reza and I cannot speak highly enough of the exceptional experience I had. From start to finish, Reza went above and beyond to ensure that my home buying process was as smooth as possible. He took the time to listen to my needs, preferences, and concerns, and provided insightful advice on every property we viewed. His attention to detail, responsiveness, and dedication were truly impressive. Whether it was answering questions late at night or scheduling last-minute viewings, Reza was always there for me. If you are looking for a realtor who will go the extra mile and ensure you have an outstanding experience, I cannot recommend Reza enough.",
   },
   {
-    name: "Jill Conaty",
-    avatar: "/client/client4.jpeg",
-    text: "I have met many realtors in my day but there’s no one I could ever trust like Reza. His passion for real estate & the extra mile he goes at every step is something truly rare. During every interaction we had with Reza he genuinely listened to our needs & concerns. He was always prepared with solutions to any challenges. I wholeheartedly recommend Reza to anyone looking for an exceptional service.",
+    name: "Mary Jane Gantman",
+    avatar: "/client/mary_jane_gantman.jpg",
+    text: "My husband and I are first time buyers in San Diego. From the moment we met him, Reza has been helpful, understanding, patient, professional, empathetic, and has operated with the highest level of integrity. Reza stuck through a huge amount of hurdles with us over the last 7 months. He kept us updated both by text and over the phone during every step, and was able to explain the issues at hand in language that allowed us to understand the legalities and complications. His diligence has allowed us to find the home that we are excited to raise our children in. Thank you, Reza, for all that you have done for our family. We can't wait to have you over for dinner once we are moved in!",
   },
-  // {
-  //   name: "Jacob Oenter",
-  //   avatar: "/client/client1.jpeg",
-  //   text: "Recently sold my home, and I couldn’t be more grateful for the outstanding work my real estate agent did throughout the entire process. From our first meeting to closing day, they were professional, knowledgeable, and truly dedicated to getting the best outcome for me. They provided expert advice on pricing, staging, and marketing, and their strategy brought in strong interest right away. Communication was consistent and clear, and I always felt like I was in good hands. They went above and beyond, handling every detail with care and making what could have been a stressful process feel smooth and manageable. Thanks to their expertise and hard work, my home sold quickly and at a great price. I highly recommend Reza Barghlameno to anyone looking to buy or sell a home—you won’t be disappointed!",
-  // },
-  // {
-  //   name: "Maxim Gantman",
-  //   avatar: "/client/client2.jpeg",
-  //   text: "I have met many realtors in my day but there’s no one I could ever trust like Reza. His passion for real estate & the extra mile he goes at every step is something truly rare. During every interaction we had with Reza he genuinely listened to our needs & concerns. He was always prepared with solutions to any challenges. I wholeheartedly recommend Reza to anyone looking for an exceptional service.",
-  // },
-  // {
-  //   name: "Jill Conaty",
-  //   avatar: "/client/client4.jpeg",
-  //   text: "I have met many realtors in my day but there’s no one I could ever trust like Reza. His passion for real estate & the extra mile he goes at every step is something truly rare. During every interaction we had with Reza he genuinely listened to our needs & concerns. He was always prepared with solutions to any challenges. I wholeheartedly recommend Reza to anyone looking for an exceptional service.",
-  // },
+  {
+    name: "Russell MacQueen",
+    avatar: "/client/russell_macqueen.jpg",
+    text: "Reza was the best agent we have ever worked with. His expertise was beyond belief. He had an approach working with a new realty group that allowed us to make updates to our home and within 3 weeks we had one three day showing and we had 5 offers over asking price. His thoughtfulness kept us on track without stressing us and assured us we would reach our goal to not only sell our home but he worked diligently to find a new home. We are forever grateful for him and FAM Realtor Group for all the personal efforts they put in to help us sell our home and find a new home.",
+  },
+  {
+    name: "Pulkit Kaushal",
+    avatar: "/client/pulkit_kaushal.jpg",
+    text: "Reza was incredibly helpful in our home search and in securing our first house! He had knowledge about the area and was always responsive to our questions. He made our first time homeownership process very seamless and handled contact with the seller's agent easily. We highly recommend Reza as he treats his clients as if they were family and wants to make sure the best service is given to them. We really appreciate all his efforts and him being our agent for our first home!",
+  },
 ]
+
+/*
+  Previous testimonials preserved here for reference (commented out):
+
+  [
+    { name: "Jacob Oenter", avatar: "/client/client1.jpeg", text: "..." },
+    { name: "Maxim Gantman", avatar: "/client/client2.jpeg", text: "..." },
+    { name: "Jill Conaty", avatar: "/client/client4.jpeg", text: "..." }
+  ]
+
+*/
