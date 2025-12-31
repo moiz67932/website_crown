@@ -366,6 +366,16 @@
   color: hsl(0 0% 95% / var(--tw-text-opacity, 1));
 }
 
+/* Landing subheading color (#fcba03) */
+.text-brand-skyBlue {
+  --tw-text-opacity: 1;
+  color: hsl(44 98% 50% / var(--tw-text-opacity, 1));
+}
+.dark .text-brand-skyBlue {
+  --tw-text-opacity: 1;
+  color: hsl(44 100% 65% / var(--tw-text-opacity, 1));
+}
+
 .bg-brand-californiaSand {
   background-color: hsl(35 40% 92%);
 }

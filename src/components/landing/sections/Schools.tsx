@@ -5,7 +5,7 @@ export default function SchoolsSection({ schools }: Props) {
   if (!schools || schools.length === 0) return null
   return (
     <section>
-      <h2 className="text-lg font-semibold mb-4">Schools</h2>
+      <h2 className="text-lg font-semibold mb-4" style={{ color: '#fcba03' }}>Schools</h2>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {schools.map(s => (
           <li key={s.name} className="rounded-xl border p-4 flex items-center justify-between text-sm">

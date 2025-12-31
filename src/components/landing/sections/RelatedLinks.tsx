@@ -5,7 +5,7 @@ export default function RelatedLinksSection({ links }: Props) {
   if (!links || links.length === 0) return null
   return (
     <section>
-      <h2 className="text-lg font-semibold mb-4">Related Pages</h2>
+      <h2 className="text-lg font-semibold mb-4" style={{ color: '#fcba03' }}>Related Pages</h2>
       <div className="flex flex-wrap gap-3">
         {links.map(l => (
           <a 

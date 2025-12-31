@@ -24,7 +24,7 @@ export default function StatsSection({ stats }: Props) {
   console.log('✅ [StatsSection] Rendering with stats:', stats)
   return (
     <section className="pt-2">
-      <h2 className="text-2xl font-bold mb-6 text-brand-midnightCove">Market Snapshot</h2>
+      <h2 className="text-2xl font-bold mb-6" style={{ color: '#fcba03' }}>Market Snapshot</h2>
       <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {statMeta.map((m) => {
           const value = stats[m.key];

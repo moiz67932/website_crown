@@ -6,7 +6,7 @@ export default function RelatedVariants({ citySlug, currentSlug }: { citySlug: s
   const items = LANDINGS.filter(l => l.slug !== currentSlug)
   return (
     <section className="pt-6">
-      <h3 className="text-lg font-semibold mb-3">Explore more in this city</h3>
+      <h3 className="text-lg font-semibold mb-3" style={{ color: '#fcba03' }}>Explore more in this city</h3>
       <div className="flex flex-wrap gap-3">
         {items.map(l => (
           <Link

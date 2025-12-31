@@ -14,7 +14,7 @@ export default function FeaturedGrid({ properties }: Props) {
   return (
     <section className="pt-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-brand-midnightCove">Featured Listings</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#fcba03' }}>Featured Listings</h2>
       </div>
       {loading && (
         <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">

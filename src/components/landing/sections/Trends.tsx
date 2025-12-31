@@ -10,7 +10,7 @@ export default function TrendsSection({ trends }: Props) {
   if (!trends || trends.length === 0) return null
   return (
     <section>
-      <h2 className="text-lg font-semibold mb-4">Price Trends</h2>
+      <h2 className="text-lg font-semibold mb-4" style={{ color: '#fcba03' }}>Price Trends</h2>
       <div className="rounded-2xl border p-6 min-h-[260px] flex items-center justify-center bg-muted/20">
         {!ready && <div className="animate-pulse text-sm text-muted-foreground">Loading chart…</div>}
         {ready && (

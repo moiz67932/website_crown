@@ -7,7 +7,7 @@ export default function BusinessDirectorySection({ businesses }: Props) {
   if (!businesses || businesses.length === 0) return null
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold">Local Business Directory</h2>
+      <h2 className="text-xl font-semibold" style={{ color: '#fcba03' }}>Local Business Directory</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {businesses.map(b => (
           <div key={b.name} className="rounded-lg border p-4 bg-background/50 flex flex-col gap-1">

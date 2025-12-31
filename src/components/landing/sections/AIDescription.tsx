@@ -110,7 +110,7 @@ export default async function AIDescription({ city, kind, html }: Props) {
   return (
     <section className="max-w-none space-y-16">
       <div className="space-y-3">
-        <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-brand-midnightCove">
+        <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight" style={{ color: '#fcba03' }}>
           About {city}
         </h2>
         <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
@@ -156,7 +156,7 @@ export default async function AIDescription({ city, kind, html }: Props) {
             {/* Section Content with improved typography */}
             <div
               className="prose prose-lg lg:prose-xl dark:prose-invert max-w-none
-             prose-headings:scroll-mt-24 prose-headings:font-extrabold prose-headings:text-brand-midnightCove
+             prose-headings:scroll-mt-24 prose-headings:font-extrabold [&_h2]:!text-[#fcba03] [&_h3]:!text-[#fcba03]
              prose-h2:text-2xl sm:prose-h2:text-4xl prose-h2:mb-6 prose-h2:mt-12 first:prose-h2:mt-0 prose-h2:leading-tight
              prose-h3:text-xl sm:prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8
              prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-relaxed prose-p:mb-6 prose-p:text-base sm:prose-p:text-lg
@@ -177,7 +177,8 @@ export default async function AIDescription({ city, kind, html }: Props) {
 
               {section.heading && (
                 <h2
-                  className="text-3xl sm:text-4xl font-extrabold text-brand-midnightCove mt-12 mb-6"
+                  className="text-3xl sm:text-4xl font-extrabold mt-12 mb-6"
+                  style={{ color: '#fcba03' }}
                   dangerouslySetInnerHTML={{
                     __html: section.heading.replace(/<\/?h2>/g, ""),
                   }}

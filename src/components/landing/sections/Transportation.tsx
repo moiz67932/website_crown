@@ -20,7 +20,7 @@ export default function TransportationSection({ data }: Props) {
   const { walkScore, transitScore, bikeScore, avgCommuteMins, majorHighways, transitOptions, airports } = data
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold">Transportation & Connectivity</h2>
+      <h2 className="text-xl font-semibold" style={{ color: '#fcba03' }}>Transportation & Connectivity</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {walkScore !== undefined && <Stat label="Walk Score" value={walkScore} />}
         {transitScore !== undefined && <Stat label="Transit Score" value={transitScore} />}
