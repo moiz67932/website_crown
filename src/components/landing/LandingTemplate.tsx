@@ -61,7 +61,7 @@ function ContentSection({
   return (
     <section className={`${className || ""} space-y-4`}>
       {!hasInternalH2 && section.heading && (
-        <h2 className="text-2xl sm:text-3xl font-bold text-brand-skyBlue mb-5">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-5 bg-gradient-to-r from-[#FFD36A] via-[#FCBA03] to-[#C98A00] text-transparent bg-clip-text">
           {section.heading}
         </h2>
       )}
@@ -76,8 +76,10 @@ function ContentSection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none
                      text-gray-600 dark:text-gray-400
-                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:text-brand-skyBlue prose-h2:mb-5 prose-h2:mt-0
-                     prose-h3:text-brand-skyBlue
+                     [&_h2]:!text-[#fcba03] [&_h3]:!text-[#fcba03]
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:mb-5 [&_h2]:mt-0
+                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:mb-5 prose-h2:mt-0
+                     prose-h3:font-semibold
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
@@ -87,11 +89,9 @@ function ContentSection({
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_ol]:space-y-2
                      [&_li]:relative [&_li]:pl-2
-                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-skyBlue [&_h2]:mb-5 [&_h2]:mt-0
-                     [&_h3]:text-brand-skyBlue
                      [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_table]:dark:border-gray-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
                      [&_thead]:bg-brand-midnightCove/10 [&_thead]:dark:bg-brand-midnightCove/20
-                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_th]:text-brand-skyBlue [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
+                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_thead>tr>th]:!text-[#fcba03] [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
                      [&_td]:border [&_td]:border-gray-300 [&_td]:dark:border-gray-600 [&_td]:px-4 [&_td]:py-3 [&_td]:text-gray-600 [&_td]:dark:text-gray-400
                      [&_tr]:even:bg-gray-50 [&_tr]:dark:even:bg-gray-800/50
                      [&_tbody_tr]:hover:bg-gray-100 [&_tbody_tr]:dark:hover:bg-gray-700/50 [&_tbody_tr]:transition-colors"
@@ -117,7 +117,7 @@ function NeighborhoodCards({
   return (
     <section className="space-y-5">
       {!hasInternalH2 && section.heading && (
-        <h2 className="text-2xl sm:text-3xl font-bold text-brand-skyBlue mb-5">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-5 bg-gradient-to-r from-[#FFD36A] via-[#FCBA03] to-[#C98A00] text-transparent bg-clip-text">
           {section.heading}
         </h2>
       )}
@@ -126,16 +126,16 @@ function NeighborhoodCards({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
-                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:text-brand-skyBlue prose-h2:mb-5 prose-h2:mt-0
-                     prose-h3:text-brand-skyBlue
+                     [&_h2]:!text-[#fcba03] [&_h3]:!text-[#fcba03]
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:mb-5 [&_h2]:mt-0
+                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:mb-5 prose-h2:mt-0
+                     prose-h3:font-semibold
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-li:text-[1.1rem] prose-li:leading-[1.7] prose-li:text-gray-600 dark:prose-li:text-gray-400
-                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-skyBlue [&_h2]:mb-5 [&_h2]:mt-0
-                     [&_h3]:text-brand-skyBlue
                      [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_table]:dark:border-gray-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
                      [&_thead]:bg-brand-midnightCove/10 [&_thead]:dark:bg-brand-midnightCove/20
-                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_th]:text-brand-skyBlue [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
+                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_thead>tr>th]:!text-[#fcba03] [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
                      [&_td]:border [&_td]:border-gray-300 [&_td]:dark:border-gray-600 [&_td]:px-4 [&_td]:py-3 [&_td]:text-gray-600 [&_td]:dark:text-gray-400
                      [&_tr]:even:bg-gray-50 [&_tr]:dark:even:bg-gray-800/50
                      [&_tbody_tr]:hover:bg-gray-100 [&_tbody_tr]:dark:hover:bg-gray-700/50 [&_tbody_tr]:transition-colors"
@@ -152,7 +152,7 @@ function NeighborhoodCards({
             className="bg-white dark:bg-slate-800 rounded-xl border p-6 shadow-sm hover:shadow-md transition-shadow"
           >
             {card.name && (
-              <h3 className="text-lg font-semibold text-brand-midnightCove mb-3">
+              <h3 className="text-lg font-semibold mb-3" style={{ color: '#fcba03' }}>
                 {card.name}
               </h3>
             )}
@@ -197,7 +197,7 @@ function BuyerStrategySection({
   return (
     <section className="space-y-5">
       {!hasInternalH2 && section.heading && (
-        <h2 className="text-2xl sm:text-3xl font-bold text-brand-skyBlue mb-5">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-5 bg-gradient-to-r from-[#FFD36A] via-[#FCBA03] to-[#C98A00] text-transparent bg-clip-text">
           {section.heading}
         </h2>
       )}
@@ -206,8 +206,10 @@ function BuyerStrategySection({
         <div
           className="prose prose-lg dark:prose-invert max-w-none mb-8
                      text-gray-600 dark:text-gray-400
-                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:text-brand-skyBlue prose-h2:mb-5 prose-h2:mt-0
-                     prose-h3:text-brand-skyBlue
+                     [&_h2]:!text-[#fcba03] [&_h3]:!text-[#fcba03]
+                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:mb-5 [&_h2]:mt-0
+                     prose-h2:text-2xl prose-h2:sm:text-3xl prose-h2:font-bold prose-h2:mb-5 prose-h2:mt-0
+                     prose-h3:font-semibold
                      prose-p:text-[1.15rem] prose-p:leading-[1.8] prose-p:mb-5 prose-p:text-gray-600 dark:prose-p:text-gray-400
                      prose-ul:my-5 prose-ul:pl-6 prose-ul:list-disc prose-ul:space-y-2
                      prose-ol:my-5 prose-ol:pl-6 prose-ol:list-decimal prose-ol:space-y-2
@@ -215,11 +217,9 @@ function BuyerStrategySection({
                      prose-li:marker:text-brand-midnightCove prose-li:pl-2
                      [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
                      [&_li]:relative [&_li]:pl-2
-                     [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-bold [&_h2]:text-brand-skyBlue [&_h2]:mb-5 [&_h2]:mt-0
-                     [&_h3]:text-brand-skyBlue
                      [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_table]:dark:border-gray-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
                      [&_thead]:bg-brand-midnightCove/10 [&_thead]:dark:bg-brand-midnightCove/20
-                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_th]:text-brand-skyBlue [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
+                     [&_th]:border [&_th]:border-gray-300 [&_th]:dark:border-gray-600 [&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-bold [&_thead>tr>th]:!text-[#fcba03] [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide
                      [&_td]:border [&_td]:border-gray-300 [&_td]:dark:border-gray-600 [&_td]:px-4 [&_td]:py-3 [&_td]:text-gray-600 [&_td]:dark:text-gray-400
                      [&_tr]:even:bg-gray-50 [&_tr]:dark:even:bg-gray-800/50
                      [&_tbody_tr]:hover:bg-gray-100 [&_tbody_tr]:dark:hover:bg-gray-700/50 [&_tbody_tr]:transition-colors"
@@ -232,7 +232,7 @@ function BuyerStrategySection({
       {section.cta && (
         <div className="bg-brand-midnightCove/5 rounded-xl p-8 border border-brand-midnightCove/20">
           {section.cta.title && (
-            <h3 className="text-xl font-semibold text-brand-midnightCove mb-3">
+            <h3 className="text-xl font-semibold mb-3" style={{ color: '#fcba03' }}>
               {section.cta.title}
             </h3>
           )}
@@ -380,7 +380,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
         {/* Featured */}
         <section className="pt-2">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-brand-skyBlue">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FFD36A] via-[#FCBA03] to-[#C98A00] text-transparent bg-clip-text">
               Featured Listings
             </h2>
           </div>
@@ -429,7 +429,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
             {trustContent.agent_box && (
               <div className="mb-5">
                 {trustContent.agent_box.headline && (
-                  <h3 className="text-xl font-semibold text-brand-midnightCove mb-3">
+                  <h3 className="text-xl font-semibold mb-3" style={{ color: '#fcba03' }}>
                     {trustContent.agent_box.headline}
                   </h3>
                 )}
@@ -499,7 +499,7 @@ export default function LandingTemplate({ data, faqItems, faqJsonLd }: Props) {
         <RelatedVariants citySlug={citySlug} currentSlug={kind} />
 
         <section className="mt-4">
-          <h3 className="text-lg font-semibold mb-4">
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#fcba03' }}>
             Related California Cities
           </h3>
           <div className="flex flex-wrap gap-3">

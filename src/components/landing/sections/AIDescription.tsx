@@ -110,7 +110,7 @@ export default async function AIDescription({ city, kind, html }: Props) {
   return (
     <section className="max-w-none space-y-16">
       <div className="space-y-3">
-        <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight" style={{ color: '#fcba03' }}>
+        <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight  text-[#fcba03]" style={{ color: '#fcba03' }} >
           About {city}
         </h2>
         <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
@@ -177,7 +177,7 @@ export default async function AIDescription({ city, kind, html }: Props) {
 
               {section.heading && (
                 <h2
-                  className="text-3xl sm:text-4xl font-extrabold mt-12 mb-6"
+                  className="text-3xl sm:text-4xl font-extrabold mt-12 mb-6 text-[#fcba03]"
                   style={{ color: '#fcba03' }}
                   dangerouslySetInnerHTML={{
                     __html: section.heading.replace(/<\/?h2>/g, ""),
